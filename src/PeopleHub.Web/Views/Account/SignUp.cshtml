@@ -1,0 +1,69 @@
+@model PeopleHub.Lib.Model.View.SignUpModel
+
+@{
+    ViewBag.Title = "Регистрация нового пользователя";
+    Layout = "_Layout";
+}
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col-8">
+    <h2>Регистрация</h2>
+
+    <form asp-action="SignUp" asp-controller="Account" asp-anti-forgery="true">
+        <div class="validation" asp-validation-summary="ModelOnly"></div>
+        <div>
+            <div class="form-group">
+                <label asp-for="Name">Имя</label><input class="form-control" type="text" asp-for="Name" />
+                <span asp-validation-for="Name"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Surname">Фамилия</label><input class="form-control" type="text" asp-for="Surname" />
+                <span asp-validation-for="Surname"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Gender">Пол</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" value="1" asp-for="Gender" id="male"/>
+                    <label class="form-check-label" for="male">Парень</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" value="0" asp-for="Gender" id="female"/>
+                    <label class="form-check-label" for="female">Девушка</label>
+                </div>
+                <span asp-validation-for="Gender"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Age">Ваш возраст</label><input class="form-control" type="number" asp-for="Age" />
+                <span asp-validation-for="Age"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="City">Город</label><input class="form-control" type="text" asp-for="City" />
+                <span asp-validation-for="City"></span>
+            </div>
+            <div class="form-group-plaintext">
+                <label asp-for="Bio">Пару слов о себе</label>
+                <textarea class="form-control" asp-for="Bio"></textarea>
+                <span asp-validation-for="Bio"></span>
+            </div>
+            <div class="form-group">
+                <label class="" asp-for="Email">Email</label><input class="form-control" type="email" asp-for="Email"/>
+                <span asp-validation-for="Email"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password">Введите пароль<br/></label>
+                <input class="form-control" asp-for="Password"/>
+                <span asp-validation-for="Password"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword">Повторите пароль</label>
+                <input class="form-control" asp-for="ConfirmPassword"/>
+                <span asp-validation-for="ConfirmPassword"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Зарегистрироваться"/>
+            </div>
+        </div>
+    </form>    
+    </div>
+    <div class="col-2"></div>
+</div>

@@ -1,0 +1,44 @@
+@using PeopleHub.Lib.Model.Enums
+@model PeopleHub.Lib.Model.Dto.Person.DtoPerson
+
+@{
+    ViewBag.Title = "Анкета пользователя";
+    Layout = "_Layout";
+}
+
+<div class="row">
+  <div class="col-4"></div>
+  <div class="col-6">
+    <div class="card" style="width: 18rem;">
+      @* <img class="card-img-top" src="..." alt="Card image cap"> *@
+      <div class="card-body">
+        <h5 class="card-title">@Model.Surname @Model.Name</h5>
+        <p class="card-text">@Model.Bio</p>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">Возраст: @Model.Age</li>
+        <li class="list-group-item">Город: @Model.City</li>
+        <li class="list-group-item">Пол: @(Model.Gender == Gender.Male ? "Муж" : "Жен")</li>
+      </ul>
+      <div class="card-body">
+        @switch (Model.Status)
+        {
+            case FriendRequestStatus.None:
+                <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("SendFriendRequest", "Friends", new {targetPersonId = Model.Id, returnUrl = Url.Action("Person", "Person", new { personId = Model.Id })})"><i class="fa fa-user-plus"></i></a>
+                break;
+            case FriendRequestStatus.Sent:
+            case FriendRequestStatus.Rejected:
+                <div class="alert alert-info"><i class="fa fa-clock"></i> Заявка отправлена</div>
+                break;
+            case FriendRequestStatus.Approved:
+                <a class="btn btn-danger" title="Удалить из друзей" href="@Url.Action("CancelRequest", "Friends", new { targetPersonId = Model.Id, returnUrl = Url.Action("Person", "Person", new { personId = Model.Id })})"><i class="fa fa-user-times"></i></a>
+                <div class="alert alert-success"><i class="fa fa-check"></i> У вас в друзьях</div>
+                break;
+            default:
+                <div class="alert alert-danger"><strong>Неизвестный статус заявки: @Model.Status.ToString("F")</strong></div>
+                break;
+        }
+      </div>
+    </div>
+  </div>
+</div>

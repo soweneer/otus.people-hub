@@ -1,0 +1,61 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model PeopleHub.Lib.Model.Dto.Person.DtoUpdatePerson
+
+@{
+    ViewBag.Title = "Мой профиль";
+    Layout = "_Layout";
+    
+}
+
+<div class="row">
+    <div class="col-2"></div>
+    <div class="col-8">
+    <h2>Профиль пользователя</h2>
+    @if (TempData.ContainsKey("SuccessMessage") && !string.IsNullOrWhiteSpace(TempData["SuccessMessage"].ToString()))
+    {
+        <div class="alert alert-success"><i class="fa fa-check"></i> Данные профиля успешно сохранены</div>
+    }
+    <form asp-action="Profile" asp-controller="Person" asp-anti-forgery="true" method="post">
+        <div class="validation" asp-validation-summary="ModelOnly"></div>
+        <div>
+            <div class="form-group">
+                <label asp-for="Name">Имя</label><input class="form-control" type="text" asp-for="Name" />
+                <span asp-validation-for="Name"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Surname">Фамилия</label><input class="form-control" type="text" asp-for="Surname" />
+                <span asp-validation-for="Surname"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Gender">Пол</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" value="1" asp-for="Gender" id="male"/>
+                    <label class="form-check-label" for="male">Парень</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" value="0" asp-for="Gender" id="female"/>
+                    <label class="form-check-label" for="female">Девушка</label>
+                </div>
+                <span asp-validation-for="Gender"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Age">Ваш возраст</label><input class="form-control" type="number" asp-for="Age" />
+                <span asp-validation-for="Age"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="City">Город</label><input class="form-control" type="text" asp-for="City" />
+                <span asp-validation-for="City"></span>
+            </div>
+            <div class="form-group-plaintext">
+                <label asp-for="Bio">Пару слов о себе</label>
+                <textarea class="form-control" asp-for="Bio"></textarea>
+                <span asp-validation-for="Bio"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" class="btn btn-primary" value="Сохранить"/>
+            </div>
+        </div>
+    </form>    
+    </div>
+    <div class="col-2"></div>
+</div>
