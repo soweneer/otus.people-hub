@@ -5,18 +5,17 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.BusinessLogic.Account.Create;
+using PeopleHub.Lib.BusinessLogic.Account;
 using PeopleHub.Lib.Model.Dto.Person;
 using PeopleHub.Lib.Model.View;
 using PeopleHub.Security;
 
 namespace PeopleHub.Controllers
 {
-    using CreateAccountRequest = Request;
-    using CreatePersonRequest = Lib.BusinessLogic.Person.Create.Request;
-    using FindPersonByEmailRequest = Lib.BusinessLogic.Person.FindByEmail.Request;
-    using FindAccountByEmailRequest = Lib.BusinessLogic.Account.FindByEmail.Request;
-    using AccountExistsRequest = Lib.BusinessLogic.Account.Exists.Request;
+    using CreateAccountRequest = CreateRequest;
+    using CreatePersonRequest = Lib.BusinessLogic.Person.CreateRequest;
+    using FindAccountByEmailRequest = FindByEmailRequest;
+    using AccountExistsRequest = ExistsRequest;
     
     [AllowAnonymous]
     public class AccountController : Controller

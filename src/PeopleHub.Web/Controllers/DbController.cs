@@ -1,12 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.BusinessLogic.Admin.MigrateDb;
+using PeopleHub.Lib.BusinessLogic.Admin;
 
 namespace PeopleHub.Controllers
 {
-    using MigrateDbRequest = Request;
-    
     [AllowAnonymous]
     [Route("admin/db")]
     public class DbController : Controller

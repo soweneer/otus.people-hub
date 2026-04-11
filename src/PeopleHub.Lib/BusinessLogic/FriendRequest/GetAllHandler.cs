@@ -1,26 +1,29 @@
-using System.Data;
+﻿using System.Data;
 using MediatR;
 using PeopleHub.Dal.Infrastructure.Db;
+using PeopleHub.Lib.BusinessLogic.Person;
 using PeopleHub.Lib.Model.Dto.Friend;
 using PeopleHub.Lib.Model.Dto.Person;
 using PeopleHub.Lib.Model.Enums;
 
-namespace PeopleHub.Lib.BusinessLogic.FriendRequest.GetAll;
+namespace PeopleHub.Lib.BusinessLogic.FriendRequest;
 
-using FindPersonByEmailRequest = Person.FindByEmail.Request;
+using FindPersonByEmailRequest = FindByEmailRequest;
 
-public sealed class Handler : IRequestHandler<Request, DtoFriendsInfo>
+public sealed record GetAllRequest(string PersonEmail): IRequest<DtoFriendsInfo>;
+
+public sealed class GetAllHandler : IRequestHandler<GetAllRequest, DtoFriendsInfo>
 {
     private readonly DbClient _dbClient;
     private readonly IMediator _mediator;
 
-    public Handler(IMediator mediator, DbClient dbClient)
+    public GetAllHandler(IMediator mediator, DbClient dbClient)
     {
         _mediator = mediator;
         _dbClient = dbClient;
     }
 
-    public async Task<DtoFriendsInfo> Handle(Request request, CancellationToken cancellationToken)
+    public async Task<DtoFriendsInfo> Handle(GetAllRequest request, CancellationToken cancellationToken)
     {
         var personId = await _mediator.Send(new FindPersonByEmailRequest(request.PersonEmail), cancellationToken);
 

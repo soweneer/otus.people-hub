@@ -4,6 +4,9 @@
 # Visual Studio Code
 .vscode
 
+# claude
+/.claude
+
 # User-specific files
 *.suo
 *.user

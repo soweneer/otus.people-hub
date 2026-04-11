@@ -1,24 +1,17 @@
-using MediatR;
+﻿using MediatR;
 using PeopleHub.Dal.Infrastructure.Db;
 using PeopleHub.Lib.Model.Dto.Friend;
 
-namespace PeopleHub.Lib.BusinessLogic.FriendRequest.Get;
+namespace PeopleHub.Lib.BusinessLogic.FriendRequest;
 
-public sealed class Handler : IRequestHandler<Request, DtoFriendRequest>
+public sealed record GetRequest(int Id): IRequest<DtoFriendRequest>;
+
+public sealed class GetHandler(DbClient dbClient) : IRequestHandler<GetRequest, DtoFriendRequest>
 {
-    private readonly DbClient _dbClient;
-    private readonly IMediator _mediator;
-
-    public Handler(DbClient dbClient, IMediator mediator)
-    {
-        _dbClient = dbClient;
-        _mediator = mediator;
-    }
-
-    public async Task<DtoFriendRequest> Handle(Request request, CancellationToken cancellationToken)
+    public async Task<DtoFriendRequest> Handle(GetRequest request, CancellationToken cancellationToken)
     {
         var query = $"SELECT * FROM \"{DbClient.FriendsTable}\" WHERE \"Id\" = {request.Id}";
-        var dataTable = await _dbClient.GetDataTableAsync(query);
+        var dataTable = await dbClient.GetDataTableAsync(query);
         return dataTable is null || dataTable.Rows.Count == 0
             ? null
             : new DtoFriendRequest

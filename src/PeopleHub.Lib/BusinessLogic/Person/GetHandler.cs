@@ -1,20 +1,15 @@
-using MediatR;
+﻿using MediatR;
 using PeopleHub.Dal.Infrastructure.Db;
 using PeopleHub.Lib.Model.Dto.Person;
 using PeopleHub.Lib.Model.Enums;
 
-namespace PeopleHub.Lib.BusinessLogic.Person.Get;
+namespace PeopleHub.Lib.BusinessLogic.Person;
 
-public sealed class Handler : IRequestHandler<Request, DtoPerson>
+public sealed record GetRequest(int PersonId, int? CurrentPersonId = null): IRequest<DtoPerson>;
+
+public sealed class GetHandler(DbClient dbClient) : IRequestHandler<GetRequest, DtoPerson>
 {
-    private readonly DbClient _dbClient;
-
-    public Handler(DbClient dbClient)
-    {
-        _dbClient = dbClient;
-    }
-
-    public async Task<DtoPerson> Handle(Request request, CancellationToken cancellationToken)
+    public async Task<DtoPerson> Handle(GetRequest request, CancellationToken cancellationToken)
     {
         var (personId, currentPersonId) = request;
 
@@ -24,7 +19,7 @@ public sealed class Handler : IRequestHandler<Request, DtoPerson>
               $"(p.\"Id\" = f.\"ReceiverPersonId\" AND f.\"SenderPersonId\" = {currentPersonId.Value}) " +
               $"WHERE p.\"Id\" = {personId}"
             : $"SELECT *, NULL::INTEGER AS \"Status\" FROM \"{DbClient.PersonsTable}\" WHERE \"Id\" = {personId}";
-        var dataTable = await _dbClient.GetDataTableAsync(query);
+        var dataTable = await dbClient.GetDataTableAsync(query);
         if (dataTable.Rows.Count == 0)
             return null;
 

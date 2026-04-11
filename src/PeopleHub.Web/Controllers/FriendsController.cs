@@ -1,18 +1,17 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.BusinessLogic.Person.FindByEmail;
-using PeopleHub.Lib.Exceptions;
+using PeopleHub.Lib.BusinessLogic.Person;
 
 namespace PeopleHub.Controllers
 {
-    using FindPersonByEmailRequest = Request;
-    using GetFriendsInfoRequest = Lib.BusinessLogic.FriendRequest.GetAll.Request;
-    using GetFriendRequest = Lib.BusinessLogic.FriendRequest.Get.Request;
-    using InitiateFriendshipRequest = Lib.BusinessLogic.FriendRequest.Send.Request;
-    using CancelFriendshipRequest = Lib.BusinessLogic.FriendRequest.Delete.Request;
-    using ApproveFriendshipRequest = Lib.BusinessLogic.FriendRequest.Approve.Request;
-    using RejectFriendshipRequest = Lib.BusinessLogic.FriendRequest.Reject.Request;
+    using FindPersonByEmailRequest = FindByEmailRequest;
+    using GetFriendsInfoRequest = Lib.BusinessLogic.FriendRequest.GetAllRequest;
+    using GetFriendRequest = Lib.BusinessLogic.FriendRequest.GetRequest;
+    using InitiateFriendshipRequest = Lib.BusinessLogic.FriendRequest.SendRequest;
+    using CancelFriendshipRequest = Lib.BusinessLogic.FriendRequest.DeleteRequest;
+    using ApproveFriendshipRequest = Lib.BusinessLogic.FriendRequest.ApproveRequest;
+    using RejectFriendshipRequest = Lib.BusinessLogic.FriendRequest.RejectRequest;
     
     [Authorize]
     public class FriendsController : Controller

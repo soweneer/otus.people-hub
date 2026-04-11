@@ -1,19 +1,14 @@
-using MediatR;
+﻿using MediatR;
 using PeopleHub.Dal.Infrastructure.Db;
 using PeopleHub.Lib.Exceptions;
 
-namespace PeopleHub.Lib.BusinessLogic.Person.FindByEmail;
+namespace PeopleHub.Lib.BusinessLogic.Person;
 
-public sealed class Handler : IRequestHandler<Request, int>
+public sealed record FindByEmailRequest(string Email): IRequest<int>;
+
+public sealed class FindByEmailHandler(DbClient dbClient) : IRequestHandler<FindByEmailRequest, int>
 {
-    private readonly DbClient _dbClient;
-
-    public Handler(DbClient dbClient)
-    {
-        _dbClient = dbClient;
-    }
-
-    public async Task<int> Handle(Request request, CancellationToken cancellationToken)
+    public async Task<int> Handle(FindByEmailRequest request, CancellationToken cancellationToken)
     {
         var query = $"""
             SELECT p."Id"
@@ -23,7 +18,7 @@ public sealed class Handler : IRequestHandler<Request, int>
             WHERE
                 a."Email" = '{request.Email}'
             """;
-        var dataTable = await _dbClient.GetDataTableAsync(query);
+        var dataTable = await dbClient.GetDataTableAsync(query);
 
         return dataTable.Rows.Count == 0
             ? throw new UnknownUserException(request.Email)
