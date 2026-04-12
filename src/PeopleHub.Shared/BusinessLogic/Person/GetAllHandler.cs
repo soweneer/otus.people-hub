@@ -10,23 +10,15 @@ using FindPersonByEmailRequest = FindByEmailRequest;
 
 public sealed record GetAllRequest(string PersonEmail): IRequest<IReadOnlyCollection<PersonDto>>;
 
-public sealed class GetAllHandler: IRequestHandler<GetAllRequest, IReadOnlyCollection<PersonDto>>
+public sealed class GetAllHandler(DbClient dbClient, IMediator mediator) : IRequestHandler<GetAllRequest, IReadOnlyCollection<PersonDto>>
 {
-    private readonly DbClient _dbClient;
-    private readonly IMediator _mediator;
-
-    public GetAllHandler(DbClient dbClient, IMediator mediator)
-    {
-        _dbClient = dbClient;
-        _mediator = mediator;
-    }
 
     public async Task<IReadOnlyCollection<PersonDto>> Handle(GetAllRequest request, CancellationToken cancellationToken)
     {
-        var personId = await _mediator.Send(new FindPersonByEmailRequest(request.PersonEmail)
+        var personId = await mediator.Send(new FindPersonByEmailRequest(request.PersonEmail)
             , cancellationToken);
 
-        await _dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
+        await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
         var personList = new List<PersonDto>();
         var createQuery = $"""
                 CREATE TEMPORARY TABLE "MyFriends" AS
@@ -35,7 +27,7 @@ public sealed class GetAllHandler: IRequestHandler<GetAllRequest, IReadOnlyColle
                     UNION ALL
                     SELECT "ReceiverPersonId" AS "FriendId", "Status" FROM "{DbClient.FriendsTable}" WHERE "SenderPersonId" = {personId}) AS TMP
             """;
-        await _dbClient.RunCmdAsync(createQuery);
+        await dbClient.RunCmdAsync(createQuery);
         var selectQuery = $"""
                 SELECT p.*, f."Status"
                 FROM
@@ -44,7 +36,7 @@ public sealed class GetAllHandler: IRequestHandler<GetAllRequest, IReadOnlyColle
                 WHERE
                     p."Id" <> {personId}
             """;
-        var dataTable = await _dbClient.GetDataTableAsync(selectQuery);
+        var dataTable = await dbClient.GetDataTableAsync(selectQuery);
         if (dataTable == null || dataTable.Rows.Count == 0)
             return personList;
         personList.AddRange(
@@ -63,7 +55,7 @@ public sealed class GetAllHandler: IRequestHandler<GetAllRequest, IReadOnlyColle
                     : Enum.Parse<FriendRequestStatus>(row["Status"].ToString())
             });
 
-        await _dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
+        await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
 
         return personList;
     }

@@ -12,23 +12,15 @@ using FindPersonByEmailRequest = FindByEmailRequest;
 
 public sealed record GetAllRequest(string PersonEmail): IRequest<FriendsInfoDto>;
 
-public sealed class GetAllHandler : IRequestHandler<GetAllRequest, FriendsInfoDto>
+public sealed class GetAllHandler(IMediator mediator, DbClient dbClient) : IRequestHandler<GetAllRequest, FriendsInfoDto>
 {
-    private readonly DbClient _dbClient;
-    private readonly IMediator _mediator;
-
-    public GetAllHandler(IMediator mediator, DbClient dbClient)
-    {
-        _mediator = mediator;
-        _dbClient = dbClient;
-    }
 
     public async Task<FriendsInfoDto> Handle(GetAllRequest request, CancellationToken cancellationToken)
     {
-        var personId = await _mediator.Send(new FindPersonByEmailRequest(request.PersonEmail), cancellationToken);
+        var personId = await mediator.Send(new FindPersonByEmailRequest(request.PersonEmail), cancellationToken);
 
         var friendsInfo = new FriendsInfoDto();
-            var dataSet = await _dbClient.GetDataSetASync(
+            var dataSet = await dbClient.GetDataSetASync(
         $@"SELECT f.""Id"" AS ""RequestId"", f.""Status"", p.* FROM ""{DbClient.FriendsTable}"" f LEFT JOIN ""{DbClient.PersonsTable}"" p ON p.""Id"" = f.""SenderPersonId"" WHERE f.""ReceiverPersonId"" = {personId} AND f.""Status"" <> {FriendRequestStatus.Approved:D};
                 SELECT f.""Id"" AS ""RequestId"", f.""Status"", p.* FROM ""{DbClient.FriendsTable}"" f LEFT JOIN ""{DbClient.PersonsTable}"" p ON p.""Id"" = f.""ReceiverPersonId"" WHERE f.""SenderPersonId"" = {personId} AND f.""Status"" <> {FriendRequestStatus.Approved:D};
                 SELECT f.""Id"" AS ""RequestId"", p.*
