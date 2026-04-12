@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using PeopleHub.Dal.Infrastructure.Db;
-using PeopleHub.Lib;
+using PeopleHub.Infrastructure.Db;
+using PeopleHub.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();

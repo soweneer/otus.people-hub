@@ -1,18 +1,18 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.BusinessLogic.Person;
+using PeopleHub.Shared.BusinessLogic.Person;
 
 namespace PeopleHub.Controllers
 {
     using FindPersonByEmailRequest = FindByEmailRequest;
-    using GetFriendsInfoRequest = Lib.BusinessLogic.FriendRequest.GetAllRequest;
-    using GetFriendRequest = Lib.BusinessLogic.FriendRequest.GetRequest;
-    using InitiateFriendshipRequest = Lib.BusinessLogic.FriendRequest.SendRequest;
-    using CancelFriendshipRequest = Lib.BusinessLogic.FriendRequest.DeleteRequest;
-    using ApproveFriendshipRequest = Lib.BusinessLogic.FriendRequest.ApproveRequest;
-    using RejectFriendshipRequest = Lib.BusinessLogic.FriendRequest.RejectRequest;
-    
+    using GetFriendsInfoRequest = Shared.BusinessLogic.FriendRequest.GetAllRequest;
+    using GetFriendRequest = Shared.BusinessLogic.FriendRequest.GetRequest;
+    using InitiateFriendshipRequest = Shared.BusinessLogic.FriendRequest.SendRequest;
+    using CancelFriendshipRequest = Shared.BusinessLogic.FriendRequest.DeleteRequest;
+    using ApproveFriendshipRequest = Shared.BusinessLogic.FriendRequest.ApproveRequest;
+    using RejectFriendshipRequest = Shared.BusinessLogic.FriendRequest.RejectRequest;
+
     [Authorize]
     public class FriendsController : Controller
     {
@@ -31,7 +31,7 @@ namespace PeopleHub.Controllers
                 return Unauthorized();
 
             var friendsInfo = await _mediator.Send(new GetFriendsInfoRequest(User.Identity.Name),
-                HttpContext.RequestAborted); 
+                HttpContext.RequestAborted);
             return View(friendsInfo);
         }
 
@@ -43,7 +43,7 @@ namespace PeopleHub.Controllers
 
             await _mediator.Send(new InitiateFriendshipRequest(User.Identity.Name, targetPersonId),
                 HttpContext.RequestAborted);
-            
+
             return string.IsNullOrWhiteSpace(returnUrl)
                 ? RedirectToAction("Index", "Person")
                 : Redirect(returnUrl);
@@ -57,7 +57,7 @@ namespace PeopleHub.Controllers
 
             await _mediator.Send(new CancelFriendshipRequest(User.Identity.Name, targetPersonId),
                 HttpContext.RequestAborted);
-            
+
             return string.IsNullOrWhiteSpace(returnUrl)
                 ? RedirectToAction("Index")
                 : Redirect(returnUrl);
@@ -68,7 +68,7 @@ namespace PeopleHub.Controllers
         {
             if (User.Identity is null)
                 return Unauthorized();
-            
+
             var personId = await _mediator.Send(new FindPersonByEmailRequest(User.Identity.Name));
             var friendRequestInfo = await _mediator.Send(new GetFriendRequest(requestId), HttpContext.RequestAborted);
             if (friendRequestInfo.ReceiverPersonId != personId)
@@ -83,7 +83,7 @@ namespace PeopleHub.Controllers
         {
             if (User.Identity is null)
                 return Unauthorized();
-            
+
             var personId = await _mediator.Send(new FindPersonByEmailRequest(User.Identity.Name));
             var friendRequestInfo = await _mediator.Send(new GetFriendRequest(requestId), HttpContext.RequestAborted);
             if (friendRequestInfo.ReceiverPersonId != personId)

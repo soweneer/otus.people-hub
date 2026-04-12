@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.BusinessLogic.Admin;
+using PeopleHub.Shared.BusinessLogic.Admin;
 
 namespace PeopleHub.Controllers
 {
@@ -10,7 +10,7 @@ namespace PeopleHub.Controllers
     public class DbController : Controller
     {
         private readonly IMediator _mediator;
-        
+
         public DbController(IMediator mediator)
         {
             _mediator = mediator;
