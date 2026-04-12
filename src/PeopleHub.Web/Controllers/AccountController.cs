@@ -18,16 +18,8 @@ namespace PeopleHub.Controllers
     using AccountExistsRequest = ExistsRequest;
 
     [AllowAnonymous]
-    public class AccountController : Controller
+    public class AccountController(IMapper mapper, IMediator mediator) : Controller
     {
-        private readonly IMapper _mapper;
-        private readonly IMediator _mediator;
-
-        public AccountController(IMapper mapper, IMediator mediator)
-        {
-            _mapper = mapper;
-            _mediator = mediator;
-        }
 
         [HttpGet]
         public IActionResult SignIn()
@@ -44,7 +36,7 @@ namespace PeopleHub.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var account = await _mediator.Send(new FindAccountByEmailRequest(model.Email));
+            var account = await mediator.Send(new FindAccountByEmailRequest(model.Email));
             if (account is not null && Encrypt.VerifyHashedPassword(account.Password, model.Password))
             {
                 await Authenticate(model.Email);
@@ -96,18 +88,18 @@ namespace PeopleHub.Controllers
 
             if (!ModelState.IsValid)
                 return View(model);
-            if (await _mediator.Send(new AccountExistsRequest(model.Email)))
+            if (await mediator.Send(new AccountExistsRequest(model.Email)))
             {
                 ModelState.AddModelError("Email", "Такой пользователь уже существует в базе");
                 return View(model);
             }
 
-            var personResult = await _mediator.Send(new CreatePersonRequest(
-                _mapper.Map<SignUpModel, PersonDto>(model)));
+            var personResult = await mediator.Send(new CreatePersonRequest(
+                mapper.Map<SignUpModel, PersonDto>(model)));
             if (personResult.HasValue)
             {
                 var hashedPassword = Encrypt.HashPassword(model.Password);
-                var accountResult = await _mediator.Send(
+                var accountResult = await mediator.Send(
                     new CreateAccountRequest(personResult.Value, model.Email, hashedPassword));
                 if (accountResult.HasValue)
                 {

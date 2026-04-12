@@ -3,21 +3,15 @@ using Npgsql;
 
 namespace PeopleHub.Infrastructure.Db;
 
-public sealed class DbClient
+public sealed class DbClient(string connectionString)
 {
-    private readonly string _connectionString;
     public const string PersonsTable = "Persons";
     public const string FriendsTable = "FriendRequests";
     public const string AccountsTable = "Accounts";
 
-    public DbClient(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
-
     private async Task<NpgsqlConnection> GetSqlConnectionAsync()
     {
-        var connection = new NpgsqlConnection(_connectionString);
+        var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
         return connection;
     }

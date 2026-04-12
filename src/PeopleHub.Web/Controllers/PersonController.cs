@@ -9,16 +9,8 @@ using PeopleHub.Shared.Model.Dto.Person;
 namespace PeopleHub.Controllers
 {
     [Authorize]
-    public class PersonController : Controller
+    public class PersonController(IMapper mapper, IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
-
-        public PersonController(IMapper mapper, IMediator mediator)
-        {
-            _mapper = mapper;
-            _mediator = mediator;
-        }
 
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -28,7 +20,7 @@ namespace PeopleHub.Controllers
                 return Unauthorized();
             }
 
-            var persons = await _mediator.Send(
+            var persons = await mediator.Send(
                 new GetAllRequest(User.Identity.Name), HttpContext.RequestAborted);
 
             return View(persons);
@@ -39,9 +31,9 @@ namespace PeopleHub.Controllers
         {
             if (User.Identity is null) return Unauthorized();
 
-            var curPersonId = await _mediator.Send(new FindByEmailRequest(User.Identity.Name),
+            var curPersonId = await mediator.Send(new FindByEmailRequest(User.Identity.Name),
                 HttpContext.RequestAborted);
-            var personInfo = await _mediator.Send(new GetRequest(personId, curPersonId), HttpContext.RequestAborted);
+            var personInfo = await mediator.Send(new GetRequest(personId, curPersonId), HttpContext.RequestAborted);
             if (personInfo == null)
                 throw new UnknownPersonException(personId);
 
@@ -52,11 +44,11 @@ namespace PeopleHub.Controllers
         public async Task<IActionResult> Profile()
         {
             if (User.Identity is null) return Unauthorized();
-            var curPersonId = await _mediator.Send(new FindByEmailRequest(User.Identity.Name),
+            var curPersonId = await mediator.Send(new FindByEmailRequest(User.Identity.Name),
                 HttpContext.RequestAborted);
 
-            var personInfo = await _mediator.Send(new GetRequest(curPersonId), HttpContext.RequestAborted);
-            return View(_mapper.Map<UpdatePersonDto>(personInfo));
+            var personInfo = await mediator.Send(new GetRequest(curPersonId), HttpContext.RequestAborted);
+            return View(mapper.Map<UpdatePersonDto>(personInfo));
         }
 
         [HttpPost]
@@ -65,14 +57,14 @@ namespace PeopleHub.Controllers
             if (User.Identity is null) return Unauthorized();
             if (!ModelState.IsValid)
                 return View();
-            var curPersonId = await _mediator.Send(new FindByEmailRequest(User.Identity.Name),
+            var curPersonId = await mediator.Send(new FindByEmailRequest(User.Identity.Name),
                 HttpContext.RequestAborted);
 
-            var updatedPerson = await _mediator.Send(new UpdateRequest(curPersonId, profileData),
+            var updatedPerson = await mediator.Send(new UpdateRequest(curPersonId, profileData),
                 HttpContext.RequestAborted);
 
             TempData["SuccessMessage"] = "Профиль успешно сохранен";
-            return View(_mapper.Map<UpdatePersonDto>(updatedPerson));
+            return View(mapper.Map<UpdatePersonDto>(updatedPerson));
         }
     }
 }

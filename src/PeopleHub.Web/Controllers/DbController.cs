@@ -7,20 +7,14 @@ namespace PeopleHub.Controllers
 {
     [AllowAnonymous]
     [Route("admin/db")]
-    public class DbController : Controller
+    public class DbController(IMediator mediator) : Controller
     {
-        private readonly IMediator _mediator;
-
-        public DbController(IMediator mediator)
-        {
-            _mediator = mediator;
-        }
 
         [HttpGet("migrate")]
         public async Task<IActionResult> MigrateDb()
         {
             // TODO перенести это в какой-нито sandbox
-            await _mediator.Send(new MigrateDbRequest(), HttpContext.RequestAborted);
+            await mediator.Send(new MigrateDbRequest(), HttpContext.RequestAborted);
 
             return Ok("Ok");
         }
