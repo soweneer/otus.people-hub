@@ -5,24 +5,24 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.BusinessLogic.Account;
-using PeopleHub.Lib.Model.Dto.Person;
-using PeopleHub.Lib.Model.View;
-using PeopleHub.Security;
+using PeopleHub.Shared.BusinessLogic.Account;
+using PeopleHub.Shared.Model.Dto.Person;
+using PeopleHub.Shared.Model.View;
+using PeopleHub.Infrastructure.Security;
 
 namespace PeopleHub.Controllers
 {
     using CreateAccountRequest = CreateRequest;
-    using CreatePersonRequest = Lib.BusinessLogic.Person.CreateRequest;
+    using CreatePersonRequest = Shared.BusinessLogic.Person.CreateRequest;
     using FindAccountByEmailRequest = FindByEmailRequest;
     using AccountExistsRequest = ExistsRequest;
-    
+
     [AllowAnonymous]
     public class AccountController : Controller
     {
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
-        
+
         public AccountController(IMapper mapper, IMediator mediator)
         {
             _mapper = mapper;
@@ -41,16 +41,16 @@ namespace PeopleHub.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignIn(SignInModel model)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
                 return View(model);
-            
+
             var account = await _mediator.Send(new FindAccountByEmailRequest(model.Email));
             if (account is not null && Encrypt.VerifyHashedPassword(account.Password, model.Password))
             {
                 await Authenticate(model.Email);
                 return RedirectToAction("Index", "Person");
             }
-                
+
             ModelState.AddModelError("Password", "Неверные данные пользователя");
             return View(model);
         }
@@ -72,7 +72,7 @@ namespace PeopleHub.Controllers
             {
                 new(ClaimsIdentity.DefaultNameClaimType, userName)
             };
-            
+
             var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
@@ -81,7 +81,7 @@ namespace PeopleHub.Controllers
         public IActionResult SignUp()
         {
             if (User.Identity is null) return Unauthorized();
-            
+
             return User.Identity.IsAuthenticated
                 ? RedirectToAction("Index", "Person")
                 : View();
@@ -91,7 +91,7 @@ namespace PeopleHub.Controllers
         // [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignUp(SignUpModel model)
         {
-            if (User.Identity is not null && User.Identity.IsAuthenticated) 
+            if (User.Identity is not null && User.Identity.IsAuthenticated)
                 return RedirectToAction("Index", "Person");
 
             if (!ModelState.IsValid)
@@ -101,9 +101,9 @@ namespace PeopleHub.Controllers
                 ModelState.AddModelError("Email", "Такой пользователь уже существует в базе");
                 return View(model);
             }
-            
+
             var personResult = await _mediator.Send(new CreatePersonRequest(
-                _mapper.Map<SignUpModel, DtoPerson>(model)));
+                _mapper.Map<SignUpModel, PersonDto>(model)));
             if (personResult.HasValue)
             {
                 var hashedPassword = Encrypt.HashPassword(model.Password);
@@ -115,7 +115,7 @@ namespace PeopleHub.Controllers
                     return RedirectToAction("Index", "Person");
                 }
             }
-                    
+
             ModelState.AddModelError("Email", "Не удалось зарегистрировать пользователя");
             return View(model);
         }

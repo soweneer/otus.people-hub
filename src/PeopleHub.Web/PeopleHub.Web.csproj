@@ -10,8 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PeopleHub.Lib\PeopleHub.Lib.csproj" />
-      <ProjectReference Include="..\PeopleHub.Security\PeopleHub.Security.csproj" />
+      <ProjectReference Include="..\PeopleHub.Shared\PeopleHub.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>

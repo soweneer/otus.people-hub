@@ -3,8 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Exceptions;
-using PeopleHub.Lib.BusinessLogic.Person;
-using PeopleHub.Lib.Model.Dto.Person;
+using PeopleHub.Shared.BusinessLogic.Person;
+using PeopleHub.Shared.Model.Dto.Person;
 
 namespace PeopleHub.Controllers
 {
@@ -19,7 +19,7 @@ namespace PeopleHub.Controllers
             _mapper = mapper;
             _mediator = mediator;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -30,7 +30,7 @@ namespace PeopleHub.Controllers
 
             var persons = await _mediator.Send(
                 new GetAllRequest(User.Identity.Name), HttpContext.RequestAborted);
-            
+
             return View(persons);
         }
 
@@ -38,16 +38,16 @@ namespace PeopleHub.Controllers
         public async Task<IActionResult> Person(int personId)
         {
             if (User.Identity is null) return Unauthorized();
-            
+
             var curPersonId = await _mediator.Send(new FindByEmailRequest(User.Identity.Name),
                 HttpContext.RequestAborted);
             var personInfo = await _mediator.Send(new GetRequest(personId, curPersonId), HttpContext.RequestAborted);
             if (personInfo == null)
                 throw new UnknownPersonException(personId);
-            
+
             return View(personInfo);
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
@@ -56,11 +56,11 @@ namespace PeopleHub.Controllers
                 HttpContext.RequestAborted);
 
             var personInfo = await _mediator.Send(new GetRequest(curPersonId), HttpContext.RequestAborted);
-            return View(_mapper.Map<DtoUpdatePerson>(personInfo));
+            return View(_mapper.Map<UpdatePersonDto>(personInfo));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Profile(DtoUpdatePerson profileData)
+        public async Task<IActionResult> Profile(UpdatePersonDto profileData)
         {
             if (User.Identity is null) return Unauthorized();
             if (!ModelState.IsValid)
@@ -72,7 +72,7 @@ namespace PeopleHub.Controllers
                 HttpContext.RequestAborted);
 
             TempData["SuccessMessage"] = "Профиль успешно сохранен";
-            return View(_mapper.Map<DtoUpdatePerson>(updatedPerson));
+            return View(_mapper.Map<UpdatePersonDto>(updatedPerson));
         }
     }
 }

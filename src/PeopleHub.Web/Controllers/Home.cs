@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Lib.Model.View;
+using PeopleHub.Shared.Model.View;
 
 namespace PeopleHub.Controllers;
 

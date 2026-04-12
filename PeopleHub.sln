@@ -2,11 +2,11 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Web", "src\PeopleHub.Web\PeopleHub.Web.csproj", "{B940CD26-6C28-4C2E-9BF8-6F35C203C958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Dal", "src\PeopleHub.Dal\PeopleHub.Dal.csproj", "{6096D68A-56C0-4A36-9B50-C1B9A03827DF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Domain", "src\PeopleHub.Domain\PeopleHub.Domain.csproj", "{A1B2C3D4-1111-2222-3333-444455556666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Security", "src\PeopleHub.Security\PeopleHub.Security.csproj", "{879AC54A-2960-4C4C-A332-9B9178AB5D0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Infrastructure", "src\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj", "{A1B2C3D4-1111-2222-3333-444455557777}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Lib", "src\PeopleHub.Lib\PeopleHub.Lib.csproj", "{50ED78BB-C324-4567-9E89-E2428EA59297}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Shared", "src\PeopleHub.Shared\PeopleHub.Shared.csproj", "{A1B2C3D4-1111-2222-3333-444455558888}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,17 +18,17 @@ Global
 		{B940CD26-6C28-4C2E-9BF8-6F35C203C958}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B940CD26-6C28-4C2E-9BF8-6F35C203C958}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B940CD26-6C28-4C2E-9BF8-6F35C203C958}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6096D68A-56C0-4A36-9B50-C1B9A03827DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6096D68A-56C0-4A36-9B50-C1B9A03827DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6096D68A-56C0-4A36-9B50-C1B9A03827DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6096D68A-56C0-4A36-9B50-C1B9A03827DF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{879AC54A-2960-4C4C-A332-9B9178AB5D0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{879AC54A-2960-4C4C-A332-9B9178AB5D0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{879AC54A-2960-4C4C-A332-9B9178AB5D0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{879AC54A-2960-4C4C-A332-9B9178AB5D0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50ED78BB-C324-4567-9E89-E2428EA59297}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50ED78BB-C324-4567-9E89-E2428EA59297}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50ED78BB-C324-4567-9E89-E2428EA59297}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50ED78BB-C324-4567-9E89-E2428EA59297}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455556666}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455556666}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455556666}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455556666}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455557777}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455557777}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455557777}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455557777}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455558888}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455558888}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455558888}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-444455558888}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
