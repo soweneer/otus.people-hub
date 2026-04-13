@@ -41,19 +41,8 @@ public sealed class GetAllHandler(DbClient dbClient, IMediator mediator) : IRequ
             return personList;
         personList.AddRange(
             from DataRow row in dataTable.Rows
-            select new PersonDto
-            {
-                Id = Convert.ToInt32(row["Id"]),
-                Surname = row["Surname"].ToString(),
-                Name = row["Name"].ToString(),
-                Age = Convert.ToInt32(row["Age"]),
-                Gender = Enum.Parse<Gender>(row["Gender"].ToString()),
-                Bio = row["Bio"].ToString(),
-                City = row["City"].ToString(),
-                Status = Convert.IsDBNull(row["Status"])
-                    ? FriendRequestStatus.None
-                    : Enum.Parse<FriendRequestStatus>(row["Status"].ToString())
-            });
+            select PersonDto.ExtractFromRow(row)
+        );
 
         await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
 

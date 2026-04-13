@@ -12,13 +12,13 @@ public sealed class GetHandler(DbClient dbClient) : IRequestHandler<GetRequest, 
     {
         var query = $"SELECT * FROM \"{DbClient.FriendsTable}\" WHERE \"Id\" = {request.Id}";
         var dataTable = await dbClient.GetDataTableAsync(query);
+
         return dataTable is null || dataTable.Rows.Count == 0
             ? null
-            : new FriendRequestDto
-            {
-                Id = Convert.ToInt32(dataTable.Rows[0]["Id"]),
-                ReceiverPersonId = Convert.ToInt32(dataTable.Rows[0]["ReceiverPersonId"]),
-                SenderPersonId = Convert.ToInt32(dataTable.Rows[0]["SenderPersonId"])
-            };
+            : new FriendRequestDto(
+                Convert.ToInt32(dataTable.Rows[0]["Id"]),
+                Convert.ToInt32(dataTable.Rows[0]["ReceiverPersonId"]),
+                Convert.ToInt32(dataTable.Rows[0]["SenderPersonId"])
+            );
     }
 }

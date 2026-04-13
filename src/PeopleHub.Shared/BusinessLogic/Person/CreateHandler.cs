@@ -10,9 +10,10 @@ public sealed class CreateHandler(DbClient dbClient) : IRequestHandler<CreateReq
 {
     public async Task<int?> Handle(CreateRequest request, CancellationToken cancellationToken)
     {
-        var person = request.Person;
+        var (_, name, surname, age, city, gender, bio, _) = request.Person;
+
         return await dbClient.TryGetIntAsync(
             $"INSERT INTO \"{DbClient.PersonsTable}\" (\"Surname\", \"Name\", \"Age\", \"Gender\", \"City\", \"Bio\") " +
-            $"VALUES ('{person.Surname}', '{person.Name}', {person.Age}, {person.Gender:D}, '{person.City}', '{person.Bio}') RETURNING \"Id\"");
+            $"VALUES ('{surname}', '{name}', {age}, {gender:D}, '{city}', '{bio}') RETURNING \"Id\"");
     }
 }

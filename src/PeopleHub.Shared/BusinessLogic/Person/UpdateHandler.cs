@@ -13,10 +13,12 @@ public sealed class UpdateHandler(DbClient dbClient, IMediator mediator) : IRequ
     public async Task<PersonDto> Handle(UpdateRequest request, CancellationToken cancellationToken)
     {
         var (personId, data) = request;
+
         await dbClient.RunCmdAsync(
             $"UPDATE \"{DbClient.PersonsTable}\" " +
                  $"SET \"Surname\" = '{data.Surname}', \"Name\" = '{data.Name}', \"Age\" = {data.Age}, \"Bio\" = '{data.Bio}', \"City\" = '{data.City}', \"Gender\" = {data.Gender:D} " +
                  $"WHERE \"Id\" = {personId}");
+
         return await mediator.Send(new GetPersonRequest(personId), cancellationToken);
     }
 }

@@ -1,15 +1,23 @@
+using System.Data;
 using PeopleHub.Domain.Enums;
 
 namespace PeopleHub.Shared.Model.Dto.Person;
 
-public sealed record PersonDto
+public sealed record PersonDto(int Id, string Name, string Surname, int Age, string City, Gender Gender,string Bio, 
+    FriendRequestStatus Status)
 {
-    public int Id { get; init; }
-    public string Name { get; init; }
-    public string Surname { get; init; }
-    public int Age { get; init; }
-    public string City { get; init; }
-    public Gender Gender { get; init; }
-    public string Bio { get; init; }
-    public FriendRequestStatus Status { get; init; }
+    // TODO move to extension
+    public static PersonDto ExtractFromRow(DataRow row) => 
+        new(
+            Convert.ToInt32(row["Id"]),
+            row["Name"].ToString(),
+            row["Surname"].ToString(),
+            Convert.ToInt32(row["Age"]),
+            row["City"].ToString(),
+            Enum.Parse<Gender>(row["Gender"].ToString()),
+            row["Bio"].ToString(),
+            Convert.IsDBNull(row["Status"])
+                ? FriendRequestStatus.None
+                : Enum.Parse<FriendRequestStatus>(row["Status"].ToString())
+        );
 }

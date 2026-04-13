@@ -13,7 +13,7 @@
     {
         <li class="nav-item">
             <a class="nav-link" id="income-tab" data-toggle="tab" href="#income" role="tab" aria-controls="income" aria-selected="false">
-                Входящие <span class="badge badge-pill badge-success">@Model.IncomingRequests.Count</span>
+                Входящие <span class="badge badge-pill badge-success">@Model.IncomingRequests.Length</span>
             </a>
         </li>
     }
@@ -21,7 +21,7 @@
     {
         <li class="nav-item">
             <a class="nav-link" id="outcome-tab" data-toggle="tab" href="#outcome" role="tab" aria-controls="outcome" aria-selected="false">
-                Исходящие <span class="badge badge-pill badge-success">@Model.OutgoingRequests.Count</span>
+                Исходящие <span class="badge badge-pill badge-success">@Model.OutgoingRequests.Length</span>
             </a>
         </li>
     }

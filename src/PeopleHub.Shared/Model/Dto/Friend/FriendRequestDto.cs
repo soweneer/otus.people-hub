@@ -1,8 +1,3 @@
 namespace PeopleHub.Shared.Model.Dto.Friend;
 
-public sealed record FriendRequestDto
-{
-    public int Id { get; init; }
-    public int SenderPersonId { get; init; }
-    public int ReceiverPersonId { get; init; }
-}
+public sealed record FriendRequestDto(int Id, int SenderPersonId, int ReceiverPersonId);
