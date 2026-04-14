@@ -3,8 +3,8 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Exceptions;
-using PeopleHub.Shared.BusinessLogic.Person;
-using PeopleHub.Shared.Model.Dto.Person;
+using PeopleHub.Domain.BusinessLogic.Person;
+using PeopleHub.Domain.Model.Dto.Person;
 
 namespace PeopleHub.Controllers
 {

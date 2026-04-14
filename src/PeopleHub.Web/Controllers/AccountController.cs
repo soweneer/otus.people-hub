@@ -5,15 +5,15 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Shared.BusinessLogic.Account;
-using PeopleHub.Shared.Model.Dto.Person;
+using PeopleHub.Domain.BusinessLogic.Account;
+using PeopleHub.Domain.Model.Dto.Person;
 using PeopleHub.Shared.Model.View;
 using PeopleHub.Infrastructure.Security;
 
 namespace PeopleHub.Controllers
 {
     using CreateAccountRequest = CreateRequest;
-    using CreatePersonRequest = Shared.BusinessLogic.Person.CreateRequest;
+    using CreatePersonRequest = Domain.BusinessLogic.Person.CreateRequest;
     using FindAccountByEmailRequest = FindByEmailRequest;
     using AccountExistsRequest = ExistsRequest;
 

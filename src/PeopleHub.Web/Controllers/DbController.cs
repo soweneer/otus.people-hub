@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Shared.BusinessLogic.Admin;
+using PeopleHub.Domain.BusinessLogic.Admin;
 
 namespace PeopleHub.Controllers
 {

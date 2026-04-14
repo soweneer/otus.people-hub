@@ -1,17 +1,17 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Shared.BusinessLogic.Person;
+using PeopleHub.Domain.BusinessLogic.Person;
 
 namespace PeopleHub.Controllers
 {
     using FindPersonByEmailRequest = FindByEmailRequest;
-    using GetFriendsInfoRequest = Shared.BusinessLogic.FriendRequest.GetAllRequest;
-    using GetFriendRequest = Shared.BusinessLogic.FriendRequest.GetRequest;
-    using InitiateFriendshipRequest = Shared.BusinessLogic.FriendRequest.SendRequest;
-    using CancelFriendshipRequest = Shared.BusinessLogic.FriendRequest.DeleteRequest;
-    using ApproveFriendshipRequest = Shared.BusinessLogic.FriendRequest.ApproveRequest;
-    using RejectFriendshipRequest = Shared.BusinessLogic.FriendRequest.RejectRequest;
+    using GetFriendsInfoRequest = Domain.BusinessLogic.FriendRequest.GetAllRequest;
+    using GetFriendRequest = Domain.BusinessLogic.FriendRequest.GetRequest;
+    using InitiateFriendshipRequest = Domain.BusinessLogic.FriendRequest.SendRequest;
+    using CancelFriendshipRequest = Domain.BusinessLogic.FriendRequest.DeleteRequest;
+    using ApproveFriendshipRequest = Domain.BusinessLogic.FriendRequest.ApproveRequest;
+    using RejectFriendshipRequest = Domain.BusinessLogic.FriendRequest.RejectRequest;
 
     [Authorize]
     public class FriendsController(IMediator mediator) : Controller
