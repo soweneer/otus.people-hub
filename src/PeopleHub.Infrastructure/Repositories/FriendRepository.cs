@@ -2,13 +2,12 @@
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Model;
-using PeopleHub.Domain.Model.Dto.Person;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Infrastructure.Repositories;
 
-internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestRepository
+internal class FriendRepository(DbClient dbClient) : IFriendRepository
 {
     public Task ApproveAsync(int id) =>
         dbClient.ExecuteCmdAsync(

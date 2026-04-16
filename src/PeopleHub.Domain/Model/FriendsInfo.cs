@@ -8,6 +8,6 @@ public sealed record FriendInfo(PersonLite Person, int FriendRequestId, FriendRe
 
 public sealed record FriendsInfo(
     FriendInfo[] Friends,
-    FriendInfo[] IncomingRequests,
-    FriendInfo[] OutgoingRequests
+    FriendInfo[] Incoming,
+    FriendInfo[] Outgoing
 );

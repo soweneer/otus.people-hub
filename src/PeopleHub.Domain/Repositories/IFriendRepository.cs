@@ -3,7 +3,7 @@ using PeopleHub.Domain.Model;
 
 namespace PeopleHub.Domain.Repositories;
 
-public interface IFriendRequestRepository
+public interface IFriendRepository
 {
     Task ApproveAsync(int id);
     

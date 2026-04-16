@@ -16,7 +16,7 @@ namespace PeopleHub.Infrastructure
             
             services.AddScoped(_ => new DbClient(dbConnectionString));
             services.AddScoped<IAccountRepository, AccountRepository>();
-            services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+            services.AddScoped<IFriendRepository, FriendRepository>();
             services.AddScoped<IPersonRepository, PersonRepository>();
 
             return services;
