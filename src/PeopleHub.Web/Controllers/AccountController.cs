@@ -7,18 +7,18 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.BusinessLogic.Account;
 using PeopleHub.Domain.Model.Dto.Person;
+using PeopleHub.Domain.Repositories;
 using PeopleHub.Shared.Model.View;
 using PeopleHub.Infrastructure.Security;
 
 namespace PeopleHub.Controllers
 {
     using CreateAccountRequest = CreateRequest;
-    using CreatePersonRequest = Domain.BusinessLogic.Person.CreateRequest;
     using FindAccountByEmailRequest = FindByEmailRequest;
     using AccountExistsRequest = ExistsRequest;
 
     [AllowAnonymous]
-    public class AccountController(IMapper mapper, IMediator mediator) : Controller
+    public class AccountController(IMapper mapper, IMediator mediator, IPersonRepository personRepository) : Controller
     {
         [HttpGet]
         public IActionResult SignIn()
@@ -93,8 +93,8 @@ namespace PeopleHub.Controllers
                 return View(model);
             }
 
-            var personResult = await mediator.Send(new CreatePersonRequest(
-                mapper.Map<SignUpModel, PersonDto>(model)));
+            var personResult = await personRepository.CreateAsync(
+                mapper.Map<SignUpModel, PersonDto>(model), HttpContext.RequestAborted);
             if (personResult.HasValue)
             {
                 var hashedPassword = Encrypt.HashPassword(model.Password);

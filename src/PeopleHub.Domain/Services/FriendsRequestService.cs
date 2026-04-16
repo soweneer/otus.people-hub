@@ -1,8 +1,7 @@
-﻿using PeopleHub.Domain.Interfaces;
-using PeopleHub.Domain.Model;
+﻿using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
 
-namespace PeopleHub.Domain.Implementations;
+namespace PeopleHub.Domain.Services;
 
 internal sealed class FriendsRequestService(IPersonRepository personRepository, 
     IFriendRequestRepository friendRequestRepository)

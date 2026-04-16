@@ -1,6 +1,6 @@
 ﻿using PeopleHub.Domain.Model;
 
-namespace PeopleHub.Domain.Interfaces;
+namespace PeopleHub.Domain.Services;
 
 public interface IFriendRequestService
 {
