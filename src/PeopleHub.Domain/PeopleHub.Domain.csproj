@@ -12,10 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="14.1.0" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj" />
     </ItemGroup>
 

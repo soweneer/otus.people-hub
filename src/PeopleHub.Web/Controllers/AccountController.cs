@@ -20,7 +20,6 @@ namespace PeopleHub.Controllers
     [AllowAnonymous]
     public class AccountController(IMapper mapper, IMediator mediator) : Controller
     {
-
         [HttpGet]
         public IActionResult SignIn()
         {

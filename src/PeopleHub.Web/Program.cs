@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using PeopleHub.Infrastructure.Db;
+using PeopleHub.Domain;
+using PeopleHub.Infrastructure;
 using PeopleHub.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,15 +15,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         opt.LoginPath = new PathString("/Account/SignIn");
     });
-var dbConnectionString = builder.Configuration.GetConnectionString("PostgreSqlDb");
-if (string.IsNullOrEmpty(dbConnectionString))
-    throw new MissingMemberException("Connection string is absent");
-builder.Services.AddScoped(_ => new DbClient(dbConnectionString));
-builder.Services.AddPeopleHubLib();
+
+builder.Services.AddPeopleHubShared();
+builder.Services.AddPeopleHubDomain();
+
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+builder.Services.AddPeopleHubInfrastructure(app.Configuration);
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
