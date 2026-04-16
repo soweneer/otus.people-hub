@@ -1,24 +1,21 @@
 using System.Security.Claims;
 using AutoMapper;
-using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.BusinessLogic.Account;
 using PeopleHub.Domain.Model.Dto.Person;
 using PeopleHub.Domain.Repositories;
+using PeopleHub.Infrastructure.Helpers;
 using PeopleHub.Shared.Model.View;
-using PeopleHub.Infrastructure.Security;
 
 namespace PeopleHub.Controllers
 {
-    using CreateAccountRequest = CreateRequest;
-    using FindAccountByEmailRequest = FindByEmailRequest;
-    using AccountExistsRequest = ExistsRequest;
-
     [AllowAnonymous]
-    public class AccountController(IMapper mapper, IMediator mediator, IPersonRepository personRepository) : Controller
+    public class AccountController(
+        IMapper mapper,
+        IAccountRepository accountRepository,
+        IPersonRepository personRepository) : Controller
     {
         [HttpGet]
         public IActionResult SignIn()
@@ -35,7 +32,7 @@ namespace PeopleHub.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var account = await mediator.Send(new FindAccountByEmailRequest(model.Email));
+            var account = await accountRepository.FindByEmailAsync(model.Email);
             if (account is not null && Encrypt.VerifyHashedPassword(account.Password, model.Password))
             {
                 await Authenticate(model.Email);
@@ -87,7 +84,7 @@ namespace PeopleHub.Controllers
 
             if (!ModelState.IsValid)
                 return View(model);
-            if (await mediator.Send(new AccountExistsRequest(model.Email)))
+            if (await accountRepository.ExistsAsync(model.Email))
             {
                 ModelState.AddModelError("Email", "Такой пользователь уже существует в базе");
                 return View(model);
@@ -98,8 +95,8 @@ namespace PeopleHub.Controllers
             if (personResult.HasValue)
             {
                 var hashedPassword = Encrypt.HashPassword(model.Password);
-                var accountResult = await mediator.Send(
-                    new CreateAccountRequest(personResult.Value, model.Email, hashedPassword));
+                var accountResult = await accountRepository.CreateAsync(
+                    model.Email, hashedPassword, personResult.Value);
                 if (accountResult.HasValue)
                 {
                     await Authenticate(model.Email);

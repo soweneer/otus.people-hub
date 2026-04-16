@@ -1,20 +1,13 @@
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.BusinessLogic.Person;
+using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Controllers
 {
-    using FindPersonByEmailRequest = FindByEmailRequest;
-    using GetFriendsInfoRequest = Domain.BusinessLogic.FriendRequest.GetAllRequest;
-    using GetFriendRequest = Domain.BusinessLogic.FriendRequest.GetRequest;
-    using InitiateFriendshipRequest = Domain.BusinessLogic.FriendRequest.SendRequest;
-    using CancelFriendshipRequest = Domain.BusinessLogic.FriendRequest.DeleteRequest;
-    using ApproveFriendshipRequest = Domain.BusinessLogic.FriendRequest.ApproveRequest;
-    using RejectFriendshipRequest = Domain.BusinessLogic.FriendRequest.RejectRequest;
-
     [Authorize]
-    public class FriendsController(IMediator mediator) : Controller
+    public class FriendsController(
+        IFriendRepository friendRepository,
+        IPersonRepository personRepository) : Controller
     {
         private const string AccessDeniedMessage = "Ошибка прав доступа";
 
@@ -24,8 +17,9 @@ namespace PeopleHub.Controllers
             if (User.Identity is null)
                 return Unauthorized();
 
-            var friendsInfo = await mediator.Send(new GetFriendsInfoRequest(User.Identity.Name),
+            var personId = await personRepository.GetPersonIdAsync(User.Identity.Name,
                 HttpContext.RequestAborted);
+            var friendsInfo = await friendRepository.GetFriendsAsync(personId);
             return View(friendsInfo);
         }
 
@@ -35,8 +29,9 @@ namespace PeopleHub.Controllers
             if (User.Identity is null)
                 return Unauthorized();
 
-            await mediator.Send(new InitiateFriendshipRequest(User.Identity.Name, targetPersonId),
+            var senderPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
                 HttpContext.RequestAborted);
+            await friendRepository.SendAsync(senderPersonId, targetPersonId);
 
             return string.IsNullOrWhiteSpace(returnUrl)
                 ? RedirectToAction("Index", "Person")
@@ -49,8 +44,9 @@ namespace PeopleHub.Controllers
             if (User.Identity is null)
                 return Unauthorized();
 
-            await mediator.Send(new CancelFriendshipRequest(User.Identity.Name, targetPersonId),
+            var senderPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
                 HttpContext.RequestAborted);
+            await friendRepository.DeleteAsync(senderPersonId, targetPersonId);
 
             return string.IsNullOrWhiteSpace(returnUrl)
                 ? RedirectToAction("Index")
@@ -63,12 +59,13 @@ namespace PeopleHub.Controllers
             if (User.Identity is null)
                 return Unauthorized();
 
-            var personId = await mediator.Send(new FindPersonByEmailRequest(User.Identity.Name));
-            var friendRequestInfo = await mediator.Send(new GetFriendRequest(requestId), HttpContext.RequestAborted);
+            var personId = await personRepository.GetPersonIdAsync(User.Identity.Name,
+                HttpContext.RequestAborted);
+            var friendRequestInfo = await friendRepository.GetAsync(requestId);
             if (friendRequestInfo.ReceiverPersonId != personId)
                 return BadRequest(AccessDeniedMessage);
 
-            await mediator.Send(new ApproveFriendshipRequest(requestId), HttpContext.RequestAborted);
+            await friendRepository.ApproveAsync(requestId);
             return RedirectToAction("Index");
         }
 
@@ -78,12 +75,13 @@ namespace PeopleHub.Controllers
             if (User.Identity is null)
                 return Unauthorized();
 
-            var personId = await mediator.Send(new FindPersonByEmailRequest(User.Identity.Name));
-            var friendRequestInfo = await mediator.Send(new GetFriendRequest(requestId), HttpContext.RequestAborted);
+            var personId = await personRepository.GetPersonIdAsync(User.Identity.Name,
+                HttpContext.RequestAborted);
+            var friendRequestInfo = await friendRepository.GetAsync(requestId);
             if (friendRequestInfo.ReceiverPersonId != personId)
                 return BadRequest(AccessDeniedMessage);
 
-            await mediator.Send(new RejectFriendshipRequest(requestId), HttpContext.RequestAborted);
+            await friendRepository.RejectAsync(requestId);
             return RedirectToAction("Index");
         }
     }

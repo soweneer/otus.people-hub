@@ -1,5 +1,6 @@
-namespace PeopleHub.Infrastructure.Security;
 using System.Security.Cryptography;
+
+namespace PeopleHub.Infrastructure.Helpers;
 
 public static class Encrypt
 {

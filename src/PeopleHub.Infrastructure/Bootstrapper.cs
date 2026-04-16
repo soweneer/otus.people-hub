@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PeopleHub.Domain.Repositories;
+using PeopleHub.Domain.Services;
 using PeopleHub.Infrastructure.Db;
 using PeopleHub.Infrastructure.Repositories;
 
@@ -18,6 +19,7 @@ namespace PeopleHub.Infrastructure
             services.AddScoped<IAccountRepository, AccountRepository>();
             services.AddScoped<IFriendRepository, FriendRepository>();
             services.AddScoped<IPersonRepository, PersonRepository>();
+            services.AddScoped<IAdminRepository, AdminRepository>();
 
             return services;
         }
