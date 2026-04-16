@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Shared
 {

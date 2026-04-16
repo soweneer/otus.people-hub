@@ -5,7 +5,6 @@ namespace PeopleHub.Infrastructure.Db;
 
 internal sealed class DbClient(string connectionString)
 {
-    public 
     public const string PersonsTable = "persons";
     public const string FriendsRequestsTable = "friend_requests";
     public const string AccountsTable = "accounts";
@@ -17,14 +16,16 @@ internal sealed class DbClient(string connectionString)
         return connection;
     }
 
-    public async Task<DataTable> GetDataTableAsync(string query)
+    public async Task<DataTable> GetDataTableAsync(string query, CancellationToken cancellationToken)
     {
         await using var connection = await GetSqlConnectionAsync();
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = query;
-        var dataReader = await cmd.ExecuteReaderAsync();
+
+        var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
         var dataTable = new DataTable();
         dataTable.Load(dataReader);
+
         return dataTable;
     }
 
@@ -35,22 +36,6 @@ internal sealed class DbClient(string connectionString)
         var dataSet = new DataSet();
         dataAdapter.Fill(dataSet);
         return dataSet;
-    }
-
-    public void RunCmd(string query)
-    {
-        using var connection = GetSqlConnectionAsync().GetAwaiter().GetResult();
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = query;
-        cmd.ExecuteNonQuery();
-    }
-
-    public async Task RunCmdAsync(string query)
-    {
-        await using var connection = await GetSqlConnectionAsync();
-        await using var cmd = connection.CreateCommand();
-        cmd.CommandText = query;
-        await cmd.ExecuteNonQueryAsync();
     }
 
     private async Task<bool> TablesCreated()
@@ -119,21 +104,55 @@ internal sealed class DbClient(string connectionString)
         // TODO uncomment me when got ready to do indexes homewwork
         // CREATE INDEX "ix_{FriendsRequestsTable}_sender_person_id" ON "{FriendsRequestsTable}" ("sender_person_id");
         // CREATE INDEX "ix_{FriendsRequestsTable}_receiver_person_id" ON "{FriendsRequestsTable}" ("receiver_person_id");
-        
         // CREATE INDEX "ix_accounts_person_id" ON "{AccountsTable}" ("person_id");
         #endregion
 
-        await RunCmdAsync(query);
+        await ExecuteCmdAsync(query, cmd =>
+        {
+            cmd.ExecuteNonQuery();
+        });
     }
 
-    public async Task<int?> TryGetIntAsync(string query)
+    public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters)
+    {
+        var scalar = new object();
+        await ExecuteCmdAsync(query, cmd =>
+        {
+            scalar = cmd.ExecuteScalar();
+        }, parameters);
+
+        return scalar;
+    }
+    
+    public async Task<DataTable> ExecuteDataTableAsync(string query, IEnumerable<(string, object)> parameters)
+    {
+        var dataTable = new DataTable();
+        await ExecuteCmdAsync(query, cmd =>
+        {
+            var dataReader = cmd.ExecuteReader();
+            dataTable.Load(dataReader);
+        }, parameters);
+        
+        return dataTable;
+    }
+
+    public async Task ExecuteCmdAsync(string parametrizedQuery, Action<NpgsqlCommand> cmdAction, 
+        IEnumerable<(string, object)> parameters = null)
     {
         await using var connection = await GetSqlConnectionAsync();
         await using var cmd = connection.CreateCommand();
-        cmd.CommandText = query;
+        cmd.CommandText = parametrizedQuery;
 
-        return int.TryParse(cmd.ExecuteScalar()?.ToString(), out var result)
-            ? result
-            : null;
+        if (parameters is not null)
+        {
+            foreach (var parameter in parameters)
+            {
+                cmd.Parameters.AddWithValue(parameter.Item1, parameter.Item2);    
+            }
+        }
+        
+        cmdAction.Invoke(cmd);
+        
+        await connection.CloseAsync();
     }
 }

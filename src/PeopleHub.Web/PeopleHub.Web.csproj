@@ -7,6 +7,7 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <RootNamespace>PeopleHub</RootNamespace>
         <LangVersion>latest</LangVersion>
+        <UserSecretsId>6d4ee67e-9d9e-4d5f-a06e-0b628b7045ff</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +16,11 @@
 
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="16.1.1" />
+      <PackageReference Include="MediatR" Version="14.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Mediatr\" />
     </ItemGroup>
 
 </Project>

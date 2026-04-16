@@ -1,3 +1,13 @@
-﻿namespace PeopleHub.Domain.Entities;
+﻿using PeopleHub.Domain.Enums;
 
-public sealed record Person();
+namespace PeopleHub.Domain.Entities;
+
+public sealed record Person(
+    int Id,
+    string Name,
+    string Surname,
+    int Age, 
+    string City,
+    Gender Gender,
+    string Bio,
+    FriendRequestStatus Status);
