@@ -5,8 +5,9 @@ namespace PeopleHub.Infrastructure.Db;
 
 internal sealed class DbClient(string connectionString)
 {
+    public 
     public const string PersonsTable = "persons";
-    public const string FriendsTable = "friend_requests";
+    public const string FriendsRequestsTable = "friend_requests";
     public const string AccountsTable = "accounts";
 
     private async Task<NpgsqlConnection> GetSqlConnectionAsync()
@@ -65,12 +66,11 @@ internal sealed class DbClient(string connectionString)
                 tableList.Add(dataReader[0].ToString().ToUpper());
         }
 
-        return tableList.OrderBy(t => t).SequenceEqual(new[]
-        {
+        return tableList.OrderBy(t => t).SequenceEqual([
             AccountsTable.ToUpper(),
-            FriendsTable.ToUpper(),
+            FriendsRequestsTable.ToUpper(),
             PersonsTable.ToUpper()
-        });
+        ]);
     }
 
     public async Task EnsureDbCreated()
@@ -81,42 +81,46 @@ internal sealed class DbClient(string connectionString)
         const string query =
             #region SQL для создания базовых таблиц
             $"""
-                DROP TABLE IF EXISTS "{FriendsTable}";
+                DROP TABLE IF EXISTS "{FriendsRequestsTable}";
                 DROP TABLE IF EXISTS "{AccountsTable}";
                 DROP TABLE IF EXISTS "{PersonsTable}";
 
                 CREATE TABLE "{PersonsTable}" (
-                  "Id" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                  "Surname" VARCHAR(100) NOT NULL,
-                  "Name" VARCHAR(100) NOT NULL,
-                  "Age" SMALLINT NOT NULL,
-                  "Gender" SMALLINT NOT NULL,
-                  "City" VARCHAR(100) NOT NULL,
-                  "Bio" TEXT
+                  "id" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                  "surname" VARCHAR(100) NOT NULL,
+                  "name" VARCHAR(100) NOT NULL,
+                  "age" SMALLINT NOT NULL,
+                  "gender" SMALLINT NOT NULL,
+                  "city" VARCHAR(100) NOT NULL,
+                  "bio" TEXT
                 );
 
-                CREATE TABLE "{FriendsTable}" (
-                  "Id" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                  "SenderPersonId" INTEGER NOT NULL,
-                  "ReceiverPersonId" INTEGER NOT NULL,
-                  "Status" INTEGER NOT NULL DEFAULT 0,
-                  CONSTRAINT "Friends_ibfk_1" FOREIGN KEY ("SenderPersonId") REFERENCES "{PersonsTable}" ("Id") ON DELETE CASCADE,
-                  CONSTRAINT "Friends_ibfk_2" FOREIGN KEY ("ReceiverPersonId") REFERENCES "{PersonsTable}" ("Id") ON DELETE CASCADE,
-                  CONSTRAINT "Friends_relation_unique" UNIQUE ("SenderPersonId", "ReceiverPersonId"),
-                  CONSTRAINT "Friends_relation_unique_reverse" UNIQUE ("ReceiverPersonId", "SenderPersonId")
+                CREATE TABLE "{FriendsRequestsTable}" (
+                  "id" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                  "sender_person_id" INTEGER NOT NULL,
+                  "receiver_person_id" INTEGER NOT NULL,
+                  "status" INTEGER NOT NULL DEFAULT 0,
+                  CONSTRAINT "friends_ibfk_1" FOREIGN KEY ("sender_person_id") REFERENCES "{PersonsTable}" ("id") ON DELETE CASCADE,
+                  CONSTRAINT "friends_ibfk_2" FOREIGN KEY ("receiver_person_id") REFERENCES "{PersonsTable}" ("id") ON DELETE CASCADE,
+                  CONSTRAINT "friends_relation_unique" UNIQUE ("sender_person_id", "receiver_person_id"),
+                  CONSTRAINT "friends_relation_unique_reverse" UNIQUE ("receiver_person_id", "sender_person_id")
                 );
-                CREATE INDEX "IX_FriendRequests_SenderPersonId" ON "{FriendsTable}" ("SenderPersonId");
-                CREATE INDEX "IX_FriendRequests_ReceiverPersonId" ON "{FriendsTable}" ("ReceiverPersonId");
 
                 CREATE TABLE "{AccountsTable}" (
-                  "Id" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                  "Email" VARCHAR(100) NOT NULL,
-                  "Password" VARCHAR(100) NOT NULL,
-                  "PersonId" INTEGER NOT NULL,
-                  CONSTRAINT "Accounts_ibfk_1" FOREIGN KEY ("PersonId") REFERENCES "{PersonsTable}" ("Id") ON DELETE CASCADE
+                  "id" INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                  "email" VARCHAR(100) NOT NULL,
+                  "password" VARCHAR(100) NOT NULL,
+                  "person_id" INTEGER NOT NULL,
+                  CONSTRAINT "accounts_ibfk_1" FOREIGN KEY ("person_id") REFERENCES "{PersonsTable}" ("id") ON DELETE CASCADE
                 );
-                CREATE INDEX "IX_Accounts_PersonId" ON "{AccountsTable}" ("PersonId");
+                
             """;
+        
+        // TODO uncomment me when got ready to do indexes homewwork
+        // CREATE INDEX "ix_{FriendsRequestsTable}_sender_person_id" ON "{FriendsRequestsTable}" ("sender_person_id");
+        // CREATE INDEX "ix_{FriendsRequestsTable}_receiver_person_id" ON "{FriendsRequestsTable}" ("receiver_person_id");
+        
+        // CREATE INDEX "ix_accounts_person_id" ON "{AccountsTable}" ("person_id");
         #endregion
 
         await RunCmdAsync(query);

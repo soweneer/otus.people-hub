@@ -12,29 +12,28 @@ public sealed record GetAllRequest(string PersonEmail): IRequest<IReadOnlyCollec
 
 public sealed class GetAllHandler(DbClient dbClient, IMediator mediator) : IRequestHandler<GetAllRequest, IReadOnlyCollection<PersonDto>>
 {
-
     public async Task<IReadOnlyCollection<PersonDto>> Handle(GetAllRequest request, CancellationToken cancellationToken)
     {
         var personId = await mediator.Send(new FindPersonByEmailRequest(request.PersonEmail)
             , cancellationToken);
 
-        await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
+        await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"my_friends\"");
         var personList = new List<PersonDto>();
         var createQuery = $"""
-                CREATE TEMPORARY TABLE "MyFriends" AS
-                SELECT DISTINCT "FriendId", "Status" FROM
-                    (SELECT "SenderPersonId" AS "FriendId", "Status" FROM "{DbClient.FriendsTable}" WHERE "ReceiverPersonId" = {personId}
+                CREATE TEMPORARY TABLE "my_friends" AS
+                SELECT DISTINCT "friend_id", "status" FROM
+                    (SELECT "sender_person_id" AS "friend_id", "status" FROM "{DbClient.FriendsRequestsTable}" WHERE "receiver_person_id" = {personId}
                     UNION ALL
-                    SELECT "ReceiverPersonId" AS "FriendId", "Status" FROM "{DbClient.FriendsTable}" WHERE "SenderPersonId" = {personId}) AS TMP
+                    SELECT "receiver_person_id" AS "friend_id", "status" FROM "{DbClient.FriendsRequestsTable}" WHERE "sender_person_id" = {personId}) AS TMP
             """;
         await dbClient.RunCmdAsync(createQuery);
         var selectQuery = $"""
-                SELECT p.*, f."Status"
+                SELECT p.*, f."status"
                 FROM
-                    "Persons" p
-                    LEFT JOIN "MyFriends" f ON f."FriendId" = p."Id"
+                    "{DbClient.PersonsTable}" p
+                    LEFT JOIN "my_friends" f ON f."friend_id" = p."id"
                 WHERE
-                    p."Id" <> {personId}
+                    p."id" <> {personId}
             """;
         var dataTable = await dbClient.GetDataTableAsync(selectQuery);
         if (dataTable == null || dataTable.Rows.Count == 0)
@@ -44,7 +43,7 @@ public sealed class GetAllHandler(DbClient dbClient, IMediator mediator) : IRequ
             select PersonDto.ExtractFromRow(row)
         );
 
-        await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"MyFriends\"");
+        await dbClient.RunCmdAsync("DROP TABLE IF EXISTS \"my_friends\"");
 
         return personList;
     }

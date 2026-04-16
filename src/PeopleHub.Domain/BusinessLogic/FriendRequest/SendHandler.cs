@@ -16,7 +16,7 @@ public sealed class SendHandler(DbClient dbClient, IMediator mediator) : IReques
         var personId = await mediator.Send(new FindPersonByEmailRequest(request.SenderPersonEmail), cancellationToken);
 
         await dbClient.RunCmdAsync(
-            $"INSERT INTO \"{DbClient.FriendsTable}\" (\"SenderPersonId\", \"ReceiverPersonId\", \"Status\") " +
+            $"INSERT INTO \"{DbClient.FriendsTable}\" (\"sender_person_id\", \"receiver_person_id\", \"status\") " +
             $"VALUES ({personId}, {request.ReceiverPersonId}, {FriendRequestStatus.Sent:D})");
     }
 }

@@ -14,8 +14,8 @@ public sealed class GetHandler(DbClient dbClient) : IRequestHandler<GetRequest, 
 
         var query = currentPersonId.HasValue
             ? $"SELECT p.*, f.\"Status\" FROM \"{DbClient.PersonsTable}\" p LEFT JOIN \"{DbClient.FriendsTable}\" f ON " +
-              $"(p.\"Id\" = f.\"SenderPersonId\" AND f.\"ReceiverPersonId\" = {currentPersonId.Value}) OR " +
-              $"(p.\"Id\" = f.\"ReceiverPersonId\" AND f.\"SenderPersonId\" = {currentPersonId.Value}) " +
+              $"(p.\"Id\" = f.\"sender_person_id\" AND f.\"receiver_person_id\" = {currentPersonId.Value}) OR " +
+              $"(p.\"Id\" = f.\"receiver_person_id\" AND f.\"sender_person_id\" = {currentPersonId.Value}) " +
               $"WHERE p.\"Id\" = {personId}"
             : $"SELECT *, NULL::INTEGER AS \"Status\" FROM \"{DbClient.PersonsTable}\" WHERE \"Id\" = {personId}";
         var dataTable = await dbClient.GetDataTableAsync(query);

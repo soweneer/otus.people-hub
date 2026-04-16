@@ -9,7 +9,7 @@ public sealed class ExistsHandler(DbClient dbClient) : IRequestHandler<ExistsReq
 {
     public async Task<bool> Handle(ExistsRequest request, CancellationToken cancellationToken)
     {
-        var query = $"SELECT COUNT(*) FROM \"Accounts\" WHERE \"Email\" = '{request.Email}'";
+        var query = $"SELECT COUNT(*) FROM \"{DbClient.AccountsTable}\" WHERE \"email\" = '{request.Email}'";
         var count = await dbClient.TryGetIntAsync(query);
         return count > 0;
     }

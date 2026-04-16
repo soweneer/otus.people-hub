@@ -10,7 +10,7 @@ public sealed class CreateHandler(DbClient dbClient) : IRequestHandler<CreateReq
     public async Task<int?> Handle(CreateRequest request, CancellationToken cancellationToken)
     {
         return await dbClient.TryGetIntAsync(
-            "INSERT INTO \"Accounts\" (\"Email\", \"Password\", \"PersonId\") " +
+            $"INSERT INTO \"{DbClient.AccountsTable}\" (\"email\", \"password\", \"personId\") " +
             $"VALUES ('{request.Email}', '{request.Password}', {request.PersonId}) RETURNING \"Id\"");
     }
 }

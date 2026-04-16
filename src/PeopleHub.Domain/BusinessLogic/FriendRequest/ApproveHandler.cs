@@ -11,6 +11,7 @@ public sealed class ApproveHandler(DbClient dbClient) : IRequestHandler<ApproveR
     public Task Handle(ApproveRequest request, CancellationToken cancellationToken) =>
         dbClient.RunCmdAsync(
             $"UPDATE \"{DbClient.FriendsTable}\" " +
-            $"SET \"Status\" = {FriendRequestStatus.Approved:D} " +
-            $"WHERE \"Id\" = {request.Id}");
+            $"SET \"status\" = {FriendRequestStatus.Approved:D} " +
+            $"WHERE \"id\" = {request.Id}");
 }
+s

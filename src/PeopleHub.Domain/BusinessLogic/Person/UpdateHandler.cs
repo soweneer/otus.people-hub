@@ -16,7 +16,7 @@ public sealed class UpdateHandler(DbClient dbClient, IMediator mediator) : IRequ
 
         await dbClient.RunCmdAsync(
             $"UPDATE \"{DbClient.PersonsTable}\" " +
-                 $"SET \"Surname\" = '{data.Surname}', \"Name\" = '{data.Name}', \"Age\" = {data.Age}, \"Bio\" = '{data.Bio}', \"City\" = '{data.City}', \"Gender\" = {data.Gender:D} " +
+                 $"SET \"surname\" = '{data.Surname}', \"name\" = '{data.Name}', \"age\" = {data.Age}, \"bio\" = '{data.Bio}', \"city\" = '{data.City}', \"gender\" = {data.Gender:D} " +
                  $"WHERE \"Id\" = {personId}");
 
         return await mediator.Send(new GetPersonRequest(personId), cancellationToken);

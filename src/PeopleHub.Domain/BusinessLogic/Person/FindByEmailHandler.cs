@@ -11,17 +11,17 @@ public sealed class FindByEmailHandler(DbClient dbClient) : IRequestHandler<Find
     public async Task<int> Handle(FindByEmailRequest request, CancellationToken cancellationToken)
     {
         var query = $"""
-            SELECT p."Id"
+            SELECT p."id"
             FROM
-                "Persons" p
-                LEFT JOIN "Accounts" a ON a."PersonId" = p."Id"
+                "{DbClient.PersonsTable}" p
+                LEFT JOIN "{DbClient.AccountsTable}" a ON a."person_id" = p."id"
             WHERE
-                a."Email" = '{request.Email}'
+                a."email" = '{request.Email}'
             """;
         var dataTable = await dbClient.GetDataTableAsync(query);
 
         return dataTable.Rows.Count == 0
             ? throw new UnknownUserException(request.Email)
-            : Convert.ToInt32(dataTable.Rows[0]["Id"]);
+            : Convert.ToInt32(dataTable.Rows[0]["id"]);
     }
 }

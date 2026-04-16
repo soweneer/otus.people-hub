@@ -20,21 +20,21 @@ public sealed class GetAllHandler(IMediator mediator, DbClient dbClient) : IRequ
         
         var dataSet = await dbClient.GetDataSetASync(
             $"""
-             SELECT f."Id" AS "RequestId", f."Status", p.* FROM "{DbClient.FriendsTable}" f LEFT JOIN "{DbClient.PersonsTable}" p ON p."Id" = f."SenderPersonId" WHERE f."ReceiverPersonId" = {personId} AND f."Status" <> {FriendRequestStatus.Approved:D};
-                             SELECT f."Id" AS "RequestId", f."Status", p.* FROM "{DbClient.FriendsTable}" f LEFT JOIN "{DbClient.PersonsTable}" p ON p."Id" = f."ReceiverPersonId" WHERE f."SenderPersonId" = {personId} AND f."Status" <> {FriendRequestStatus.Approved:D};
-                             SELECT f."Id" AS "RequestId", p.*
+             SELECT f."id" AS "request_id", f."status", p.* FROM "{DbClient.FriendsRequestsTable}" f LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."sender_person_id" WHERE f."receiver_person_id" = {personId} AND f."status" <> {FriendRequestStatus.Approved:D};
+                             SELECT f."id" AS "request_id", f."status", p.* FROM "{DbClient.FriendsRequestsTable}" f LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."receiver_person_id" WHERE f."sender_person_id" = {personId} AND f."status" <> {FriendRequestStatus.Approved:D};
+                             SELECT f."id" AS "request_id", p.*
                              FROM
-                 	            "{DbClient.FriendsTable}" f
-                                 LEFT JOIN "{DbClient.PersonsTable}" p ON p."Id" = f."ReceiverPersonId"
+                 	            "{DbClient.FriendsRequestsTable}" f
+                                 LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."receiver_person_id"
                              WHERE
-                 	            f."SenderPersonId" = {personId} AND f."Status" = {FriendRequestStatus.Approved:D}
+                 	            f."sender_person_id" = {personId} AND f."status" = {FriendRequestStatus.Approved:D}
                              UNION ALL
-                             SELECT f."Id" AS "RequestId", p.*
+                             SELECT f."id" AS "request_id", p.*
                              FROM
-                 	            "{DbClient.FriendsTable}" f
-                                 LEFT JOIN "{DbClient.PersonsTable}" p ON p."Id" = f."SenderPersonId"
+                 	            "{DbClient.FriendsRequestsTable}" f
+                                 LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."sender_person_id"
                              WHERE
-                 	            f."ReceiverPersonId" = {personId} AND f."Status" = {FriendRequestStatus.Approved:D};
+                 	            f."receiver_person_id" = {personId} AND f."status" = {FriendRequestStatus.Approved:D};
              """
         );
 
@@ -59,12 +59,12 @@ public sealed class GetAllHandler(IMediator mediator, DbClient dbClient) : IRequ
     private static FriendDto ParseFriendRequestInfoFromRow(DataRow row, FriendRequestStatus? status = null) => 
         new(
             new PersonLiteDto(
-                Convert.ToInt32(row["Id"]),
-                $"{row["Surname"]} {row["Name"]}",
-                Convert.ToInt32(row["Age"]),
-                row["City"].ToString()
+                Convert.ToInt32(row["id"]),
+                $"{row["surname"]} {row["name"]}",
+                Convert.ToInt32(row["age"]),
+                row["city"].ToString()
             ),
-            Convert.ToInt32(row["RequestId"]),
-            status ?? Enum.Parse<FriendRequestStatus>(row["Status"].ToString())
+            Convert.ToInt32(row["request_id"]),
+            status ?? Enum.Parse<FriendRequestStatus>(row["status"].ToString())
         );
 }

@@ -16,8 +16,8 @@ public sealed class DeleteHander(DbClient dbClient, IMediator mediator) : IReque
 
         var query = $"DELETE FROM \"{DbClient.FriendsTable}\" " +
                     "WHERE " +
-                    $"(\"SenderPersonId\" = {personId} AND \"ReceiverPersonId\" = {request.ReceiverPersonId})" +
-                    $" OR (\"SenderPersonId\" = {request.ReceiverPersonId} AND \"ReceiverPersonId\" = {personId})";
+                    $"(\"sender_person_id\" = {personId} AND \"receiver_person_id\" = {request.ReceiverPersonId})" +
+                    $" OR (\"sender_person_id\" = {request.ReceiverPersonId} AND \"receiver_person_id\" = {personId})";
 
         await dbClient.RunCmdAsync(query);
     }

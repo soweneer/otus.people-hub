@@ -11,8 +11,4 @@
       <Folder Include="Repositories\" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj" />
-    </ItemGroup>
-
 </Project>

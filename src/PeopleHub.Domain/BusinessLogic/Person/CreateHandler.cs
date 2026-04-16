@@ -13,7 +13,7 @@ public sealed class CreateHandler(DbClient dbClient) : IRequestHandler<CreateReq
         var (_, name, surname, age, city, gender, bio, _) = request.Person;
 
         return await dbClient.TryGetIntAsync(
-            $"INSERT INTO \"{DbClient.PersonsTable}\" (\"Surname\", \"Name\", \"Age\", \"Gender\", \"City\", \"Bio\") " +
+            $"INSERT INTO \"{DbClient.PersonsTable}\" (\"surname\", \"name\", \"age\", \"gender\", \"city\", \"bio\") " +
             $"VALUES ('{surname}', '{name}', {age}, {gender:D}, '{city}', '{bio}') RETURNING \"Id\"");
     }
 }

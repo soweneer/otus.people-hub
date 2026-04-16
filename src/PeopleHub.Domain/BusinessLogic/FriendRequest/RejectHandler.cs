@@ -11,6 +11,6 @@ public sealed class RejectHandler(DbClient dbClient) : IRequestHandler<RejectReq
     public Task Handle(RejectRequest request, CancellationToken cancellationToken) => 
         dbClient.RunCmdAsync(
             $"UPDATE \"{DbClient.FriendsTable}\" " +
-            $"SET \"Status\" = {FriendRequestStatus.Rejected:D} " +
-            $"WHERE \"Id\" = {request.Id}");
+            $"SET \"status\" = {FriendRequestStatus.Rejected:D} " +
+            $"WHERE \"id\" = {request.Id}");
 }

@@ -10,15 +10,15 @@ public sealed class GetHandler(DbClient dbClient) : IRequestHandler<GetRequest, 
 {
     public async Task<FriendRequestDto> Handle(GetRequest request, CancellationToken cancellationToken)
     {
-        var query = $"SELECT * FROM \"{DbClient.FriendsTable}\" WHERE \"Id\" = {request.Id}";
+        var query = $"SELECT * FROM \"{DbClient.FriendsRequestsTable}\" WHERE \"id\" = {request.Id}";
         var dataTable = await dbClient.GetDataTableAsync(query);
 
         return dataTable is null || dataTable.Rows.Count == 0
             ? null
             : new FriendRequestDto(
-                Convert.ToInt32(dataTable.Rows[0]["Id"]),
-                Convert.ToInt32(dataTable.Rows[0]["ReceiverPersonId"]),
-                Convert.ToInt32(dataTable.Rows[0]["SenderPersonId"])
+                Convert.ToInt32(dataTable.Rows[0]["id"]),
+                Convert.ToInt32(dataTable.Rows[0]["receiver_person_id"]),
+                Convert.ToInt32(dataTable.Rows[0]["sender_person_id"])
             );
     }
 }
