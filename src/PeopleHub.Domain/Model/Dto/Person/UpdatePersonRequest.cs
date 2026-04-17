@@ -2,15 +2,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PeopleHub.Domain.Model.Dto.Person;
 
-public sealed record UpdatePersonDto
+public sealed record UpdatePersonRequest
 {
     [Required(ErrorMessage = "Не указано имя")]
-    [RegularExpression(@"^[a-zA-Zа-яА-Я-]+$", ErrorMessage = "Используйте только буквы и дефис")]
+    [RegularExpression("^[a-zA-Zа-яА-Я-]+$", ErrorMessage = "Используйте только буквы и дефис")]
     [StringLength(100)]
     public string Name { get; set; }
 
     [Required(ErrorMessage = "Не указана фамилия")]
-    [RegularExpression(@"^[a-zA-Zа-яА-Я-]+$", ErrorMessage = "Используйте только буквы и дефис")]
+    [RegularExpression("^[a-zA-Zа-яА-Я-]+$", ErrorMessage = "Используйте только буквы и дефис")]
     [StringLength(100)]
     public string Surname { get; set; }
 

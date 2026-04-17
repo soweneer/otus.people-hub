@@ -8,6 +8,7 @@ namespace PeopleHub.Domain
         public static IServiceCollection AddPeopleHubDomain(this IServiceCollection services)
         {
             services.AddScoped<IFriendRequestService, FriendRequestService>();
+            services.AddScoped<IPersonService, PersonService>();
 
             return services;
         }

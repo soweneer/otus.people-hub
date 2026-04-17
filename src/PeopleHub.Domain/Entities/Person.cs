@@ -1,4 +1,5 @@
-﻿using PeopleHub.Domain.Enums;
+﻿using System.Data;
+using PeopleHub.Domain.Enums;
 
 namespace PeopleHub.Domain.Entities;
 
@@ -10,4 +11,19 @@ public sealed record Person(
     string City,
     Gender Gender,
     string Bio,
-    FriendRequestStatus Status);
+    FriendRequestStatus Status)
+{
+    public static Person ExtractFromRow(DataRow row) =>
+        new(
+            Convert.ToInt32(row["id"]),
+            row["name"].ToString(),
+            row["surname"].ToString(),
+            Convert.ToInt32(row["age"]),
+            row["city"].ToString(),
+            Enum.Parse<Gender>(row["gender"].ToString()),
+            row["bio"].ToString(),
+            Convert.IsDBNull(row["status"])
+                ? FriendRequestStatus.None
+                : Enum.Parse<FriendRequestStatus>(row["status"].ToString())
+        );
+}

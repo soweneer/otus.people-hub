@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PeopleHub.Shared.Model.View
+namespace PeopleHub.Model
 {
     public sealed class SignUpModel
     {
@@ -15,7 +15,7 @@ namespace PeopleHub.Shared.Model.View
         public string Surname { get; set; }
 
         [Required(ErrorMessage = "Не указан город")]
-        [RegularExpression(@"^[a-zA-Zа-яА-Я-\s]+$", ErrorMessage = "Используйте только буквы, пробел или дефис")]
+        [RegularExpression(@"^[a-zA-Zа-яА-Я\s-]+$", ErrorMessage = "Используйте только буквы, пробел или дефис")]
         [StringLength(100)]
         public string City { get; set; }
 
@@ -31,7 +31,7 @@ namespace PeopleHub.Shared.Model.View
         [Compare("Password", ErrorMessage = "Пароли не совпадают")]
         public string ConfirmPassword { get; set; }
 
-        [RegularExpression(@"^[a-zA-Zа-яА-Я,.-\s]+$", ErrorMessage = "Используйте только буквы, пробел или дефис")]
+        [RegularExpression(@"^[a-zA-Zа-яА-Я,.\s-]+$", ErrorMessage = "Используйте только буквы, пробел или дефис")]
         [StringLength(400, ErrorMessage = "Слишком много слов")]
         public string Bio { get; set; }
 

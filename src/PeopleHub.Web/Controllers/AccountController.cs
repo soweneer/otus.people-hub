@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -7,12 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.Model.Dto.Person;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Helpers;
-using PeopleHub.Shared.Model.View;
+using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
 {
     public class AccountController(
-        IMapper mapper,
         IAccountRepository accountRepository,
         IPersonRepository personRepository) : Controller
     {
@@ -50,21 +48,12 @@ namespace PeopleHub.Controllers
             return RedirectToAction("SignIn", "Account");
         }
 
-        private async Task Authenticate(string userName)
-        {
-            var claims = new List<Claim>
-            {
-                new(ClaimsIdentity.DefaultNameClaimType, userName)
-            };
-
-            var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
-        }
 
         [HttpGet, AllowAnonymous]
         public IActionResult SignUp()
         {
-            if (User.Identity is not null) RedirectToAction("Index", "Person");
+            if (User.Identity?.IsAuthenticated ?? false)
+                return RedirectToAction("Index", "Person");
 
             return View();
         }
@@ -75,9 +64,9 @@ namespace PeopleHub.Controllers
         {
             if (User.Identity?.IsAuthenticated ?? false)
                 return RedirectToAction("Index", "Person");
-
             if (!ModelState.IsValid)
                 return View(model);
+
             if (await accountRepository.ExistsAsync(model.Email))
             {
                 ModelState.AddModelError("Email", "Такой пользователь уже существует в базе");
@@ -100,6 +89,17 @@ namespace PeopleHub.Controllers
 
             ModelState.AddModelError("Email", "Не удалось зарегистрировать пользователя");
             return View(model);
+        }
+
+        private async Task Authenticate(string userName)
+        {
+            var claims = new List<Claim>
+            {
+                new(ClaimsIdentity.DefaultNameClaimType, userName)
+            };
+
+            var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
     }
 }

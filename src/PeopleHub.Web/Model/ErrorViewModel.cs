@@ -1,4 +1,4 @@
-namespace PeopleHub.Shared.Model.View;
+namespace PeopleHub.Model;
 
 public sealed class ErrorViewModel
 {

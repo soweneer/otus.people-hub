@@ -1,24 +1,19 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Exceptions;
+using PeopleHub.Extensions;
 using PeopleHub.Domain.Model.Dto.Person;
-using PeopleHub.Domain.Repositories;
+using PeopleHub.Domain.Services;
 
 namespace PeopleHub.Controllers
 {
     [Authorize]
-    public class PersonController(IMapper mapper, IPersonRepository personRepository) : Controller
+    public class PersonController(IPersonService personService) : Controller
     {
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            if (User.Identity is null)
-            {
-                return Unauthorized();
-            }
-
-            var persons = await personRepository.GetAllWithFriendStatusAsync(
+            var persons = await personRepository.GetFriendsAsync(
                 User.Identity.Name, HttpContext.RequestAborted);
 
             return View(persons);
@@ -27,8 +22,6 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Person(int personId)
         {
-            if (User.Identity is null) return Unauthorized();
-
             var curPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
                 HttpContext.RequestAborted);
             var personInfo = await personRepository.GetByIdAsync(personId, curPersonId, HttpContext.RequestAborted);
@@ -41,28 +34,24 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            if (User.Identity is null) return Unauthorized();
             var curPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
                 HttpContext.RequestAborted);
 
             var personInfo = await personRepository.GetByIdAsync(curPersonId, null, HttpContext.RequestAborted);
-            return View(mapper.Map<UpdatePersonDto>(personInfo));
+            return View(personInfo);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Profile(UpdatePersonDto profileData)
+        public async Task<IActionResult> Profile(UpdatePersonRequest updateRequest)
         {
-            if (User.Identity is null) return Unauthorized();
             if (!ModelState.IsValid)
                 return View();
-            var curPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
-                HttpContext.RequestAborted);
 
-            var updatedPerson = await personRepository.UpdateAsync(curPersonId, profileData,
+            var updatedPerson = await personService.UpdateAsync(User.Identity.Name, updateRequest.ToPersonData(), 
                 HttpContext.RequestAborted);
 
             TempData["SuccessMessage"] = "Профиль успешно сохранен";
-            return View(mapper.Map<UpdatePersonDto>(updatedPerson));
+            return View(updatedPerson);
         }
     }
 }

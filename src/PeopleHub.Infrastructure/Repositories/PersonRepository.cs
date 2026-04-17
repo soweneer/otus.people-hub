@@ -1,6 +1,7 @@
 using System.Data;
+using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Exceptions;
-using PeopleHub.Domain.Model.Dto.Person;
+using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
 
@@ -33,7 +34,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             : Convert.ToInt32(dataTable.Rows[0]["id"]);
     }
 
-    public async Task<int?> CreateAsync(PersonDto person, CancellationToken cancellationToken)
+    public async Task<int?> CreateAsync(Person person, CancellationToken cancellationToken)
     {
         var (_, name, surname, age, city, gender, bio, _) = person;
 
@@ -45,7 +46,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
         return scalar is null or DBNull ? null : Convert.ToInt32(scalar);
     }
 
-    public async Task<IReadOnlyCollection<PersonDto>> GetAllWithFriendStatusAsync(
+    public async Task<IReadOnlyCollection<Person>> GetFriendsAsync(
         string currentUserEmail, CancellationToken cancellationToken)
     {
         var personId = await GetPersonIdAsync(currentUserEmail, cancellationToken);
@@ -54,7 +55,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             "DROP TABLE IF EXISTS \"my_friends\"",
             cmd => cmd.ExecuteNonQuery());
 
-        var personList = new List<PersonDto>();
+        var personList = new List<Person>();
         var createQuery = $"""
                 CREATE TEMPORARY TABLE "my_friends" AS
                 SELECT DISTINCT "friend_id", "status" FROM
@@ -77,7 +78,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             return personList;
         personList.AddRange(
             from DataRow row in dataTable.Rows
-            select PersonDto.ExtractFromRow(row)
+            select Person.ExtractFromRow(row)
         );
 
         await dbClient.ExecuteCmdAsync(
@@ -87,7 +88,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
         return personList;
     }
 
-    public async Task<PersonDto> GetByIdAsync(
+    public async Task<Person> GetByIdAsync(
         int personId, int? currentPersonId, CancellationToken cancellationToken)
     {
         var query = currentPersonId.HasValue
@@ -100,15 +101,16 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
 
         return dataTable.Rows.Count == 0
             ? null
-            : PersonDto.ExtractFromRow(dataTable.Rows[0]);
+            : Person.ExtractFromRow(dataTable.Rows[0]);
     }
 
-    public async Task<PersonDto> UpdateAsync(
-        int personId, UpdatePersonDto updateInfo, CancellationToken cancellationToken)
+    public async Task<Person> UpdateAsync(int personId, UpdatePersonData personData, CancellationToken cancellationToken)
     {
+        var (name, surname, age, city, bio, gender) = personData;
+        
         await dbClient.ExecuteCmdAsync(
             $"UPDATE \"{DbClient.PersonsTable}\" " +
-                 $"SET \"surname\" = '{updateInfo.Surname}', \"name\" = '{updateInfo.Name}', \"age\" = {updateInfo.Age}, \"bio\" = '{updateInfo.Bio}', \"city\" = '{updateInfo.City}', \"gender\" = {updateInfo.Gender:D} " +
+                 $"SET \"surname\" = '{surname}', \"name\" = '{name}', \"age\" = {age}, \"bio\" = '{bio}', \"city\" = '{city}', \"gender\" = {gender:D} " +
                  $"WHERE \"Id\" = {personId}",
             cmd => cmd.ExecuteNonQuery());
 
