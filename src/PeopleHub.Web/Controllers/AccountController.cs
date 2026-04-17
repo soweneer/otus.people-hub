@@ -11,21 +11,20 @@ using PeopleHub.Shared.Model.View;
 
 namespace PeopleHub.Controllers
 {
-    [AllowAnonymous]
     public class AccountController(
         IMapper mapper,
         IAccountRepository accountRepository,
         IPersonRepository personRepository) : Controller
     {
-        [HttpGet]
+        [HttpGet, AllowAnonymous]
         public IActionResult SignIn()
         {
-            return User.Identity.IsAuthenticated
+            return User.Identity!.IsAuthenticated
                 ? RedirectToAction("Index", "Person")
                 : View("SignIn");
         }
 
-        [HttpPost]
+        [HttpPost, AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignIn(SignInModel model)
         {
@@ -43,13 +42,10 @@ namespace PeopleHub.Controllers
             return View(model);
         }
 
-        [HttpGet]
-        [Authorize]
+        [HttpGet, Authorize]
         public new async Task<IActionResult> SignOut()
         {
-            if (User.Identity is null) return Unauthorized();
-            if (User.Identity.IsAuthenticated)
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             return RedirectToAction("SignIn", "Account");
         }
@@ -65,21 +61,19 @@ namespace PeopleHub.Controllers
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
 
-        [HttpGet]
+        [HttpGet, AllowAnonymous]
         public IActionResult SignUp()
         {
-            if (User.Identity is null) return Unauthorized();
+            if (User.Identity is not null) RedirectToAction("Index", "Person");
 
-            return User.Identity.IsAuthenticated
-                ? RedirectToAction("Index", "Person")
-                : View();
+            return View();
         }
 
-        [HttpPost]
-        // [ValidateAntiForgeryToken]
+        [HttpPost, AllowAnonymous]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SignUp(SignUpModel model)
         {
-            if (User.Identity is not null && User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated ?? false)
                 return RedirectToAction("Index", "Person");
 
             if (!ModelState.IsValid)

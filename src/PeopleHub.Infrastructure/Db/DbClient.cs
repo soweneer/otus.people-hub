@@ -41,20 +41,23 @@ internal sealed class DbClient(string connectionString)
     private async Task<bool> TablesCreated()
     {
         var tableList = new List<string>();
-        await using (var connection = await GetSqlConnectionAsync())
-        await using (var cmd = connection.CreateCommand())
-        {
-            cmd.CommandText = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'";
-            var dataReader = await cmd.ExecuteReaderAsync();
 
-            while (await dataReader.ReadAsync())
-                tableList.Add(dataReader[0].ToString().ToUpper());
-        }
+        await ExecuteCmdAsync("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
+            // ReSharper disable once AsyncVoidLambda
+            async cmd =>
+            {
+                var dataReader = await cmd.ExecuteReaderAsync();
+
+                while (await dataReader.ReadAsync())
+                {
+                    tableList.Add(dataReader[0].ToString());
+                }                
+            });
 
         return tableList.OrderBy(t => t).SequenceEqual([
-            AccountsTable.ToUpper(),
-            FriendsRequestsTable.ToUpper(),
-            PersonsTable.ToUpper()
+            AccountsTable,
+            FriendsRequestsTable,
+            PersonsTable
         ]);
     }
 

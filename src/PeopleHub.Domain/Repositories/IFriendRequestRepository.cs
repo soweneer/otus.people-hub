@@ -3,9 +3,9 @@ using PeopleHub.Domain.Model;
 
 namespace PeopleHub.Domain.Repositories;
 
-public interface IFriendRepository
+public interface IFriendRequestRepository
 {
-    Task ApproveAsync(int id);
+    Task ApproveAsync(int id, int receiverPersonId);
     
     Task DeleteAsync(int senderPersonId, int receiverPersonId);
     
@@ -13,7 +13,7 @@ public interface IFriendRepository
     
     Task<FriendRequest> GetAsync(int id);
     
-    Task RejectAsync(int id);
+    Task RejectAsync(int id, int receiverPersonId);
     
     Task SendAsync(int senderPersonId, int receiverPersonId);
 }

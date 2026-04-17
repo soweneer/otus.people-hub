@@ -14,7 +14,6 @@ namespace PeopleHub.Controllers
         {
             // TODO перенести это в какой-нито sandbox
             await adminRepository.MigrateAsync();
-            
 
             return Ok("Ok");
         }

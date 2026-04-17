@@ -16,14 +16,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opt.LoginPath = new PathString("/Account/SignIn");
     });
 
+// ---------------------------------------------------------------------------------------------------------------------------------
 builder.Services.AddPeopleHubShared();
 builder.Services.AddPeopleHubDomain();
+var dbConnectionString = builder.Configuration.GetConnectionString("PostgreSql");
+if (string.IsNullOrEmpty(dbConnectionString))
+    throw new MissingMemberException("Connection string is absent");
+builder.Services.AddPeopleHubInfrastructure(dbConnectionString);
+// ---------------------------------------------------------------------------------------------------------------------------------
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-builder.Services.AddPeopleHubInfrastructure(app.Configuration);
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

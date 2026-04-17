@@ -7,13 +7,13 @@ using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Infrastructure.Repositories;
 
-internal class FriendRepository(DbClient dbClient) : IFriendRepository
+internal class FriendRequestRequestRepository(DbClient dbClient) : IFriendRequestRepository
 {
-    public Task ApproveAsync(int id) =>
+    public Task ApproveAsync(int id, int receiverPersonId) =>
         dbClient.ExecuteCmdAsync(
             $"UPDATE \"{DbClient.FriendsRequestsTable}\" " +
             $"SET \"status\" = {FriendRequestStatus.Approved:D} " +
-            $"WHERE \"id\" = {id}",
+            $"WHERE \"id\" = {id} AND \"receiver_person_id\" = {receiverPersonId}",
             cmd => cmd.ExecuteNonQuery());
 
     public async Task DeleteAsync(int personId, int receiverPersonId)
@@ -82,11 +82,12 @@ internal class FriendRepository(DbClient dbClient) : IFriendRepository
             );
     }
 
-    public Task RejectAsync(int id) => 
+    public Task RejectAsync(int id, int receiverPersonId) => 
         dbClient.ExecuteCmdAsync(
             $"UPDATE \"{DbClient.FriendsRequestsTable}\" " +
             $"SET \"status\" = {FriendRequestStatus.Rejected:D} " +
-            $"WHERE \"id\" = {id}", cmd => cmd.ExecuteNonQuery()
+            $"WHERE \"id\" = {id} AND \"receiver_person_id\" = {receiverPersonId}",
+            cmd => cmd.ExecuteNonQuery()
         );
 
     public Task SendAsync(int senderPersonId, int receiverPersonId) => 
