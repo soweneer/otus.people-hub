@@ -11,14 +11,15 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
 {
     public async Task<int> GetPersonIdAsync(string email, CancellationToken cancellationToken)
     {
-        const string query = $"""
-                              SELECT p."id"
-                              FROM
-                                  "{DbClient.AccountsTable}" a
-                                  LEFT JOIN "{DbClient.PersonsTable}" p ON a."person_id" = p."id"
-                              WHERE
-                                  a."email" = '@email'
-                              """;
+        const string query = 
+            $"""
+                SELECT p."id"
+                FROM
+                  "{DbClient.AccountsTable}" a
+                  LEFT JOIN "{DbClient.PersonsTable}" p ON a."person_id" = p."id"
+                WHERE
+                  a."email" = '@email'
+            """;
 
         var dataTable = new DataTable();
         await dbClient.ExecuteCmdAsync(query,
@@ -88,8 +89,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
         return personList;
     }
 
-    public async Task<Person> GetByIdAsync(
-        int personId, int? currentPersonId, CancellationToken cancellationToken)
+    public async Task<Person> GetByIdAsync(int personId, int? currentPersonId, CancellationToken cancellationToken)
     {
         var query = currentPersonId.HasValue
             ? $"SELECT p.*, f.\"Status\" FROM \"{DbClient.PersonsTable}\" p LEFT JOIN \"{DbClient.FriendsRequestsTable}\" f ON " +
