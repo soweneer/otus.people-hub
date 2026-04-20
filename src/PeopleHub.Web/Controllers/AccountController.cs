@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.Enums;
-using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Services;
 using PeopleHub.Extensions;
 using PeopleHub.Model;

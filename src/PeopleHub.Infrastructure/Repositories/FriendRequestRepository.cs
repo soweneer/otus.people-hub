@@ -30,13 +30,13 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
     public async Task<FriendsInfo> GetFriendsAsync(int personId)
     {
         var dataSet = await dbClient.GetDataSetASync(
-            """
+            $"""
              with my_friends as (
                  select * from
                  (
-                     select id as request_id, sender_person_id as friend_id, status, 0 as incoming from friend_requests where receiver_person_id = 4
+                     select id as request_id, sender_person_id as friend_id, status, 0 as incoming from friend_requests where receiver_person_id = {personId}
                      union all
-                     select id as request_id, receiver_person_id as friend_id, status, 1 as incoming from friend_requests where sender_person_id = 4
+                     select id as request_id, receiver_person_id as friend_id, status, 1 as incoming from friend_requests where sender_person_id = {personId}
                  )
              )
              select p.*, f.*
@@ -51,7 +51,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
         var outgoing = new List<FriendInfoLite>();
         foreach (DataRow row in dataSet.Tables[0].Rows)
         {
-            var status = Enum.Parse<FriendRequestStatus>(row["status"]!.ToString());
+            var status = Enum.Parse<FriendRequestStatus>(row["status"].ToString());
             var friend = new FriendInfoLite(
                 new PersonLite(
                     Convert.ToInt32(row["id"]),

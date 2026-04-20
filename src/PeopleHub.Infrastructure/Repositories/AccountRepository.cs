@@ -34,9 +34,17 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"SELECT * FROM {DbClient.AccountsTable} WHERE email = @email",
             [("email", email)]);
+        if (dataTable.Rows.Count == 0)
+        {
+            return null;
+        }
 
-        return dataTable.Rows.Count == 0
-            ? null
-            : new Account(dataTable.Rows[0]["email"].ToString(), dataTable.Rows[0]["password"].ToString());
+        var dataRow = dataTable.Rows[0];
+        return new Account(
+            int.Parse(dataRow["id"].ToString()),
+            dataRow["email"].ToString(),
+            dataRow["password"].ToString(),
+             int.Parse(dataRow["person_id"].ToString())
+            );
     }
 }
