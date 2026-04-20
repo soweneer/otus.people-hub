@@ -6,7 +6,7 @@ using PeopleHub.Domain.Services;
 namespace PeopleHub.Controllers
 {
     [Authorize]
-    public class FriendsController(IFriendRequestService friendRequestService) : Controller
+    public class FriendsController(IFriendRequestService friendRequestService, IPersonService personService) : Controller
     {
         [HttpGet]
         public async Task<IActionResult> Index()
@@ -27,7 +27,7 @@ namespace PeopleHub.Controllers
                 : Redirect(returnUrl);
         }
 
-        [HttpPatch]
+        [HttpGet]
         public async Task<IActionResult> CancelRequest(int targetPersonId, string returnUrl)
         {
             await friendRequestService.CancelAsync(User.Identity!.Name, targetPersonId, HttpContext.RequestAborted);
@@ -37,7 +37,7 @@ namespace PeopleHub.Controllers
                 : Redirect(returnUrl);
         }
 
-        [HttpPatch]
+        [HttpGet]
         public async Task<IActionResult> Approve(int friendRequestId)
         {
             await friendRequestService.ApproveAsync(User.Identity!.Name, friendRequestId, HttpContext.RequestAborted);
@@ -45,7 +45,7 @@ namespace PeopleHub.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpPatch]
+        [HttpGet]
         public async Task<IActionResult> Reject(int friendRequestId)
         {
             await friendRequestService.RejectAsync(User.Identity!.Name, friendRequestId, HttpContext.RequestAborted);

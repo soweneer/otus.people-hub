@@ -34,15 +34,15 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
              with my_friends as (
                  select * from
                  (
-                     select id as request_id, sender_person_id as friend_id, status, 0 as incoming from friend_requests where receiver_person_id = {personId}
+                     select id as request_id, sender_person_id as friend_id, status, 0 as incoming from {DbClient.FriendsRequestsTable} where receiver_person_id = {personId}
                      union all
-                     select id as request_id, receiver_person_id as friend_id, status, 1 as incoming from friend_requests where sender_person_id = {personId}
+                     select id as request_id, receiver_person_id as friend_id, status, 1 as incoming from {DbClient.FriendsRequestsTable} where sender_person_id = {personId}
                  )
              )
              select p.*, f.*
              from
                  my_friends f
-                 left join persons p on f.friend_id = p.id
+                 left join {DbClient.PersonsTable} p on f.friend_id = p.id
              """
         );
 
@@ -59,8 +59,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
                     Convert.ToInt32(row["age"]),
                     row["city"].ToString()
                 ),
-                Convert.ToInt32(row["request_id"]),
-                status);
+                Convert.ToInt32(row["request_id"]));
 
             if (status is FriendRequestStatus.Approved)
             {

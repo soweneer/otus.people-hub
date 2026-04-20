@@ -1,5 +1,5 @@
 @using PeopleHub.Domain.Enums
-@model IReadOnlyCollection<PeopleHub.Domain.Model.FriendInfo>
+@model IReadOnlyCollection<PeopleHub.Domain.Model.PersonInfo>
 
 @{
     ViewBag.Title = "Люди";
@@ -21,17 +21,17 @@
         {
             <tr>
                 <td>
-                    <a href="@Url.Action("Person", "Person", new {personId = person.Id})">
-                        @person.Surname @person.Name
+                    <a href="@Url.Action("Person", "Person", new {personId = person.Person.Id})">
+                        @person.Person.Name
                     </a>
                 </td>
-                <td>@person.Age</td>
-                <td>@person.City</td>
+                <td>@person.Person.Age</td>
+                <td>@person.Person.City</td>
                 <td>
                     @switch (person.Status)
                     {
                         case FriendRequestStatus.None:
-                            <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("SendFriendRequest", "Friends", new {targetPersonId = person.Id, returnUrl = Url.Action("Index", "Person")})"><i class="fa fa-user-plus"></i></a>
+                            <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("SendFriendRequest", "Friends", new {targetPersonId = person.Person.Id, returnUrl = Url.Action("Index", "Person")})"><i class="fa fa-user-plus"></i></a>
                             break;
                         case FriendRequestStatus.Sent:
                         case FriendRequestStatus.Rejected:
@@ -39,7 +39,7 @@
                             break;
                         case FriendRequestStatus.Approved:
                             <div class="alert alert-success"><i class="fa fa-check"></i> У вас в друзьях</div>
-                            <a class="btn btn-danger" title="Удалить из друзей" href="@Url.Action("CancelRequest", "Friends", new {targetPersonId = person.Id, returnUrl = Url.Action("Index")})"><i class="fa fa-user-times"></i></a>
+                            <a class="btn btn-danger" title="Удалить из друзей" href="@Url.Action("CancelRequest", "Friends", new {targetPersonId = person.Person.Id, returnUrl = Url.Action("Index")})"><i class="fa fa-user-times"></i></a>
                             break;
                         default:
                             <div class="alert alert-danger"><strong>Неизвестный статус заявки: @person.Status.ToString("F")</strong></div>

@@ -13,7 +13,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var persons = await personService.GetFriendsAsync(User.Identity!.Name, HttpContext.RequestAborted);
+            var persons = await personService.GetAllAsync(User.Identity!.Name, HttpContext.RequestAborted);
 
             return View(persons);
         }
@@ -21,7 +21,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Person(int personId)
         {
-            var personInfo = await personService.GetByIdAsync(User.Identity!.Name, personId, HttpContext.RequestAborted);
+            var personInfo = await personService.GetByEmailAsync(User.Identity!.Name, personId, HttpContext.RequestAborted);
 
             return personInfo == null 
                 ? throw new UnknownPersonException(personId)
@@ -31,7 +31,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var personInfo = await personService.GetByIdAsync(User.Identity!.Name, null, HttpContext.RequestAborted);
+            var personInfo = await personService.GetProfileAsync(User.Identity!.Name, HttpContext.RequestAborted);
 
             return View(personInfo);
         }

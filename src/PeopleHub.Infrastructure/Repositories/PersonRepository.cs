@@ -1,5 +1,6 @@
 using System.Data;
 using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Exceptions;
 using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
@@ -35,6 +36,22 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             : Convert.ToInt32(dataTable.Rows[0]["id"]);
     }
 
+    public async Task<PersonalInfo> GetAsync(int personId, CancellationToken cancellationToken)
+    {
+        var dataTable = await dbClient.ExecuteDataTableAsync(
+            $"select * from {DbClient.PersonsTable} where id = {personId}");
+        
+        var dataRow = dataTable.Rows[0];
+        return new PersonalInfo(
+            dataRow["name"].ToString(),
+            dataRow["surname"].ToString(),
+            int.Parse(dataRow["age"].ToString()),
+            dataRow["city"].ToString(),
+            dataRow["bio"].ToString(),
+            int.Parse(dataRow["gender"].ToString())
+        );
+    }
+
     public async Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken)
     {
         var (name, surname, age, city, bio, gender) = personalInfo;
@@ -52,15 +69,15 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
                 ("bio", bio)
             ]);
 
-        return personId is null or DBNull ? null : Convert.ToInt32(personId);
+        return personId is null or DBNull
+            ? null
+            : Convert.ToInt32(personId);
     }
 
-    public async Task<IReadOnlyCollection<Friend>> GetFriendsAsync(
-        string currentUserEmail, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<PersonInfo>> GetAllAsync(string currentUserEmail, CancellationToken cancellationToken)
     {
         var personId = await GetPersonIdAsync(currentUserEmail, cancellationToken);
 
-        var personList = new List<Friend>();
         var selectQuery = $"""
             with my_friends as (
                 select distinct friend_id, status from
@@ -70,10 +87,11 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
                     select receiver_person_id as friend_id, status from {DbClient.FriendsRequestsTable} where sender_person_id = {personId}
                 )
             )
-            select p.*, f.status
-            from
-                my_friends f 
-                left join {DbClient.PersonsTable} p on f.friend_id = p.id
+            select p.id, p.surname || ' ' || p.name as name, p.age, p.city, f.status
+            from 
+                {DbClient.PersonsTable} p 
+                left join my_friends f on friend_id = p.id
+            order by p.id;
             """;
         var dataTable = await dbClient.GetDataTableAsync(selectQuery, cancellationToken);
         if (dataTable is null || dataTable.Rows.Count == 0)
@@ -81,23 +99,32 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             return [];
         }
 
-        personList.AddRange(
-            from DataRow row in dataTable.Rows
-            select Friend.ExtractFromRow(row)
-        );
-
-        return personList;
+        return dataTable.Rows.Cast<DataRow>()
+            .Select(row => new PersonInfo(
+                new PersonLite(
+                    int.Parse(row["id"].ToString()),
+                    row["name"].ToString(),
+                    int.Parse(row["age"].ToString()),
+                    row["city"].ToString()
+                    ), 
+                Convert.IsDBNull(row["status"])
+                    ? FriendRequestStatus.None
+                    : Enum.Parse<FriendRequestStatus>(row["status"].ToString())))
+            .ToArray();
     }
 
-    public async Task<Friend> GetByIdAsync(int personId, int? currentPersonId, CancellationToken cancellationToken = default)
+    public async Task<Friend> GetByIdAsync(int personId, int viewerPersonId, CancellationToken cancellationToken = default)
     {
-        var curPersonId = currentPersonId ?? 0;
-        var query = 
-              $"select p.*, f.status from {DbClient.PersonsTable} p " +
-              $"left join {DbClient.FriendsRequestsTable} f on " +
-                  $"(p.id = f.sender_person_id and f.receiver_person_id = {curPersonId}) or " +
-                  $"(p.id = f.receiver_person_id and f.sender_person_id = {curPersonId}) " +
-              $"where p.id = {personId}";
+        var query = $"""
+            select
+                    p.*, fr.status
+            from
+                    {DbClient.PersonsTable} p
+                    left join {DbClient.FriendsRequestsTable} fr 
+                        on (p.id = fr.receiver_person_id and fr.sender_person_id = {viewerPersonId})
+                               or (p.id = fr.sender_person_id and fr.receiver_person_id = {viewerPersonId})
+            where p.id = {personId};
+            """;
         var dataTable = await dbClient.GetDataTableAsync(query, cancellationToken);
 
         return dataTable.Rows.Count == 0

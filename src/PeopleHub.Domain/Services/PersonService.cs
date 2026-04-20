@@ -6,19 +6,23 @@ namespace PeopleHub.Domain.Services;
 
 public class PersonService(IPersonRepository personRepository) : IPersonService
 {
-    public async Task<IReadOnlyCollection<FriendInfo>> GetFriendsAsync(string email, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyCollection<PersonInfo>> GetAllAsync(string email, CancellationToken cancellationToken = default) =>
+        personRepository.GetAllAsync(email, cancellationToken);
+
+    public async Task<FriendInfo?> GetByEmailAsync(string email, int targetPersonId, CancellationToken cancellationToken = default)
     {
-        var persons = await personRepository.GetFriendsAsync(email, cancellationToken);
-        return persons.Select(ToFriendInfo).ToArray();
+        var viewerId = await personRepository.GetPersonIdAsync(email, cancellationToken);
+        var friend = await personRepository.GetByIdAsync(targetPersonId, viewerId, cancellationToken);
+        return friend is null 
+            ? null
+            : ToFriendInfo(friend);
     }
 
-    public async Task<FriendInfo?> GetByIdAsync(string email, int? targetPersonId, CancellationToken cancellationToken = default)
+    public async Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default)
     {
-        var curPersonId = await personRepository.GetPersonIdAsync(email, cancellationToken);
-        var id = targetPersonId ?? curPersonId;
-        var viewerId = targetPersonId.HasValue ? (int?)curPersonId : null;
-        var friend = await personRepository.GetByIdAsync(id, viewerId, cancellationToken);
-        return friend is null ? null : ToFriendInfo(friend);
+        var personId = await personRepository.GetPersonIdAsync(email, cancellationToken);
+        
+        return await personRepository.GetAsync(personId, cancellationToken);
     }
 
     public async Task<PersonalInfo> UpdateAsync(string email, PersonalInfo personalInfo, CancellationToken cancellationToken = default)

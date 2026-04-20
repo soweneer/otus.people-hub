@@ -45,7 +45,6 @@ namespace PeopleHub.Controllers
             return RedirectToAction("SignIn", "Account");
         }
 
-
         [HttpGet, AllowAnonymous]
         public IActionResult SignUp()
         {
