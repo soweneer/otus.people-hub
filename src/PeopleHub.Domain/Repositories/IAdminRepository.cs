@@ -1,4 +1,4 @@
-﻿namespace PeopleHub.Domain.Services;
+﻿namespace PeopleHub.Domain.Repositories;
 
 public interface IAdminRepository
 {

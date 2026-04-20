@@ -11,17 +11,17 @@ internal class FriendRequestRequestRepository(DbClient dbClient) : IFriendReques
 {
     public Task ApproveAsync(int id, int receiverPersonId) =>
         dbClient.ExecuteCmdAsync(
-            $"UPDATE \"{DbClient.FriendsRequestsTable}\" " +
-            $"SET \"status\" = {FriendRequestStatus.Approved:D} " +
-            $"WHERE \"id\" = {id} AND \"receiver_person_id\" = {receiverPersonId}",
+            $"UPDATE {DbClient.FriendsRequestsTable} " +
+            $"SET status = {FriendRequestStatus.Approved:D} " +
+            $"WHERE id = {id} AND receiver_person_id = {receiverPersonId}",
             cmd => cmd.ExecuteNonQuery());
 
     public async Task DeleteAsync(int personId, int receiverPersonId)
     {
-        var query = $"DELETE FROM \"{DbClient.FriendsRequestsTable}\" " +
+        var query = $"DELETE FROM {DbClient.FriendsRequestsTable} " +
                     "WHERE " +
-                    $"(\"sender_person_id\" = {personId} AND \"receiver_person_id\" = {receiverPersonId})" +
-                    $" OR (\"sender_person_id\" = {receiverPersonId} AND \"receiver_person_id\" = {personId})";
+                    $"(sender_person_id = {personId} AND receiver_person_id = {receiverPersonId})" +
+                    $" OR (sender_person_id = {receiverPersonId} AND receiver_person_id = {personId})";
 
         await dbClient.ExecuteCmdAsync(query, 
             cmd => cmd.ExecuteNonQuery());
@@ -31,21 +31,21 @@ internal class FriendRequestRequestRepository(DbClient dbClient) : IFriendReques
     {
         var dataSet = await dbClient.GetDataSetASync(
             $"""
-             SELECT f."id" AS "request_id", f."status", p.* FROM "{DbClient.FriendsRequestsTable}" f LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."sender_person_id" WHERE f."receiver_person_id" = {personId} AND f."status" <> {FriendRequestStatus.Approved:D};
-                             SELECT f."id" AS "request_id", f."status", p.* FROM "{DbClient.FriendsRequestsTable}" f LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."receiver_person_id" WHERE f."sender_person_id" = {personId} AND f."status" <> {FriendRequestStatus.Approved:D};
-                             SELECT f."id" AS "request_id", p.*
-                             FROM
-                 	            "{DbClient.FriendsRequestsTable}" f
-                                 LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."receiver_person_id"
-                             WHERE
-                 	            f."sender_person_id" = {personId} AND f."status" = {FriendRequestStatus.Approved:D}
-                             UNION ALL
-                             SELECT f."id" AS "request_id", p.*
-                             FROM
-                 	            "{DbClient.FriendsRequestsTable}" f
-                                 LEFT JOIN "{DbClient.PersonsTable}" p ON p."id" = f."sender_person_id"
-                             WHERE
-                 	            f."receiver_person_id" = {personId} AND f."status" = {FriendRequestStatus.Approved:D};
+             SELECT f.id AS request_id, f.status, p.* FROM {DbClient.FriendsRequestsTable} f LEFT JOIN {DbClient.PersonsTable} p ON p.id = f.sender_person_id WHERE f.receiver_person_id = {personId} AND f.status <> {FriendRequestStatus.Approved:D};
+             SELECT f.id AS request_id, f.status, p.* FROM {DbClient.FriendsRequestsTable} f LEFT JOIN {DbClient.PersonsTable} p ON p.id = f.receiver_person_id WHERE f.sender_person_id = {personId} AND f.status <> {FriendRequestStatus.Approved:D};
+             SELECT f.id AS request_id, p.*
+             FROM
+                {DbClient.FriendsRequestsTable} f
+                 LEFT JOIN {DbClient.PersonsTable} p ON p.id = f.receiver_person_id
+             WHERE
+                f.sender_person_id = {personId} AND f.status = {FriendRequestStatus.Approved:D}
+             UNION ALL
+             SELECT f.id AS request_id, p.*
+             FROM
+                {DbClient.FriendsRequestsTable} f
+                 LEFT JOIN {DbClient.PersonsTable} p ON p.id = f.sender_person_id
+             WHERE
+                f.receiver_person_id = {personId} AND f.status = {FriendRequestStatus.Approved:D};
              """
         );
 
@@ -70,7 +70,7 @@ internal class FriendRequestRequestRepository(DbClient dbClient) : IFriendReques
     public async Task<FriendRequest> GetAsync(int id)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
-            $"SELECT * FROM \"{DbClient.FriendsRequestsTable}\" WHERE \"id\" = @id",
+            $"SELECT * FROM {DbClient.FriendsRequestsTable} WHERE id = @id",
             [("id", id)]);
 
         return dataTable is null || dataTable.Rows.Count == 0
@@ -84,20 +84,20 @@ internal class FriendRequestRequestRepository(DbClient dbClient) : IFriendReques
 
     public Task RejectAsync(int id, int receiverPersonId) => 
         dbClient.ExecuteCmdAsync(
-            $"UPDATE \"{DbClient.FriendsRequestsTable}\" " +
-            $"SET \"status\" = {FriendRequestStatus.Rejected:D} " +
-            $"WHERE \"id\" = {id} AND \"receiver_person_id\" = {receiverPersonId}",
+            $"UPDATE {DbClient.FriendsRequestsTable} " +
+            $"SET status = {FriendRequestStatus.Rejected:D} " +
+            $"WHERE id = {id} AND receiver_person_id = {receiverPersonId}",
             cmd => cmd.ExecuteNonQuery()
         );
 
     public Task SendAsync(int senderPersonId, int receiverPersonId) => 
         dbClient.ExecuteCmdAsync(
-            $"INSERT INTO \"{DbClient.FriendsRequestsTable}\" (\"sender_person_id\", \"receiver_person_id\", \"status\") " +
+            $"INSERT INTO {DbClient.FriendsRequestsTable} (sender_person_id, receiver_person_id, status) " +
             $"VALUES ({senderPersonId}, {receiverPersonId}, {FriendRequestStatus.Sent:D})",
             cmd => cmd.ExecuteNonQuery()
         );
     
-    private static FriendInfo ParseFriendRequestInfoFromRow(DataRow row, FriendRequestStatus? status = null) => 
+    private static FriendLite ParseFriendRequestInfoFromRow(DataRow row, FriendRequestStatus? status = null) => 
         new(
             new PersonLite(
                 Convert.ToInt32(row["id"]),

@@ -15,10 +15,10 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             $"""
                 SELECT p.id
                 FROM
-                  "{DbClient.AccountsTable}" a
-                  LEFT JOIN {DbClient.PersonsTable} p ON a."person_id" = p.id
+                  {DbClient.AccountsTable} a
+                  LEFT JOIN {DbClient.PersonsTable} p ON a.person_id = p.id
                 WHERE
-                  a."email" = '@email'
+                  a.email = '@email'
             """;
 
         var dataTable = new DataTable();
