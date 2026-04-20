@@ -13,7 +13,7 @@ namespace PeopleHub.Infrastructure
         {
             services.AddScoped(_ => new DbClient(dbConnectionString));
             services.AddScoped<IAccountRepository, AccountRepository>();
-            services.AddScoped<IFriendRequestRepository, FriendRequestRequestRepository>();
+            services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<IPersonRepository, PersonRepository>();
             services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();

@@ -18,7 +18,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
                   {DbClient.AccountsTable} a
                   LEFT JOIN {DbClient.PersonsTable} p ON a.person_id = p.id
                 WHERE
-                  a.email = '@email'
+                  a.email = @email
             """;
 
         var dataTable = new DataTable();
@@ -41,7 +41,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
 
         const string query =
             $"INSERT INTO {DbClient.PersonsTable} (surname, name, age, gender, city, bio) " +
-            "VALUES ('@surname', '@name', @age, @gender, '@city', '@bio') RETURNING id";
+            "VALUES (@surname, @name, @age, @gender, @city, @bio) RETURNING id";
         var personId = await dbClient.ExecuteScalarAsync(query, 
             [
                 ("surname", surname),
@@ -55,71 +55,63 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
         return personId is null or DBNull ? null : Convert.ToInt32(personId);
     }
 
-    public async Task<IReadOnlyCollection<Person>> GetFriendsAsync(
+    public async Task<IReadOnlyCollection<Friend>> GetFriendsAsync(
         string currentUserEmail, CancellationToken cancellationToken)
     {
         var personId = await GetPersonIdAsync(currentUserEmail, cancellationToken);
 
-        await dbClient.ExecuteCmdAsync(
-            "DROP TABLE IF EXISTS my_friends",
-            cmd => cmd.ExecuteNonQuery());
-
-        var personList = new List<Person>();
-        var createQuery = $"""
-                CREATE TEMPORARY TABLE my_friends AS
-                SELECT DISTINCT friend_id, status FROM
-                    (SELECT sender_person_id AS friend_id, status FROM {DbClient.FriendsRequestsTable} WHERE receiver_person_id = {personId}
-                    UNION ALL
-                    SELECT receiver_person_id AS friend_id, status FROM {DbClient.FriendsRequestsTable} WHERE sender_person_id = {personId}) AS TMP
-            """;
-        await dbClient.ExecuteCmdAsync(createQuery, cmd => cmd.ExecuteNonQuery());
-
+        var personList = new List<Friend>();
         var selectQuery = $"""
-                SELECT p.*, f.status
-                FROM
-                    {DbClient.PersonsTable} p
-                    LEFT JOIN my_friends f ON f.friend_id = p.id
-                WHERE
-                    p.id <> {personId}
+            with my_friends as (
+                select distinct friend_id, status from
+                (
+                    select sender_person_id as friend_id, status from {DbClient.FriendsRequestsTable} where receiver_person_id = {personId}
+                    union all
+                    select receiver_person_id as friend_id, status from {DbClient.FriendsRequestsTable} where sender_person_id = {personId}
+                )
+            )
+            select p.*, f.status
+            from
+                my_friends f 
+                left join {DbClient.PersonsTable} p on f.friend_id = p.id
             """;
         var dataTable = await dbClient.GetDataTableAsync(selectQuery, cancellationToken);
-        if (dataTable == null || dataTable.Rows.Count == 0)
-            return personList;
+        if (dataTable is null || dataTable.Rows.Count == 0)
+        {
+            return [];
+        }
+
         personList.AddRange(
             from DataRow row in dataTable.Rows
-            select Person.ExtractFromRow(row)
+            select Friend.ExtractFromRow(row)
         );
-
-        await dbClient.ExecuteCmdAsync(
-            "DROP TABLE IF EXISTS my_friends",
-            cmd => cmd.ExecuteNonQuery());
 
         return personList;
     }
 
-    public async Task<Person> GetByIdAsync(int personId, int? currentPersonId, CancellationToken cancellationToken = default)
+    public async Task<Friend> GetByIdAsync(int personId, int? currentPersonId, CancellationToken cancellationToken = default)
     {
         var curPersonId = currentPersonId ?? 0;
         var query = 
-              $"SELECT p.*, f.status FROM {DbClient.PersonsTable} p " +
-              $"LEFT JOIN {DbClient.FriendsRequestsTable} f ON " +
-                  $"(p.id = f.sender_person_id AND f.receiver_person_id = {curPersonId}) OR " +
-                  $"(p.id = f.receiver_person_id AND f.sender_person_id = {curPersonId}) " +
-              $"WHERE p.id = {personId}";
+              $"select p.*, f.status from {DbClient.PersonsTable} p " +
+              $"left join {DbClient.FriendsRequestsTable} f on " +
+                  $"(p.id = f.sender_person_id and f.receiver_person_id = {curPersonId}) or " +
+                  $"(p.id = f.receiver_person_id and f.sender_person_id = {curPersonId}) " +
+              $"where p.id = {personId}";
         var dataTable = await dbClient.GetDataTableAsync(query, cancellationToken);
 
         return dataTable.Rows.Count == 0
             ? null
-            : Person.ExtractFromRow(dataTable.Rows[0]);
+            : Friend.ExtractFromRow(dataTable.Rows[0]);
     }
 
-    public async Task<Person> UpdateAsync(int personId, PersonalInfo personalInfo, CancellationToken cancellationToken)
+    public async Task UpdateAsync(int personId, PersonalInfo personalInfo, CancellationToken cancellationToken)
     {
         var (name, surname, age, city, bio, gender) = personalInfo;
         
         await dbClient.ExecuteCmdAsync(
             $"UPDATE {DbClient.PersonsTable} " +
-                 "SET surname = '@surname', name = '@name', age = @age, bio = '@bio', city = '@city', gender = @gender" +
+                 "SET surname = @surname, name = @name, age = @age, bio = @bio, city = @city, gender = @gender" +
                  "WHERE id = @personId",
             cmd => cmd.ExecuteNonQuery(),
             [
@@ -131,7 +123,5 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
                 ("bio", bio),
                 ("personId", personId)
             ]);
-
-        return await GetByIdAsync(personId, null, cancellationToken);
     }
 }

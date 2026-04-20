@@ -3,7 +3,7 @@ using PeopleHub.Domain.Enums;
 
 namespace PeopleHub.Domain.Entities;
 
-public sealed record Person(
+public sealed record Friend(
     int Id,
     string Name,
     string Surname,
@@ -13,7 +13,7 @@ public sealed record Person(
     string Bio,
     FriendRequestStatus Status)
 {
-    public static Person ExtractFromRow(DataRow row) =>
+    public static Friend ExtractFromRow(DataRow row) =>
         new(
             Convert.ToInt32(row["id"]),
             row["name"].ToString(),

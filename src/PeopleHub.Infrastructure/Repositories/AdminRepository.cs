@@ -1,5 +1,4 @@
 ﻿using PeopleHub.Domain.Repositories;
-using PeopleHub.Domain.Services;
 using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Infrastructure.Repositories;

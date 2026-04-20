@@ -118,10 +118,7 @@ internal sealed class DbClient(string connectionString)
     public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters = null)
     {
         var scalar = new object();
-        await ExecuteCmdAsync(query, cmd =>
-        {
-            scalar = cmd.ExecuteScalar();
-        }, parameters);
+        await ExecuteCmdAsync(query, cmd => scalar = cmd.ExecuteScalar(), parameters);
 
         return scalar;
     }

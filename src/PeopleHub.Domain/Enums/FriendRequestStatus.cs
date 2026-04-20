@@ -4,7 +4,7 @@ namespace PeopleHub.Domain.Enums
     {
         None = -1,
         Sent = 0,
-        Approved = 1,
-        Rejected = 2
+        Rejected = 1,
+        Approved = 2
     }
 }

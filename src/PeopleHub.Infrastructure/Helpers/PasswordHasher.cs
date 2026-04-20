@@ -12,7 +12,9 @@ internal class PasswordHasher : IPasswordHasher
     public string Hash(string password)
     {
         if (string.IsNullOrWhiteSpace(password))
+        {
             throw new ArgumentNullException(nameof(password));
+        }
 
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
         var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, KeySize);
@@ -26,13 +28,19 @@ internal class PasswordHasher : IPasswordHasher
     public bool Verify(string hash, string password)
     {
         if (string.IsNullOrWhiteSpace(hash))
+        {
             return false;
+        }
         if (string.IsNullOrWhiteSpace(password))
+        {
             throw new ArgumentNullException(nameof(password));
+        }
 
         var src = Convert.FromBase64String(hash);
         if (src.Length != 0x31 || src[0] != 0)
+        {
             return false;
+        }
 
         var salt = new byte[SaltSize];
         Buffer.BlockCopy(src, 1, salt, 0, SaltSize);

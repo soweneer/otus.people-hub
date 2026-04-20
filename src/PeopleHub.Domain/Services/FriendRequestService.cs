@@ -39,6 +39,6 @@ internal sealed class FriendRequestService(IPersonRepository personRepository,
     {
         var receiverPersonId = await personRepository.GetPersonIdAsync(receiverEmail, cancellationToken);
         
-        await friendRequestRepository.ApproveAsync(id, receiverPersonId);
+        await friendRequestRepository.RejectAsync(id, receiverPersonId);
     }
 }
