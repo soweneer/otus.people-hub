@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PeopleHub.Domain.Model.Dto.Person;
+namespace PeopleHub.Model;
 
-public sealed record UpdatePersonRequest
+public sealed record UpdateMyProfileRequest
 {
     [Required(ErrorMessage = "Не указано имя")]
     [RegularExpression("^[a-zA-Zа-яА-Я-]+$", ErrorMessage = "Используйте только буквы и дефис")]

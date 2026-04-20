@@ -3,16 +3,15 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.Model.Dto.Person;
-using PeopleHub.Domain.Repositories;
-using PeopleHub.Infrastructure.Helpers;
+using PeopleHub.Domain.Enums;
+using PeopleHub.Domain.Model;
+using PeopleHub.Domain.Services;
+using PeopleHub.Extensions;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
 {
-    public class AccountController(
-        IAccountRepository accountRepository,
-        IPersonRepository personRepository) : Controller
+    public class AccountController(IAccountService accountService) : Controller
     {
         [HttpGet, AllowAnonymous]
         public IActionResult SignIn()
@@ -24,20 +23,19 @@ namespace PeopleHub.Controllers
 
         [HttpPost, AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignIn(SignInModel model)
+        public async Task<IActionResult> SignIn(SignInRequest request)
         {
             if (!ModelState.IsValid)
-                return View(model);
+                return View(request);
 
-            var account = await accountRepository.FindByEmailAsync(model.Email);
-            if (account is not null && Encrypt.VerifyHashedPassword(account.Password, model.Password))
+            if (await accountService.CanLoginAsync(request.Email, request.Password, HttpContext.RequestAborted))
             {
-                await Authenticate(model.Email);
+                await Authenticate(request.Email);
                 return RedirectToAction("Index", "Person");
             }
 
             ModelState.AddModelError("Password", "Неверные данные пользователя");
-            return View(model);
+            return View(request);
         }
 
         [HttpGet, Authorize]
@@ -60,35 +58,30 @@ namespace PeopleHub.Controllers
 
         [HttpPost, AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SignUp(SignUpModel model)
+        public async Task<IActionResult> SignUp(SignUpRequest request)
         {
             if (User.Identity?.IsAuthenticated ?? false)
                 return RedirectToAction("Index", "Person");
             if (!ModelState.IsValid)
-                return View(model);
+                return View(request);
 
-            if (await accountRepository.ExistsAsync(model.Email))
-            {
-                ModelState.AddModelError("Email", "Такой пользователь уже существует в базе");
-                return View(model);
-            }
+            var status = await accountService.SignUpAsync(request.Email, request.Password, 
+                request.ExtractPersonalInfo(),
+                HttpContext.RequestAborted);
 
-            var personResult = await personRepository.CreateAsync(
-                mapper.Map<SignUpModel, PersonDto>(model), HttpContext.RequestAborted);
-            if (personResult.HasValue)
+            switch (status)
             {
-                var hashedPassword = Encrypt.HashPassword(model.Password);
-                var accountResult = await accountRepository.CreateAsync(
-                    model.Email, hashedPassword, personResult.Value);
-                if (accountResult.HasValue)
-                {
-                    await Authenticate(model.Email);
+                case SignUpStatus.AlreadyExists:
+                    ModelState.AddModelError("Email", "Такой пользователь уже существует в базе");
+                    return View(request);
+                case SignUpStatus.Success:
+                    await Authenticate(request.Email);
                     return RedirectToAction("Index", "Person");
-                }
+                case SignUpStatus.Failed:
+                default:
+                    ModelState.AddModelError("Email", "Не удалось зарегистрировать пользователя");
+                    return View(request);
             }
-
-            ModelState.AddModelError("Email", "Не удалось зарегистрировать пользователя");
-            return View(model);
         }
 
         private async Task Authenticate(string userName)

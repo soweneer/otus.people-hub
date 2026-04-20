@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Domain.Services;
 using PeopleHub.Infrastructure.Db;
+using PeopleHub.Infrastructure.Helpers;
 using PeopleHub.Infrastructure.Repositories;
 
 namespace PeopleHub.Infrastructure
@@ -15,6 +16,7 @@ namespace PeopleHub.Infrastructure
             services.AddScoped<IFriendRequestRepository, FriendRequestRequestRepository>();
             services.AddScoped<IPersonRepository, PersonRepository>();
             services.AddScoped<IAdminRepository, AdminRepository>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             return services;
         }

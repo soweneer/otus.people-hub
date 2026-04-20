@@ -9,6 +9,7 @@ namespace PeopleHub.Domain
         {
             services.AddScoped<IFriendRequestService, FriendRequestService>();
             services.AddScoped<IPersonService, PersonService>();
+            services.AddScoped<IAccountService, AccountService>();
 
             return services;
         }

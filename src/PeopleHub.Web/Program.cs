@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using PeopleHub.Domain;
 using PeopleHub.Infrastructure;
-using PeopleHub.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
@@ -17,7 +16,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-builder.Services.AddPeopleHubShared();
 builder.Services.AddPeopleHubDomain();
 var dbConnectionString = builder.Configuration.GetConnectionString("PostgreSql");
 if (string.IsNullOrEmpty(dbConnectionString))

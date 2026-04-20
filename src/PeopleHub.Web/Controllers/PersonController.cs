@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Exceptions;
 using PeopleHub.Extensions;
-using PeopleHub.Domain.Model.Dto.Person;
 using PeopleHub.Domain.Services;
+using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
 {
@@ -13,8 +13,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var persons = await personRepository.GetFriendsAsync(
-                User.Identity.Name, HttpContext.RequestAborted);
+            var persons = await personService.GetFriendsAsync(User.Identity!.Name, HttpContext.RequestAborted);
 
             return View(persons);
         }
@@ -22,35 +21,32 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Person(int personId)
         {
-            var curPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
-                HttpContext.RequestAborted);
-            var personInfo = await personRepository.GetByIdAsync(personId, curPersonId, HttpContext.RequestAborted);
-            if (personInfo == null)
-                throw new UnknownPersonException(personId);
+            var personInfo = await personService.GetByIdAsync(User.Identity!.Name, personId, HttpContext.RequestAborted);
 
-            return View(personInfo);
+            return personInfo == null 
+                ? throw new UnknownPersonException(personId)
+                : View(personInfo);
         }
 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var curPersonId = await personRepository.GetPersonIdAsync(User.Identity.Name,
-                HttpContext.RequestAborted);
+            var personInfo = await personService.GetByIdAsync(User.Identity!.Name, null, HttpContext.RequestAborted);
 
-            var personInfo = await personRepository.GetByIdAsync(curPersonId, null, HttpContext.RequestAborted);
             return View(personInfo);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Profile(UpdatePersonRequest updateRequest)
+        public async Task<IActionResult> Profile(UpdateMyProfileRequest updateRequest)
         {
             if (!ModelState.IsValid)
+            {
                 return View();
+            }
 
-            var updatedPerson = await personService.UpdateAsync(User.Identity.Name, updateRequest.ToPersonData(), 
-                HttpContext.RequestAborted);
-
+            var updatedPerson = await personService.UpdateAsync(User.Identity!.Name, updateRequest.ExtractPersonalInfo(), HttpContext.RequestAborted);
             TempData["SuccessMessage"] = "Профиль успешно сохранен";
+
             return View(updatedPerson);
         }
     }

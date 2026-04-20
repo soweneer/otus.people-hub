@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PeopleHub.Model
 {
-    public sealed class SignUpModel
+    public sealed class SignUpRequest
     {
         [Required(ErrorMessage = "Не указано имя")]
         [RegularExpression(@"^[a-zA-Zа-яА-Я-]+$", ErrorMessage = "Используйте только буквы и дефис")]

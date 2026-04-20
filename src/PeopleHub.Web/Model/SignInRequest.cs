@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PeopleHub.Model
 {
-    public sealed class SignInModel
+    public sealed class SignInRequest
     {
         [DataType(DataType.EmailAddress)]
         [Required(ErrorMessage ="Не указан email")]

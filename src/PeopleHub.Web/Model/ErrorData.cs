@@ -1,6 +1,6 @@
 namespace PeopleHub.Model;
 
-public sealed class ErrorViewModel
+public sealed class ErrorData
 {
     public string? RequestId { get; set; }
 

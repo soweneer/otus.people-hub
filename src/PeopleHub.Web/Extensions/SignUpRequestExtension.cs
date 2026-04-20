@@ -1,13 +1,13 @@
 ﻿using PeopleHub.Domain.Model;
-using PeopleHub.Domain.Model.Dto.Person;
+using PeopleHub.Model;
 
 namespace PeopleHub.Extensions;
 
-public static class UpdatePersonDataExtension
+public static class SignUpRequestExtension
 {
-    extension(UpdatePersonRequest request)
+    extension(SignUpRequest request)
     {
-        public UpdatePersonData ToPersonData() => new(request.Name, 
+        public PersonalInfo ExtractPersonalInfo() => new(request.Name, 
             request.Surname,
             request.Age,
             request.City,

@@ -1,14 +1,15 @@
 using System.Security.Cryptography;
+using PeopleHub.Domain.Services;
 
 namespace PeopleHub.Infrastructure.Helpers;
 
-public static class Encrypt
+internal class PasswordHasher : IPasswordHasher
 {
     private const int SaltSize = 0x10;
     private const int KeySize = 0x20;
     private const int Iterations = 0x3e8;
 
-    public static string HashPassword(string password)
+    public string Hash(string password)
     {
         if (string.IsNullOrWhiteSpace(password))
             throw new ArgumentNullException(nameof(password));
@@ -22,14 +23,14 @@ public static class Encrypt
         return Convert.ToBase64String(dst);
     }
 
-    public static bool VerifyHashedPassword(string hashedPassword, string password)
+    public bool Verify(string hash, string password)
     {
-        if (string.IsNullOrWhiteSpace(hashedPassword))
+        if (string.IsNullOrWhiteSpace(hash))
             return false;
         if (string.IsNullOrWhiteSpace(password))
             throw new ArgumentNullException(nameof(password));
 
-        var src = Convert.FromBase64String(hashedPassword);
+        var src = Convert.FromBase64String(hash);
         if (src.Length != 0x31 || src[0] != 0)
             return false;
 
