@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.Repositories;
 using PeopleHub.Domain.Services;
 
 namespace PeopleHub.Controllers
