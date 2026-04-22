@@ -7,7 +7,6 @@
     var searchFirstName = ViewBag.SearchFirstName as string ?? string.Empty;
     var searchLastName = ViewBag.SearchLastName as string ?? string.Empty;
     var pageSize = (int)(ViewBag.PageSize ?? 20);
-    var canLoadMore = Model.Count >= pageSize;
 }
 <form id="searchForm" method="get" action="@Url.Action("Search", "Person")" class="mb-3">
     <div class="row g-2 align-items-start">
@@ -27,8 +26,8 @@
 </div>
 <script>
     (function () {
-        var form = document.getElementById('searchForm');
-        var alertEl = document.getElementById('searchError');
+        let form = document.getElementById('searchForm');
+        let alertEl = document.getElementById('searchError');
         if (form && alertEl) {
             form.addEventListener('submit', function () {
                 alertEl.style.display = 'none';
@@ -37,7 +36,7 @@
         }
     })();
 </script>
-@if (string.IsNullOrEmpty(searchError) && Model.Count > 0)
+@if (string.IsNullOrEmpty(searchError))
 {
     <style>
         .loading-overlay {
@@ -60,14 +59,13 @@
             <span class="visually-hidden">Загрузка...</span>
         </div>
     </div>
+    <div id="noData" class="alert alert-info" hidden>Нет данных по людям</div>
     <div id="personsList"
-         data-skip="@Model.Count"
          data-page-size="@pageSize"
-         data-has-more="@(canLoadMore ? "true" : "false")"
          data-load-url="@Url.Action("LoadMore", "Person")"
          data-search-first-name="@searchFirstName"
          data-search-last-name="@searchLastName">
-        <table class="table table-striped table-bordered table-hover">
+        <table id="personsTable" class="table table-striped table-bordered table-hover" hidden>
             <thead class="thead-light">
             <tr>
                 <th scope="col">Фамилия, имя</th>
@@ -76,28 +74,32 @@
                 <th scope="col">#</th>
             </tr>
             </thead>
-            <tbody>
-            @await Html.PartialAsync("_PersonRows", Model)
-            </tbody>
+            <tbody></tbody>
         </table>
+        <div id="scrollSentinel" style="height:1px;"></div>
     </div>
     <script>
         (function () {
-            var list = document.getElementById('personsList');
+            let list = document.getElementById('personsList');
             if (!list) return;
-            if (list.dataset.hasMore !== 'true') return;
 
-            var tbody = list.querySelector('tbody');
+            let table = document.getElementById('personsTable');
+            let tbody = list.querySelector('tbody');
             if (!tbody) return;
 
-            var overlay = document.getElementById('loadingOverlay');
-            var skip = parseInt(list.dataset.skip, 10) || 0;
-            var pageSize = parseInt(list.dataset.pageSize, 10) || 20;
-            var hasMore = true;
-            var loadUrl = list.dataset.loadUrl;
-            var firstName = list.dataset.searchFirstName || '';
-            var lastName = list.dataset.searchLastName || '';
-            var loading = false;
+            let overlay = document.getElementById('loadingOverlay');
+            let noData = document.getElementById('noData');
+
+            let skip = 0;
+            let pageSize = parseInt(list.dataset.pageSize, 10) || 20;
+            let hasMore = true;
+            let loadUrl = list.dataset.loadUrl;
+            let firstName = list.dataset.searchFirstName || '';
+            let lastName = list.dataset.searchLastName || '';
+            let loading = false;
+
+            let sentinel = document.getElementById('scrollSentinel');
+            if (!sentinel) return;
 
             function showOverlay() {
                 if (overlay) overlay.hidden = false;
@@ -108,20 +110,20 @@
             }
 
             function buildUrl() {
-                var params = new URLSearchParams();
+                let params = new URLSearchParams();
                 params.set('skip', String(skip));
                 if (firstName) params.set('firstName', firstName);
                 if (lastName) params.set('lastName', lastName);
                 return loadUrl + '?' + params.toString();
             }
 
-            function isNearBottom() {
-                return window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+            function isSentinelNearViewport() {
+                let rect = sentinel.getBoundingClientRect();
+                return rect.top < window.innerHeight + 200;
             }
 
             function loadMore() {
                 if (loading || !hasMore) return;
-                if (!isNearBottom()) return;
                 loading = true;
                 showOverlay();
                 fetch(buildUrl(), {
@@ -134,17 +136,23 @@
                     })
                     .then(function (html) {
                         html = html.trim();
-                        if (!html) {
+                        let tmp = document.createElement('tbody');
+                        tmp.innerHTML = html;
+                        let newRows = tmp.querySelectorAll('tr');
+                        if (newRows.length === 0) {
                             hasMore = false;
+                            if (skip === 0 && noData) {
+                                noData.hidden = false;
+                            }
                             loading = false;
                             hideOverlay();
                             return;
                         }
-                        var tmp = document.createElement('tbody');
-                        tmp.innerHTML = html;
-                        var newRows = tmp.querySelectorAll('tr');
-                        for (var i = 0; i < newRows.length; i++) {
+                        for (let i = 0; i < newRows.length; i++) {
                             tbody.appendChild(newRows[i]);
+                        }
+                        if (skip === 0 && table) {
+                            table.hidden = false;
                         }
                         skip += newRows.length;
                         if (newRows.length < pageSize) {
@@ -152,7 +160,13 @@
                         }
                         loading = false;
                         hideOverlay();
-                        loadMore();
+                        if (hasMore) {
+                            requestAnimationFrame(function () {
+                                if (isSentinelNearViewport()) {
+                                    loadMore();
+                                }
+                            });
+                        }
                     })
                     .catch(function () {
                         loading = false;
@@ -160,13 +174,12 @@
                     });
             }
 
-            window.addEventListener('scroll', loadMore, { passive: true });
-            window.addEventListener('resize', loadMore, { passive: true });
-            loadMore();
+            let observer = new IntersectionObserver(function (entries) {
+                if (entries[0].isIntersecting) {
+                    loadMore();
+                }
+            }, { rootMargin: '200px 0px' });
+            observer.observe(sentinel);
         })();
     </script>
-}
-else if (string.IsNullOrEmpty(searchError))
-{
-    <div class="alert alert-info">Нет данных по людям</div>
 }

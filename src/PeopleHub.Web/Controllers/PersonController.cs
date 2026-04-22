@@ -14,15 +14,11 @@ namespace PeopleHub.Controllers
         private const int PageSize = 20;
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var persons = await personService.SearchAsync(
-                User.Identity!.Name,
-                new SearchFilter(string.Empty, string.Empty, 0, PageSize),
-                HttpContext.RequestAborted);
             ViewBag.PageSize = PageSize;
 
-            return View(persons);
+            return View(Array.Empty<PersonInfo>());
         }
 
         [HttpGet]
@@ -38,7 +34,7 @@ namespace PeopleHub.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> Search(SearchPersonRequest request)
+        public IActionResult Search(SearchPersonRequest request)
         {
             ViewBag.PageSize = PageSize;
             if (!ModelState.IsValid)
@@ -58,12 +54,8 @@ namespace PeopleHub.Controllers
 
             ViewBag.SearchFirstName = firstName;
             ViewBag.SearchLastName = lastName;
-            var persons = await personService.SearchAsync(
-                User.Identity!.Name,
-                new SearchFilter(firstName, lastName, 0, PageSize),
-                HttpContext.RequestAborted);
 
-            return View("Index", persons);
+            return View("Index", Array.Empty<PersonInfo>());
         }
 
         [HttpGet]
