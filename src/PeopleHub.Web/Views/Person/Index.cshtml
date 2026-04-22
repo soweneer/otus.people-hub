@@ -1,9 +1,13 @@
-@using PeopleHub.Domain.Enums
 @model IReadOnlyCollection<PeopleHub.Domain.Model.PersonInfo>
 
 @{
     ViewBag.Title = "Люди";
     Layout = "_Layout";
+    var searchError = ViewBag.SearchError as string;
+    var searchFirstName = ViewBag.SearchFirstName as string ?? string.Empty;
+    var searchLastName = ViewBag.SearchLastName as string ?? string.Empty;
+    var pageSize = (int)(ViewBag.PageSize ?? 20);
+    var canLoadMore = Model.Count >= pageSize;
 }
 <form id="searchForm" method="get" action="@Url.Action("Search", "Person")" class="mb-3">
     <div class="row g-2 align-items-start">
@@ -18,9 +22,6 @@
         </div>
     </div>
 </form>
-@{
-    var searchError = ViewBag.SearchError as string;
-}
 <div id="searchError" class="alert alert-warning" style="@(string.IsNullOrEmpty(searchError) ? "display:none" : "")">
     @searchError
 </div>
@@ -38,49 +39,98 @@
 </script>
 @if (string.IsNullOrEmpty(searchError) && Model.Count > 0)
 {
-    <table class="table table-striped table-bordered table-hover">
-        <thead class="thead-light">
-        <tr>
-            <th scope="col">Фамилия, имя</th>
-            <th scope="col">Возраст</th>
-            <th scope="col">Город</th>
-            <th scope="col">#</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var person in Model)
-        {
+    <div id="personsList"
+         data-skip="@Model.Count"
+         data-page-size="@pageSize"
+         data-has-more="@(canLoadMore ? "true" : "false")"
+         data-load-url="@Url.Action("LoadMore", "Person")"
+         data-search-first-name="@searchFirstName"
+         data-search-last-name="@searchLastName">
+        <table class="table table-striped table-bordered table-hover">
+            <thead class="thead-light">
             <tr>
-                <td>
-                    <a href="@Url.Action("Person", "Person", new {personId = person.Person.Id})">
-                        @person.Person.Name
-                    </a>
-                </td>
-                <td>@person.Person.Age</td>
-                <td>@person.Person.City</td>
-                <td>
-                    @switch (person.Status)
-                    {
-                        case FriendRequestStatus.None:
-                            <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("SendFriendRequest", "Friends", new {targetPersonId = person.Person.Id, returnUrl = Url.Action("Index", "Person")})"><i class="fa fa-user-plus"></i></a>
-                            break;
-                        case FriendRequestStatus.Sent:
-                        case FriendRequestStatus.Rejected:
-                            <div class="alert alert-info"><i class="fa fa-clock"></i> Заявка отправлена</div>
-                            break;
-                        case FriendRequestStatus.Approved:
-                            <div class="alert alert-success"><i class="fa fa-check"></i> У вас в друзьях</div>
-                            <a class="btn btn-danger" title="Удалить из друзей" href="@Url.Action("CancelRequest", "Friends", new {targetPersonId = person.Person.Id, returnUrl = Url.Action("Index")})"><i class="fa fa-user-times"></i></a>
-                            break;
-                        default:
-                            <div class="alert alert-danger"><strong>Неизвестный статус заявки: @person.Status.ToString("F")</strong></div>
-                            break;
-                    }
-                </td>
+                <th scope="col">Фамилия, имя</th>
+                <th scope="col">Возраст</th>
+                <th scope="col">Город</th>
+                <th scope="col">#</th>
             </tr>
-        }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            @await Html.PartialAsync("_PersonRows", Model)
+            </tbody>
+        </table>
+    </div>
+    <script>
+        (function () {
+            var list = document.getElementById('personsList');
+            if (!list) return;
+            if (list.dataset.hasMore !== 'true') return;
+
+            var tbody = list.querySelector('tbody');
+            if (!tbody) return;
+
+            var skip = parseInt(list.dataset.skip, 10) || 0;
+            var pageSize = parseInt(list.dataset.pageSize, 10) || 20;
+            var hasMore = true;
+            var loadUrl = list.dataset.loadUrl;
+            var firstName = list.dataset.searchFirstName || '';
+            var lastName = list.dataset.searchLastName || '';
+            var loading = false;
+
+            function buildUrl() {
+                var params = new URLSearchParams();
+                params.set('skip', String(skip));
+                if (firstName) params.set('firstName', firstName);
+                if (lastName) params.set('lastName', lastName);
+                return loadUrl + '?' + params.toString();
+            }
+
+            function isNearBottom() {
+                return window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 200;
+            }
+
+            function loadMore() {
+                if (loading || !hasMore) return;
+                if (!isNearBottom()) return;
+                loading = true;
+                fetch(buildUrl(), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                })
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('Failed to load');
+                        return res.text();
+                    })
+                    .then(function (html) {
+                        html = html.trim();
+                        if (!html) {
+                            hasMore = false;
+                            loading = false;
+                            return;
+                        }
+                        var tmp = document.createElement('tbody');
+                        tmp.innerHTML = html;
+                        var newRows = tmp.querySelectorAll('tr');
+                        for (var i = 0; i < newRows.length; i++) {
+                            tbody.appendChild(newRows[i]);
+                        }
+                        skip += newRows.length;
+                        if (newRows.length < pageSize) {
+                            hasMore = false;
+                        }
+                        loading = false;
+                        loadMore();
+                    })
+                    .catch(function () {
+                        loading = false;
+                    });
+            }
+
+            window.addEventListener('scroll', loadMore, { passive: true });
+            window.addEventListener('resize', loadMore, { passive: true });
+            loadMore();
+        })();
+    </script>
 }
 else if (string.IsNullOrEmpty(searchError))
 {

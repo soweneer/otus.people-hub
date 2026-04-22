@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.Model;
@@ -12,18 +11,36 @@ namespace PeopleHub.Controllers
     [Authorize]
     public class PersonController(IPersonService personService) : Controller
     {
+        private const int PageSize = 20;
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var persons = await personService.GetAllAsync(User.Identity!.Name, HttpContext.RequestAborted);
+            var persons = await personService.SearchAsync(
+                User.Identity!.Name,
+                new SearchFilter(string.Empty, string.Empty, 0, PageSize),
+                HttpContext.RequestAborted);
+            ViewBag.PageSize = PageSize;
 
             return View(persons);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> LoadMore(int skip, string firstName, string lastName)
+        {
+            var persons = await personService.SearchAsync(
+                User.Identity!.Name,
+                new SearchFilter(firstName ?? string.Empty, lastName ?? string.Empty, skip, PageSize),
+                HttpContext.RequestAborted);
+
+            return PartialView("_PersonRows", persons);
         }
 
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> Search(SearchPersonRequest request)
         {
+            ViewBag.PageSize = PageSize;
             if (!ModelState.IsValid)
             {
                 ViewBag.SearchError = string.Join("; ",
@@ -41,8 +58,10 @@ namespace PeopleHub.Controllers
 
             ViewBag.SearchFirstName = firstName;
             ViewBag.SearchLastName = lastName;
-            var persons = await personService.SearchAsync(User.Identity!.Name, 
-                firstName, lastName, HttpContext.RequestAborted);
+            var persons = await personService.SearchAsync(
+                User.Identity!.Name,
+                new SearchFilter(firstName, lastName, 0, PageSize),
+                HttpContext.RequestAborted);
 
             return View("Index", persons);
         }

@@ -74,63 +74,27 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             : Convert.ToInt32(personId);
     }
 
-    public async Task<IReadOnlyCollection<PersonInfo>> GetAllAsync(string currentUserEmail, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<PersonInfo>> SearchAsync(string currentUserEmail, SearchFilter searchFilter, CancellationToken cancellationToken)
     {
-        var personId = await GetPersonIdAsync(currentUserEmail, cancellationToken);
+        var (firstName, lastName, skip, take) = searchFilter;
 
-        var selectQuery = $"""
-            with my_friends as (
-                select distinct friend_id, status from
-                (
-                    select sender_person_id as friend_id, status from {DbClient.FriendsRequestsTable} where receiver_person_id = {personId}
-                    union all
-                    select receiver_person_id as friend_id, status from {DbClient.FriendsRequestsTable} where sender_person_id = {personId}
-                )
-            )
-            select p.id, p.surname || ' ' || p.name as name, p.age, p.city, f.status
-            from 
-                {DbClient.PersonsTable} p 
-                left join my_friends f on friend_id = p.id
-            order by p.id;
-            """;
-        var dataTable = await dbClient.GetDataTableAsync(selectQuery, cancellationToken);
-        if (dataTable is null || dataTable.Rows.Count == 0)
-        {
-            return [];
-        }
-
-        return dataTable.Rows.Cast<DataRow>()
-            .Select(row => new PersonInfo(
-                new PersonLite(
-                    int.Parse(row["id"].ToString()),
-                    row["name"].ToString(),
-                    int.Parse(row["age"].ToString()),
-                    row["city"].ToString()
-                    ), 
-                Convert.IsDBNull(row["status"])
-                    ? FriendRequestStatus.None
-                    : Enum.Parse<FriendRequestStatus>(row["status"].ToString())))
-            .ToArray();
-    }
-
-    public async Task<IReadOnlyCollection<PersonInfo>> SearchAsync(string currentUserEmail, string surname, string name, 
-        CancellationToken cancellationToken)
-    {
         var personId = await GetPersonIdAsync(currentUserEmail, cancellationToken);
 
         var conditions = new List<string>();
         var parameters = new List<(string, object)>();
-        if (!string.IsNullOrWhiteSpace(surname))
+        if (!string.IsNullOrWhiteSpace(lastName))
         {
-            conditions.Add("p.surname LIKE @surname");
-            parameters.Add(("surname", surname + "%"));
+            conditions.Add("p.surname like @surname");
+            parameters.Add(("surname", lastName + "%"));
         }
-        if (!string.IsNullOrWhiteSpace(name))
+        if (!string.IsNullOrWhiteSpace(firstName))
         {
-            conditions.Add("p.name LIKE @name");
-            parameters.Add(("name", name + "%"));
+            conditions.Add("p.name like @name");
+            parameters.Add(("name", firstName + "%"));
         }
-        var whereClause = "where " + string.Join(" AND ", conditions);
+        var whereClause = conditions.Count > 0
+            ? $"where {string.Join(" and ", conditions)}"
+            : string.Empty;
 
         var selectQuery = $"""
             with my_friends as (
@@ -146,7 +110,8 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
                 {DbClient.PersonsTable} p
                 left join my_friends f on friend_id = p.id
             {whereClause}
-            order by p.id;
+            order by p.id
+            limit {take} offset {skip};
             """;
 
         var dataTable = await dbClient.ExecuteDataTableAsync(selectQuery, parameters);

@@ -6,12 +6,8 @@ namespace PeopleHub.Domain.Services;
 
 public class PersonService(IPersonRepository personRepository) : IPersonService
 {
-    public Task<IReadOnlyCollection<PersonInfo>> GetAllAsync(string email, CancellationToken cancellationToken = default) =>
-        personRepository.GetAllAsync(email, cancellationToken);
-
-    public Task<IReadOnlyCollection<PersonInfo>> SearchAsync(string email, string firstName, string lastName,
-        CancellationToken cancellationToken = default) =>
-        personRepository.SearchAsync(email, lastName, firstName, cancellationToken);
+    public Task<IReadOnlyCollection<PersonInfo>> SearchAsync(string email, SearchFilter filter, CancellationToken cancellationToken = default) =>
+        personRepository.SearchAsync(email, filter, cancellationToken);
 
     public async Task<FriendInfo?> GetByEmailAsync(string email, int targetPersonId, CancellationToken cancellationToken = default)
     {
