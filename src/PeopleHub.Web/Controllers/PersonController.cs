@@ -1,5 +1,7 @@
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PeopleHub.Domain.Model;
 using PeopleHub.Exceptions;
 using PeopleHub.Extensions;
 using PeopleHub.Domain.Services;
@@ -16,6 +18,33 @@ namespace PeopleHub.Controllers
             var persons = await personService.GetAllAsync(User.Identity!.Name, HttpContext.RequestAborted);
 
             return View(persons);
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Search(SearchPersonRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.SearchError = string.Join("; ",
+                    ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
+                return View("Index", Array.Empty<PersonInfo>());
+            }
+
+            var firstName = request.FirstName.Trim();
+            var lastName = request.LastName.Trim();
+            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
+            {
+                ViewBag.SearchError = "Заполните хотя бы одно из полей: имя или фамилия";
+                return View("Index", Array.Empty<PersonInfo>());
+            }
+
+            ViewBag.SearchFirstName = firstName;
+            ViewBag.SearchLastName = lastName;
+            var persons = await personService.SearchAsync(User.Identity!.Name, 
+                firstName, lastName, HttpContext.RequestAborted);
+
+            return View("Index", persons);
         }
 
         [HttpGet]
