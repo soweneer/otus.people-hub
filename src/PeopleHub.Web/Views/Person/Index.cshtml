@@ -39,6 +39,27 @@
 </script>
 @if (string.IsNullOrEmpty(searchError) && Model.Count > 0)
 {
+    <style>
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+        }
+        .loading-overlay[hidden] {
+            display: none;
+        }
+    </style>
+    <div id="loadingOverlay" class="loading-overlay" hidden>
+        <div class="spinner-border text-light" role="status" style="width: 10rem; height: 10rem;">
+            <span class="visually-hidden">Загрузка...</span>
+        </div>
+    </div>
     <div id="personsList"
          data-skip="@Model.Count"
          data-page-size="@pageSize"
@@ -69,6 +90,7 @@
             var tbody = list.querySelector('tbody');
             if (!tbody) return;
 
+            var overlay = document.getElementById('loadingOverlay');
             var skip = parseInt(list.dataset.skip, 10) || 0;
             var pageSize = parseInt(list.dataset.pageSize, 10) || 20;
             var hasMore = true;
@@ -76,6 +98,14 @@
             var firstName = list.dataset.searchFirstName || '';
             var lastName = list.dataset.searchLastName || '';
             var loading = false;
+
+            function showOverlay() {
+                if (overlay) overlay.hidden = false;
+            }
+
+            function hideOverlay() {
+                if (overlay) overlay.hidden = true;
+            }
 
             function buildUrl() {
                 var params = new URLSearchParams();
@@ -93,6 +123,7 @@
                 if (loading || !hasMore) return;
                 if (!isNearBottom()) return;
                 loading = true;
+                showOverlay();
                 fetch(buildUrl(), {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                     credentials: 'same-origin'
@@ -106,6 +137,7 @@
                         if (!html) {
                             hasMore = false;
                             loading = false;
+                            hideOverlay();
                             return;
                         }
                         var tmp = document.createElement('tbody');
@@ -119,10 +151,12 @@
                             hasMore = false;
                         }
                         loading = false;
+                        hideOverlay();
                         loadMore();
                     })
                     .catch(function () {
                         loading = false;
+                        hideOverlay();
                     });
             }
 

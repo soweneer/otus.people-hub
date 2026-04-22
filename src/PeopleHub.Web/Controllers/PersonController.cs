@@ -48,8 +48,8 @@ namespace PeopleHub.Controllers
                 return View("Index", Array.Empty<PersonInfo>());
             }
 
-            var firstName = request.FirstName.Trim();
-            var lastName = request.LastName.Trim();
+            var firstName = request.FirstName?.Trim() ?? string.Empty;
+            var lastName = request.LastName?.Trim() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
             {
                 ViewBag.SearchError = "Заполните хотя бы одно из полей: имя или фамилия";
