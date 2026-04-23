@@ -24,9 +24,9 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
 
         var dataTable = new DataTable();
         await dbClient.ExecuteCmdAsync(query,
-            cmd =>
+            async cmd =>
             {
-                var dataReader = cmd.ExecuteReader();
+                await using var dataReader = await cmd.ExecuteReaderAsync();
                 dataTable.Load(dataReader);
             },
             [("email", email)]);
@@ -161,7 +161,7 @@ internal class PersonRepository(DbClient dbClient) : IPersonRepository
             $"UPDATE {DbClient.PersonsTable} " +
                  "SET surname = @surname, name = @name, age = @age, bio = @bio, city = @city, gender = @gender" +
                  "WHERE id = @personId",
-            cmd => cmd.ExecuteNonQuery(),
+            async cmd => await cmd.ExecuteNonQueryAsync(),
             [
                 ("surname", surname),
                 ("name", name),

@@ -14,7 +14,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             $"update {DbClient.FriendsRequestsTable} " +
             $"set status = {FriendRequestStatus.Approved:D} " +
             $"where id = {id} and receiver_person_id = {receiverPersonId}",
-            cmd => cmd.ExecuteNonQuery());
+            async cmd => await cmd.ExecuteNonQueryAsync());
 
     public async Task DeleteAsync(int personId, int receiverPersonId)
     {
@@ -24,7 +24,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
                     $" or (sender_person_id = {receiverPersonId} and receiver_person_id = {personId})";
 
         await dbClient.ExecuteCmdAsync(query, 
-            cmd => cmd.ExecuteNonQuery());
+            async cmd => await cmd.ExecuteNonQueryAsync());
     }
 
     public async Task<FriendsInfo> GetFriendsAsync(int personId)
@@ -101,13 +101,13 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             $"update {DbClient.FriendsRequestsTable} " +
             $"set status = {FriendRequestStatus.Rejected:D} " +
             $"where id = {id} and receiver_person_id = {receiverPersonId}",
-            cmd => cmd.ExecuteNonQuery()
+            async cmd => await cmd.ExecuteNonQueryAsync()
         );
 
     public Task SendAsync(int senderPersonId, int receiverPersonId) => 
         dbClient.ExecuteCmdAsync(
             $"insert into {DbClient.FriendsRequestsTable} (sender_person_id, receiver_person_id, status) " +
             $"values ({senderPersonId}, {receiverPersonId}, {FriendRequestStatus.Sent:D})",
-            cmd => cmd.ExecuteNonQuery()
+            async cmd => await cmd.ExecuteNonQueryAsync()
         );
 }

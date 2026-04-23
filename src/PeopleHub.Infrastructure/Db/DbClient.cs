@@ -3,6 +3,7 @@ using Npgsql;
 
 namespace PeopleHub.Infrastructure.Db;
 
+// ReSharper disable once AsyncVoidLambda
 internal sealed class DbClient(string connectionString)
 {
     public const string PersonsTable = "persons";
@@ -43,7 +44,6 @@ internal sealed class DbClient(string connectionString)
         var tableList = new List<string>();
 
         await ExecuteCmdAsync("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
-            // ReSharper disable once AsyncVoidLambda
             async cmd =>
             {
                 var dataReader = await cmd.ExecuteReaderAsync();
@@ -101,6 +101,9 @@ internal sealed class DbClient(string connectionString)
                     person_id INTEGER NOT NULL,
                     CONSTRAINT accounts_ibfk_1 FOREIGN KEY (person_id) REFERENCES {PersonsTable} (id) ON DELETE CASCADE
                 );
+
+                CREATE INDEX IF NOT EXISTS ix_{PersonsTable}_surname_name
+                    ON {PersonsTable} (surname varchar_pattern_ops, name varchar_pattern_ops);
             """;
         
         // TODO uncomment me when got ready to do indexes homewwork
@@ -109,16 +112,17 @@ internal sealed class DbClient(string connectionString)
         // CREATE INDEX ix_accounts_person_id ON {AccountsTable} (person_id);
         #endregion
 
-        await ExecuteCmdAsync(query, cmd => cmd.ExecuteNonQuery());
+        
+        await ExecuteCmdAsync(query, async cmd => await cmd.ExecuteNonQueryAsync());
     }
     
     public Task ExecuteNonQuery(string query, IEnumerable<(string, object)> parameters = null) =>
-        ExecuteCmdAsync(query, cmd => cmd.ExecuteNonQuery(), parameters);
+        ExecuteCmdAsync(query, async cmd => await cmd.ExecuteNonQueryAsync(), parameters);
 
     public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters = null)
     {
         var scalar = new object();
-        await ExecuteCmdAsync(query, cmd => scalar = cmd.ExecuteScalar(), parameters);
+        await ExecuteCmdAsync(query, async cmd => scalar = await cmd.ExecuteScalarAsync(), parameters);
 
         return scalar;
     }
@@ -126,16 +130,16 @@ internal sealed class DbClient(string connectionString)
     public async Task<DataTable> ExecuteDataTableAsync(string query, IEnumerable<(string, object)> parameters = null)
     {
         var dataTable = new DataTable();
-        await ExecuteCmdAsync(query, cmd =>
+        await ExecuteCmdAsync(query, async cmd =>
         {
-            var dataReader = cmd.ExecuteReader();
+            var dataReader = await cmd.ExecuteReaderAsync();
             dataTable.Load(dataReader);
         }, parameters);
         
         return dataTable;
     }
 
-    public async Task ExecuteCmdAsync(string parametrizedQuery, Action<NpgsqlCommand> cmdAction, 
+    public async Task ExecuteCmdAsync(string parametrizedQuery, Func<NpgsqlCommand, Task> cmdAction,
         IEnumerable<(string, object)> parameters = null)
     {
         await using var connection = await GetSqlConnectionAsync();
@@ -146,12 +150,12 @@ internal sealed class DbClient(string connectionString)
         {
             foreach (var parameter in parameters)
             {
-                cmd.Parameters.AddWithValue(parameter.Item1, parameter.Item2);    
+                cmd.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
             }
         }
-        
-        cmdAction.Invoke(cmd);
-        
+
+        await cmdAction(cmd);
+
         await connection.CloseAsync();
     }
 }

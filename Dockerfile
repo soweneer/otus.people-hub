@@ -8,7 +8,6 @@ WORKDIR /build
 COPY ["src/PeopleHub.Web/PeopleHub.Web.csproj", "src/PeopleHub.Web/"]
 COPY ["src/PeopleHub.Domain/PeopleHub.Domain.csproj", "src/PeopleHub.Domain/"]
 COPY ["src/PeopleHub.Infrastructure/PeopleHub.Infrastructure.csproj", "src/PeopleHub.Infrastructure/"]
-COPY ["src/PeopleHub.Shared/PeopleHub.Shared.csproj", "src/PeopleHub.Shared/"]
 RUN dotnet restore "src/PeopleHub.Web/PeopleHub.Web.csproj"
 COPY . .
 WORKDIR "/build/src/PeopleHub.Web"
