@@ -69,50 +69,45 @@ internal sealed class DbClient(string connectionString)
         const string query =
             #region SQL для создания базовых таблиц
             $"""
-                DROP TABLE IF EXISTS {FriendsRequestsTable};
-                DROP TABLE IF EXISTS {AccountsTable};
-                DROP TABLE IF EXISTS {PersonsTable};
-
-                CREATE TABLE {PersonsTable} (
-                    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                    surname VARCHAR(100) NOT NULL,
-                    name VARCHAR(100) NOT NULL,
-                    age SMALLINT NOT NULL,
-                    gender SMALLINT NOT NULL,
-                    city VARCHAR(100) NOT NULL,
-                    bio TEXT
+                drop table if exists {FriendsRequestsTable};
+                drop table if exists {AccountsTable};
+                drop table if exists {PersonsTable};
+                
+                create table {PersonsTable} (
+                    id integer generated always as identity primary key,
+                    surname varchar(100) not null,
+                    name varchar(100) not null,
+                    age smallint not null,
+                    gender smallint not null,
+                    city varchar(100) not null,
+                    bio text
                 );
-
-                CREATE TABLE {FriendsRequestsTable} (
-                    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                    sender_person_id INTEGER NOT NULL,
-                    receiver_person_id INTEGER NOT NULL,
-                    status INTEGER NOT NULL DEFAULT 0,
-                    CONSTRAINT friends_ibfk_1 FOREIGN KEY (sender_person_id) REFERENCES {PersonsTable} (id) ON DELETE CASCADE,
-                    CONSTRAINT friends_ibfk_2 FOREIGN KEY (receiver_person_id) REFERENCES {PersonsTable} (id) ON DELETE CASCADE,
-                    CONSTRAINT friends_relation_unique UNIQUE (sender_person_id, receiver_person_id),
-                    CONSTRAINT friends_relation_unique_reverse UNIQUE (receiver_person_id, sender_person_id)
+                
+                create table {FriendsRequestsTable} (
+                    id integer generated always as identity primary key,
+                    sender_person_id integer not null,
+                    receiver_person_id integer not null,
+                    status integer not null default 0,
+                    constraint friends_ibfk_1 foreign key (sender_person_id) references {PersonsTable} (id) on delete cascade,
+                    constraint friends_ibfk_2 foreign key (receiver_person_id) references {PersonsTable} (id) on delete cascade,
+                    constraint friends_relation_unique unique (sender_person_id, receiver_person_id),
+                    constraint friends_relation_unique_reverse unique (receiver_person_id, sender_person_id)
                 );
-
-                CREATE TABLE {AccountsTable} (
-                    id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                    email VARCHAR(100) NOT NULL,
-                    password VARCHAR(100) NOT NULL,
-                    person_id INTEGER NOT NULL,
-                    CONSTRAINT accounts_ibfk_1 FOREIGN KEY (person_id) REFERENCES {PersonsTable} (id) ON DELETE CASCADE
+                
+                create table {AccountsTable} (
+                    id integer generated always as identity primary key,
+                    email varchar(100) not null,
+                    password varchar(100) not null,
+                    person_id integer not null,
+                    constraint accounts_ibfk_1 foreign key (person_id) references {PersonsTable} (id) on delete cascade
                 );
-
-                CREATE INDEX IF NOT EXISTS ix_{PersonsTable}_surname_name
-                    ON {PersonsTable} (surname varchar_pattern_ops, name varchar_pattern_ops);
+                
+                create extension pg_trgm;
+                create index if not exists ix_{PersonsTable}_surname_name
+                    on {PersonsTable} using gin (surname gin_trgm_ops, name gin_trgm_ops);
             """;
-        
-        // TODO uncomment me when got ready to do indexes homewwork
-        // CREATE INDEX ix_{FriendsRequestsTable}_sender_person_id ON {FriendsRequestsTable} (sender_person_id);
-        // CREATE INDEX ix_{FriendsRequestsTable}_receiver_person_id ON {FriendsRequestsTable} (receiver_person_id);
-        // CREATE INDEX ix_accounts_person_id ON {AccountsTable} (person_id);
         #endregion
 
-        
         await ExecuteCmdAsync(query, async cmd => await cmd.ExecuteNonQueryAsync());
     }
     
