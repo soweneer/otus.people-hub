@@ -22,11 +22,11 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
     
     public async Task<bool> ExistsAsync(string email)
     {
-        var scalar = await dbClient.ExecuteScalarAsync(
+        var dbValue = await dbClient.ExecuteScalarAsync(
             $"SELECT 1 FROM {DbClient.AccountsTable} WHERE email = @email", 
             [("email", email)]);
 
-        return scalar is not null;
+        return dbValue is not null;
     }
     
     public async Task<Account> FindByEmailAsync(string email)
@@ -45,6 +45,6 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
             dataRow["email"].ToString(),
             dataRow["password"].ToString(),
              int.Parse(dataRow["person_id"].ToString())
-            );
+        );
     }
 }

@@ -16,13 +16,13 @@ internal class SearchRepository(DbClient dbClient) : ISearchRepository
         var parameters = new List<(string, object)>();
         if (!string.IsNullOrWhiteSpace(lastName))
         {
-            conditions.Add("p.surname like @surname");
-            parameters.Add(("surname", lastName + "%"));
+            conditions.Add("p.surname ilike @surname");
+            parameters.Add(("surname", $"%{lastName}%"));
         }
         if (!string.IsNullOrWhiteSpace(firstName))
         {
-            conditions.Add("p.name like @name");
-            parameters.Add(("name", firstName + "%"));
+            conditions.Add("p.name ilike @name");
+            parameters.Add(("name", $"%firstName%"));
         }
         var whereClause = conditions.Count > 0
             ? $"where {string.Join(" and ", conditions)}"
