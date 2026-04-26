@@ -22,7 +22,7 @@ internal class SearchRepository(DbClient dbClient) : ISearchRepository
         if (!string.IsNullOrWhiteSpace(firstName))
         {
             conditions.Add("p.name ilike @name");
-            parameters.Add(("name", $"%firstName%"));
+            parameters.Add(("name", $"%{firstName}%"));
         }
         var whereClause = conditions.Count > 0
             ? $"where {string.Join(" and ", conditions)}"
