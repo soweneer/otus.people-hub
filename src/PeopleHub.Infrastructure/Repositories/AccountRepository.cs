@@ -1,4 +1,4 @@
-﻿using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
 
@@ -6,29 +6,29 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class AccountRepository(DbClient dbClient) : IAccountRepository
 {
-    public async Task<int?> CreateAsync(string email, string password, int personId)
+    public async Task<int?> CreateAsync(string email, string password, int userId)
     {
         var scalar = await dbClient.ExecuteScalarAsync(
-            $"INSERT INTO {DbClient.AccountsTable} (email, password, person_id) " +
-            $"VALUES (@email, @password, @personId) RETURNING id",
+            $"INSERT INTO {DbClient.AccountsTable} (email, password, user_id) " +
+            $"VALUES (@email, @password, @userId) RETURNING id",
             [
                 ("email", email),
                 ("password", password),
-                ("personId", personId)
+                ("userId", userId)
             ]);
 
         return Convert.ToInt32(scalar);
     }
-    
+
     public async Task<bool> ExistsAsync(string email)
     {
         var dbValue = await dbClient.ExecuteScalarAsync(
-            $"SELECT 1 FROM {DbClient.AccountsTable} WHERE email = @email", 
+            $"SELECT 1 FROM {DbClient.AccountsTable} WHERE email = @email",
             [("email", email)]);
 
         return dbValue is not null;
     }
-    
+
     public async Task<Account> FindByEmailAsync(string email)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
@@ -44,7 +44,7 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
             int.Parse(dataRow["id"].ToString()),
             dataRow["email"].ToString(),
             dataRow["password"].ToString(),
-             int.Parse(dataRow["person_id"].ToString())
+             int.Parse(dataRow["user_id"].ToString())
         );
     }
 }

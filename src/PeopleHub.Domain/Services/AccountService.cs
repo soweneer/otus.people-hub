@@ -4,7 +4,7 @@ using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Domain.Services;
 
-public class AccountService(IPersonRepository personRepository,
+public class AccountService(IUserRepository userRepository,
     IAccountRepository accountRepository,
     IPasswordHasher passwordHasher) : IAccountService
 {
@@ -23,10 +23,10 @@ public class AccountService(IPersonRepository personRepository,
             return SignUpStatus.AlreadyExists;
         }
 
-        var personId = await personRepository.CreateAsync(personalInfo, cancellationToken);
-        if (personId.HasValue)
+        var userId = await userRepository.CreateAsync(personalInfo, cancellationToken);
+        if (userId.HasValue)
         {
-            var accountResult = await accountRepository.CreateAsync(email, passwordHasher.Hash(password), personId.Value);
+            var accountResult = await accountRepository.CreateAsync(email, passwordHasher.Hash(password), userId.Value);
             if (accountResult.HasValue)
             {
                 return SignUpStatus.Success;

@@ -16,7 +16,7 @@ namespace PeopleHub.Controllers
         public IActionResult SignIn()
         {
             return User.Identity!.IsAuthenticated
-                ? RedirectToAction("Index", "Person")
+                ? RedirectToAction("Index", "User")
                 : View("SignIn");
         }
 
@@ -30,7 +30,7 @@ namespace PeopleHub.Controllers
             if (await accountService.CanLoginAsync(request.Email, request.Password, HttpContext.RequestAborted))
             {
                 await Authenticate(request.Email);
-                return RedirectToAction("Index", "Person");
+                return RedirectToAction("Index", "User");
             }
 
             ModelState.AddModelError("Password", "Неверные данные пользователя");
@@ -49,7 +49,7 @@ namespace PeopleHub.Controllers
         public IActionResult SignUp()
         {
             if (User.Identity?.IsAuthenticated ?? false)
-                return RedirectToAction("Index", "Person");
+                return RedirectToAction("Index", "User");
 
             return View();
         }
@@ -59,7 +59,7 @@ namespace PeopleHub.Controllers
         public async Task<IActionResult> SignUp(SignUpRequest request)
         {
             if (User.Identity?.IsAuthenticated ?? false)
-                return RedirectToAction("Index", "Person");
+                return RedirectToAction("Index", "User");
             if (!ModelState.IsValid)
                 return View(request);
 
@@ -74,7 +74,7 @@ namespace PeopleHub.Controllers
                     return View(request);
                 case SignUpStatus.Success:
                     await Authenticate(request.Email);
-                    return RedirectToAction("Index", "Person");
+                    return RedirectToAction("Index", "User");
                 case SignUpStatus.Failed:
                 default:
                     ModelState.AddModelError("Email", "Не удалось зарегистрировать пользователя");

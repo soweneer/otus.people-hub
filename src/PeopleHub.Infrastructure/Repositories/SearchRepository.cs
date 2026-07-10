@@ -8,7 +8,7 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class SearchRepository(DbClient dbClient) : ISearchRepository
 {
-    public async Task<IReadOnlyCollection<PersonInfo>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<UserInfo>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken)
     {
         var (firstName, lastName, skip, take) = searchFilter;
 
@@ -16,12 +16,12 @@ internal class SearchRepository(DbClient dbClient) : ISearchRepository
         var parameters = new List<(string, object)>();
         if (!string.IsNullOrWhiteSpace(lastName))
         {
-            conditions.Add("p.surname ilike @surname");
+            conditions.Add("u.surname ilike @surname");
             parameters.Add(("surname", $"%{lastName}%"));
         }
         if (!string.IsNullOrWhiteSpace(firstName))
         {
-            conditions.Add("p.name ilike @name");
+            conditions.Add("u.name ilike @name");
             parameters.Add(("name", $"%{firstName}%"));
         }
         var whereClause = conditions.Count > 0
@@ -29,10 +29,10 @@ internal class SearchRepository(DbClient dbClient) : ISearchRepository
             : string.Empty;
 
         var selectQuery = $"""
-            select p.id, p.surname || ' ' || p.name as name, p.age, p.city
-            from {DbClient.PersonsTable} p
+            select u.id, u.surname || ' ' || u.name as name, u.age, u.city
+            from {DbClient.UsersTable} u
             {whereClause}
-            order by p.id
+            order by u.id
             limit {take} offset {skip};
             """;
 
@@ -43,8 +43,8 @@ internal class SearchRepository(DbClient dbClient) : ISearchRepository
         }
 
         return dataTable.Rows.Cast<DataRow>()
-            .Select(row => new PersonInfo(
-                new PersonLite(
+            .Select(row => new UserInfo(
+                new UserLite(
                     int.Parse(row["id"].ToString()),
                     row["name"].ToString(),
                     int.Parse(row["age"].ToString()),

@@ -1,3 +1,3 @@
-﻿namespace PeopleHub.Domain.Entities;
+namespace PeopleHub.Domain.Entities;
 
-public sealed record Account(int Id, string Email, string Password, int PersonId);
+public sealed record Account(int Id, string Email, string Password, int UserId);

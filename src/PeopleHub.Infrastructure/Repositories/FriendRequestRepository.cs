@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Model;
@@ -9,40 +9,40 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestRepository
 {
-    public Task ApproveAsync(int id, int receiverPersonId) =>
+    public Task ApproveAsync(int id, int receiverUserId) =>
         dbClient.ExecuteCmdAsync(
             $"update {DbClient.FriendsRequestsTable} " +
             $"set status = {FriendRequestStatus.Approved:D} " +
-            $"where id = {id} and receiver_person_id = {receiverPersonId}",
+            $"where id = {id} and receiver_user_id = {receiverUserId}",
             async cmd => await cmd.ExecuteNonQueryAsync());
 
-    public async Task DeleteAsync(int personId, int receiverPersonId)
+    public async Task DeleteAsync(int userId, int receiverUserId)
     {
         var query = $"delete from {DbClient.FriendsRequestsTable} " +
                     "where " +
-                    $"(sender_person_id = {personId} and receiver_person_id = {receiverPersonId})" +
-                    $" or (sender_person_id = {receiverPersonId} and receiver_person_id = {personId})";
+                    $"(sender_user_id = {userId} and receiver_user_id = {receiverUserId})" +
+                    $" or (sender_user_id = {receiverUserId} and receiver_user_id = {userId})";
 
-        await dbClient.ExecuteCmdAsync(query, 
+        await dbClient.ExecuteCmdAsync(query,
             async cmd => await cmd.ExecuteNonQueryAsync());
     }
 
-    public async Task<FriendsInfo> GetFriendsAsync(int personId)
+    public async Task<FriendsInfo> GetFriendsAsync(int userId)
     {
         var dataSet = await dbClient.GetDataSetASync(
             $"""
              with my_friends as (
                  select * from
                  (
-                     select id as request_id, sender_person_id as friend_id, status, 0 as incoming from {DbClient.FriendsRequestsTable} where receiver_person_id = {personId}
+                     select id as request_id, sender_user_id as friend_id, status, 0 as incoming from {DbClient.FriendsRequestsTable} where receiver_user_id = {userId}
                      union all
-                     select id as request_id, receiver_person_id as friend_id, status, 1 as incoming from {DbClient.FriendsRequestsTable} where sender_person_id = {personId}
+                     select id as request_id, receiver_user_id as friend_id, status, 1 as incoming from {DbClient.FriendsRequestsTable} where sender_user_id = {userId}
                  )
              )
-             select p.*, f.*
+             select u.*, f.*
              from
                  my_friends f
-                 left join {DbClient.PersonsTable} p on f.friend_id = p.id
+                 left join {DbClient.UsersTable} u on f.friend_id = u.id
              """
         );
 
@@ -53,7 +53,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
         {
             var status = Enum.Parse<FriendRequestStatus>(row["status"].ToString());
             var friend = new FriendInfoLite(
-                new PersonLite(
+                new UserLite(
                     Convert.ToInt32(row["id"]),
                     $"{row["surname"]} {row["name"]}",
                     Convert.ToInt32(row["age"]),
@@ -91,23 +91,23 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             ? null
             : new FriendRequest(
                 Convert.ToInt32(dataTable.Rows[0]["id"]),
-                Convert.ToInt32(dataTable.Rows[0]["receiver_person_id"]),
-                Convert.ToInt32(dataTable.Rows[0]["sender_person_id"])
+                Convert.ToInt32(dataTable.Rows[0]["receiver_user_id"]),
+                Convert.ToInt32(dataTable.Rows[0]["sender_user_id"])
             );
     }
 
-    public Task RejectAsync(int id, int receiverPersonId) => 
+    public Task RejectAsync(int id, int receiverUserId) =>
         dbClient.ExecuteCmdAsync(
             $"update {DbClient.FriendsRequestsTable} " +
             $"set status = {FriendRequestStatus.Rejected:D} " +
-            $"where id = {id} and receiver_person_id = {receiverPersonId}",
+            $"where id = {id} and receiver_user_id = {receiverUserId}",
             async cmd => await cmd.ExecuteNonQueryAsync()
         );
 
-    public Task SendAsync(int senderPersonId, int receiverPersonId) => 
+    public Task SendAsync(int senderUserId, int receiverUserId) =>
         dbClient.ExecuteCmdAsync(
-            $"insert into {DbClient.FriendsRequestsTable} (sender_person_id, receiver_person_id, status) " +
-            $"values ({senderPersonId}, {receiverPersonId}, {FriendRequestStatus.Sent:D})",
+            $"insert into {DbClient.FriendsRequestsTable} (sender_user_id, receiver_user_id, status) " +
+            $"values ({senderUserId}, {receiverUserId}, {FriendRequestStatus.Sent:D})",
             async cmd => await cmd.ExecuteNonQueryAsync()
         );
 }

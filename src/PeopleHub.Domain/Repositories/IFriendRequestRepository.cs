@@ -9,7 +9,7 @@ public interface IFriendRequestRepository
     
     Task DeleteAsync(int senderPersonId, int receiverPersonId);
     
-    Task<FriendsInfo> GetFriendsAsync(int personId);
+    Task<FriendsInfo> GetFriendsAsync(int userId);
     
     Task<FriendRequest> GetAsync(int id);
     

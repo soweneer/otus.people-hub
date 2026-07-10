@@ -4,5 +4,5 @@ namespace PeopleHub.Domain.Repositories;
 
 public interface ISearchRepository
 {
-    Task<IReadOnlyCollection<PersonInfo>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<UserInfo>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken);
 }
