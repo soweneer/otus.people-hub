@@ -17,7 +17,7 @@ export const options = {
 export default function () {
   let skip = 0;
   for (let page = 0; page < pagesCount; page++) {
-    const url = `${BASE_URL}/search` +
+    const url = `${BASE_URL}/user/search` +
       `?firstName=${encodeURIComponent(testFirstName)}` +
       `&lastName=${encodeURIComponent(testLastName)}` +
       `&skip=${skip}` +

@@ -1,4 +1,4 @@
-@model IReadOnlyCollection<PeopleHub.Domain.Model.PersonInfo>
+@model IReadOnlyCollection<PeopleHub.Domain.Model.UserInfo>
 
 @{
     ViewBag.Title = "Люди";
@@ -8,7 +8,7 @@
     var searchLastName = ViewBag.SearchLastName as string ?? string.Empty;
     var pageSize = (int)(ViewBag.PageSize ?? 20);
 }
-<form id="searchForm" method="get" action="@Url.Action("Search", "Person")" class="mb-3">
+<form id="searchForm" method="get" action="@Url.Action("Filter", "User")" class="mb-3">
     <div class="row g-2 align-items-start">
         <div class="col">
             <input type="text" name="firstName" value="@ViewBag.SearchFirstName" class="form-control" placeholder="Имя" />
@@ -60,12 +60,12 @@
         </div>
     </div>
     <div id="noData" class="alert alert-info" hidden>Нет данных по людям</div>
-    <div id="personsList"
+    <div id="usersList"
          data-page-size="@pageSize"
-         data-load-url="@Url.Action("LoadMore", "Person")"
+         data-load-url="@Url.Action("LoadMore", "User")"
          data-search-first-name="@searchFirstName"
          data-search-last-name="@searchLastName">
-        <table id="personsTable" class="table table-striped table-bordered table-hover" hidden>
+        <table id="usersTable" class="table table-striped table-bordered table-hover" hidden>
             <thead class="thead-light">
             <tr>
                 <th scope="col">Фамилия, имя</th>
@@ -80,10 +80,10 @@
     </div>
     <script>
         (function () {
-            let list = document.getElementById('personsList');
+            let list = document.getElementById('usersList');
             if (!list) return;
 
-            let table = document.getElementById('personsTable');
+            let table = document.getElementById('usersTable');
             let tbody = list.querySelector('tbody');
             if (!tbody) return;
 

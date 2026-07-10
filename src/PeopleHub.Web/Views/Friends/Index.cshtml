@@ -44,14 +44,14 @@
                 {
                     <tr>
                         <td>
-                            <a href="@Url.Action("Person", "Person", new {personId = friend.Person.Id})">
-                                @friend.Person.Name
+                            <a href="@Url.Action("User", "User", new {userId = friend.User.Id})">
+                                @friend.User.Name
                             </a>
                         </td>
-                        <td>@friend.Person.Age</td>
-                        <td>@friend.Person.City</td>
+                        <td>@friend.User.Age</td>
+                        <td>@friend.User.City</td>
                         <td>
-                            <a class="btn btn-danger" title="Удалить из друзей" href="@Url.Action("CancelRequest", "Friends", new {targetPersonId = friend.Person.Id})"><i class="fa fa-user-times"></i></a>
+                            <a class="btn btn-danger" title="Удалить из друзей" href="@Url.Action("CancelRequest", "Friends", new {targetUserId = friend.User.Id})"><i class="fa fa-user-times"></i></a>
                         </td>
                     </tr>
                 }
@@ -80,12 +80,12 @@
                 {
                     <tr>
                         <td>
-                            <a href="@Url.Action("Person", "Person", new {personId = friend.Person.Id})">
-                                @friend.Person.Name
+                            <a href="@Url.Action("User", "User", new {userId = friend.User.Id})">
+                                @friend.User.Name
                             </a>
                         </td>
-                        <td>@friend.Person.Age</td>
-                        <td>@friend.Person.City</td>
+                        <td>@friend.User.Age</td>
+                        <td>@friend.User.City</td>
                         <td>
                             <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("Approve", "Friends", new {requestId = friend.FriendRequestId})"><i class="fa fa-user-plus"></i></a>
                             <a class="btn btn-secondary" title="Оставить в подписчиках" href="@Url.Action("Reject", "Friends", new {requestId = friend.FriendRequestId})"><i class="fa fa-ban"></i></a>
@@ -113,14 +113,14 @@
                 {
                     <tr>
                         <td>
-                            <a href="@Url.Action("Person", "Person", new {personId = friend.Person.Id})">
-                                @friend.Person.Name
+                            <a href="@Url.Action("User", "User", new {userId = friend.User.Id})">
+                                @friend.User.Name
                             </a>
                         </td>
-                        <td>@friend.Person.Age</td>
-                        <td>@friend.Person.City</td>
+                        <td>@friend.User.Age</td>
+                        <td>@friend.User.City</td>
                         <td>
-                            <a class="btn btn-warning" title="Отменить заявку" href="@Url.Action("CancelRequest", "Friends",new { targetPersonId = friend.Person.Id })"><i class="fa fa-ban"></i></a>
+                            <a class="btn btn-warning" title="Отменить заявку" href="@Url.Action("CancelRequest", "Friends",new { targetUserId = friend.User.Id })"><i class="fa fa-ban"></i></a>
                         </td>
                     </tr>
                 }

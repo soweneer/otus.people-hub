@@ -1,44 +1,44 @@
-﻿using PeopleHub.Domain.Model;
+using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Domain.Services;
 
-internal sealed class FriendRequestService(IPersonRepository personRepository, 
+internal sealed class FriendRequestService(IUserRepository userRepository,
     IFriendRequestRepository friendRequestRepository)
     : IFriendRequestService
 {
-    public async Task CancelAsync(string initiatorEmail, int receiverPersonId, CancellationToken cancellationToken)
+    public async Task CancelAsync(string initiatorEmail, int receiverUserId, CancellationToken cancellationToken)
     {
-        var senderPersonId = await personRepository.GetPersonIdAsync(initiatorEmail, cancellationToken);
+        var senderUserId = await userRepository.GetUserIdAsync(initiatorEmail, cancellationToken);
 
-        await friendRequestRepository.DeleteAsync(senderPersonId, receiverPersonId);
+        await friendRequestRepository.DeleteAsync(senderUserId, receiverUserId);
     }
 
     public async Task<FriendsInfo> GetFriendsAsync(string email, CancellationToken cancellationToken)
     {
-        var personId = await personRepository.GetPersonIdAsync(email, cancellationToken);
-        
-        return await friendRequestRepository.GetFriendsAsync(personId);
+        var userId = await userRepository.GetUserIdAsync(email, cancellationToken);
+
+        return await friendRequestRepository.GetFriendsAsync(userId);
     }
 
-    public async Task SendAsync(string initiatorEmail, int receiverPersonId, CancellationToken cancellationToken)
+    public async Task SendAsync(string initiatorEmail, int receiverUserId, CancellationToken cancellationToken)
     {
-        var senderPersonId = await personRepository.GetPersonIdAsync(initiatorEmail, cancellationToken);
-        
-        await friendRequestRepository.SendAsync(senderPersonId, receiverPersonId);
+        var senderUserId = await userRepository.GetUserIdAsync(initiatorEmail, cancellationToken);
+
+        await friendRequestRepository.SendAsync(senderUserId, receiverUserId);
     }
 
     public async Task ApproveAsync(string receiverEmail, int id, CancellationToken cancellationToken)
     {
-        var receiverPersonId = await personRepository.GetPersonIdAsync(receiverEmail, cancellationToken);
-        
-        await friendRequestRepository.ApproveAsync(id, receiverPersonId);
+        var receiverUserId = await userRepository.GetUserIdAsync(receiverEmail, cancellationToken);
+
+        await friendRequestRepository.ApproveAsync(id, receiverUserId);
     }
 
     public async Task RejectAsync(string receiverEmail, int id, CancellationToken cancellationToken)
     {
-        var receiverPersonId = await personRepository.GetPersonIdAsync(receiverEmail, cancellationToken);
-        
-        await friendRequestRepository.RejectAsync(id, receiverPersonId);
+        var receiverUserId = await userRepository.GetUserIdAsync(receiverEmail, cancellationToken);
+
+        await friendRequestRepository.RejectAsync(id, receiverUserId);
     }
 }

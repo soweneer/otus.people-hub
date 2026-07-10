@@ -4,7 +4,7 @@ namespace PeopleHub.Domain.Repositories;
 
 public interface IAccountRepository
 {
-    Task<int?> CreateAsync(string email, string password, int personId);
+    Task<int?> CreateAsync(string email, string password, int userId);
 
     Task<bool> ExistsAsync(string email);
 
