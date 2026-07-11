@@ -4,7 +4,7 @@ namespace PeopleHub.Domain.Services;
 
 public interface IUserService
 {
-    Task<IReadOnlyCollection<UserInfo>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<UserInfo>> SearchAsync(string email, SearchFilter filter, CancellationToken cancellationToken = default);
 

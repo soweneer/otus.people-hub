@@ -46,18 +46,20 @@ namespace PeopleHub.Controllers
 
             var firstName = request.FirstName?.Trim() ?? string.Empty;
             var lastName = request.LastName?.Trim() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
             {
-                return Results.BadRequest("Заполните хотя бы одно из полей: имя или фамилия");
+                return Results.BadRequest("Параметры first_name и last_name обязательны");
             }
 
-            var skip = request?.Skip ?? 0;
-            var take = request?.Take ?? 0;
+            var skip = request.Skip ?? 0;
+            var take = request.Take ?? 50;
             var users = await userService.SearchAsync(
                 new SearchFilter(firstName, lastName, skip, take),
                 HttpContext.RequestAborted);
 
-            return Results.Json(users);
+            return Results.Json(users
+                .Select(u => new UserResponse(u.Id.ToString(), u.FirstName, u.SecondName, u.Biography, u.City))
+                .ToArray());
         }
 
         [HttpGet]
@@ -87,13 +89,13 @@ namespace PeopleHub.Controllers
         }
 
         [HttpGet]
-        [ActionName("User")]
-        public async Task<IActionResult> UserById(int userId)
+        [AllowAnonymous]
+        public async Task<IActionResult> UserById(int id)
         {
-            var userInfo = await userService.GetByEmailAsync(User.Identity!.Name, userId, HttpContext.RequestAborted);
+            var userInfo = await userService.GetByEmailAsync(User.Identity!.Name, id, HttpContext.RequestAborted);
 
             return userInfo == null
-                ? throw new UnknownUserException(userId)
+                ? throw new UnknownUserException(id)
                 : View("User", userInfo);
         }
 

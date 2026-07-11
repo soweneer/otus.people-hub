@@ -18,8 +18,8 @@ export default function () {
   let skip = 0;
   for (let page = 0; page < pagesCount; page++) {
     const url = `${BASE_URL}/user/search` +
-      `?firstName=${encodeURIComponent(testFirstName)}` +
-      `&lastName=${encodeURIComponent(testLastName)}` +
+      `?first_name=${encodeURIComponent(testFirstName)}` +
+      `&last_name=${encodeURIComponent(testLastName)}` +
       `&skip=${skip}` +
       `&take=${pageSize}`;
 

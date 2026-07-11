@@ -75,7 +75,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Convert.ToInt32(userId);
     }
 
-    public async Task<IReadOnlyCollection<UserInfo>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken)
     {
         var (firstName, lastName, skip, take) = searchFilter;
 
@@ -96,7 +96,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : string.Empty;
 
         var selectQuery = $"""
-            select u.id, u.surname || ' ' || u.name as name, u.age, u.city
+            select u.id, u.name, u.surname, u.city, u.bio
             from {DbClient.UsersTable} u
             {whereClause}
             order by u.id
@@ -110,14 +110,12 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
         }
 
         return dataTable.Rows.Cast<DataRow>()
-            .Select(row => new UserInfo(
-                new UserLite(
-                    int.Parse(row["id"].ToString()),
-                    row["name"].ToString(),
-                    int.Parse(row["age"].ToString()),
-                    row["city"].ToString()
-                ),
-                FriendRequestStatus.None))
+            .Select(row => new SearchedUser(
+                int.Parse(row["id"].ToString()),
+                row["name"].ToString(),
+                row["surname"].ToString(),
+                row["city"].ToString(),
+                row["bio"].ToString()))
             .ToArray();
     }
 

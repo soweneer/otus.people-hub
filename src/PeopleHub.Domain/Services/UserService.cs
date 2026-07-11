@@ -6,7 +6,7 @@ namespace PeopleHub.Domain.Services;
 
 public class UserService(IUserRepository userRepository) : IUserService
 {
-    public Task<IReadOnlyCollection<UserInfo>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default) =>
+    public Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default) =>
         userRepository.SearchAsync(filter, cancellationToken);
 
     public Task<IReadOnlyCollection<UserInfo>> SearchAsync(string email, SearchFilter filter, CancellationToken cancellationToken = default) =>

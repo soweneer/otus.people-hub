@@ -122,8 +122,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 
     #endregion
 
-    // Чтение уходит на любой из слейвов (round-robin, см. Load Balance Hosts в строке подключения),
-    // при недоступности обоих — на мастер; запись всегда на мастер.
     private async Task<NpgsqlConnection> GetSqlConnectionAsync(bool readOnly)
     {
         var connection = dataSource.CreateConnection(readOnly
@@ -180,7 +178,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
             UsersTable
         ]);
 
-    // Переименовывает таблицы/колонки старой схемы (persons -> users) без потери данных
     private async Task MigrateLegacySchemaAsync()
     {
         const string query =
