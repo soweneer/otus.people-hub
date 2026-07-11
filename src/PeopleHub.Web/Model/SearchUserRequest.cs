@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace PeopleHub.Model;
 
-public record SearchUserRequest
+public sealed record SearchUserRequest
 {
     [RegularExpression("^[a-zA-Zа-яА-ЯёЁ-]*$", ErrorMessage = "Используйте только буквы и дефис в имени")]
     [StringLength(100)]
@@ -14,7 +14,7 @@ public record SearchUserRequest
     public string LastName { get; set; } = string.Empty;
 }
 
-public record SearchUserPaginatedRequest
+public sealed record SearchUserPaginatedRequest
 {
     [FromQuery(Name = "first_name")]
     [Required(ErrorMessage = "Параметр first_name обязателен")]

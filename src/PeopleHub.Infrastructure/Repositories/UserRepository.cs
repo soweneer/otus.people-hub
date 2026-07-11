@@ -37,10 +37,16 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Convert.ToInt32(dataTable.Rows[0]["id"]);
     }
 
-    public async Task<PersonalInfo> GetAsync(int userId, CancellationToken cancellationToken)
+    public async Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
-            $"select * from {DbClient.UsersTable} where id = {userId}");
+            $"select * from {DbClient.UsersTable} where id = @id",
+            [("id", id)]);
+
+        if (dataTable is null || dataTable.Rows.Count == 0)
+        {
+            return null;
+        }
 
         var dataRow = dataTable.Rows[0];
         return new PersonalInfo(
@@ -179,7 +185,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             .ToArray();
     }
 
-    public async Task<Friend> GetByIdAsync(int userId, int viewerUserId, CancellationToken cancellationToken = default)
+    public async Task<Friend> GetAsync(int id, int viewerUserId, CancellationToken cancellationToken = default)
     {
         var query = $"""
             select
@@ -189,7 +195,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
                     left join {DbClient.FriendsRequestsTable} fr
                         on (u.id = fr.receiver_user_id and fr.sender_user_id = {viewerUserId})
                                or (u.id = fr.sender_user_id and fr.receiver_user_id = {viewerUserId})
-            where u.id = {userId};
+            where u.id = {id};
             """;
         var dataTable = await dbClient.GetDataTableAsync(query, cancellationToken);
 
@@ -198,7 +204,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Friend.ExtractFromRow(dataTable.Rows[0]);
     }
 
-    public async Task UpdateAsync(int userId, PersonalInfo personalInfo, CancellationToken cancellationToken)
+    public async Task UpdateAsync(int id, PersonalInfo personalInfo, CancellationToken cancellationToken)
     {
         var (name, surname, age, city, bio, gender) = personalInfo;
 
@@ -214,7 +220,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
                 ("gender", gender),
                 ("city", city),
                 ("bio", bio),
-                ("userId", userId)
+                ("userId", id)
             ]);
     }
 }

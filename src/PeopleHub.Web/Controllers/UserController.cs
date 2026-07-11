@@ -66,6 +66,21 @@ namespace PeopleHub.Controllers
                 .ToArray());
         }
 
+        [HttpGet("/user/{id:int}")]
+        [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IResult> GetById(int id)
+        {
+            var user = await userService.GetAsync(id, HttpContext.RequestAborted);
+
+            return user is null
+                ? Results.NotFound($"Пользователь [{id}] не найден")
+                : Results.Json(new UserResponse(id.ToString(), user.Name, user.Surname, user.Bio, user.City));
+        }
+
         [HttpGet]
         [Authorize]
         public IActionResult Filter(SearchUserRequest request)

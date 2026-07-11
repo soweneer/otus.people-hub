@@ -7,7 +7,7 @@ public interface IFriendRequestRepository
 {
     Task ApproveAsync(int id, int receiverPersonId);
     
-    Task DeleteAsync(int senderPersonId, int receiverPersonId);
+    Task DeleteAsync(int id, int receiverPersonId);
     
     Task<FriendsInfo> GetFriendsAsync(int userId);
     

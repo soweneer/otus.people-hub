@@ -1,4 +1,5 @@
 using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Exceptions;
 using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
 
@@ -15,17 +16,21 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<FriendInfo?> GetByEmailAsync(string email, int targetUserId, CancellationToken cancellationToken = default)
     {
         var viewerId = await userRepository.GetUserIdAsync(email, cancellationToken);
-        var friend = await userRepository.GetByIdAsync(targetUserId, viewerId, cancellationToken);
+        var friend = await userRepository.GetAsync(targetUserId, viewerId, cancellationToken);
         return friend is null
             ? null
             : ToFriendInfo(friend);
     }
 
+    public Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default) =>
+        userRepository.GetAsync(id, cancellationToken);
+
     public async Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default)
     {
         var userId = await userRepository.GetUserIdAsync(email, cancellationToken);
 
-        return await userRepository.GetAsync(userId, cancellationToken);
+        return await userRepository.GetAsync(userId, cancellationToken)
+            ?? throw new UnknownUserException(email);
     }
 
     public async Task<PersonalInfo> UpdateAsync(string email, PersonalInfo personalInfo, CancellationToken cancellationToken = default)

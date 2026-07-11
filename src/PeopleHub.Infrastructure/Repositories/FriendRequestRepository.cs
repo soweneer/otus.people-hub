@@ -16,17 +16,17 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             $"where id = {id} and receiver_user_id = {receiverUserId}",
             async cmd => await cmd.ExecuteNonQueryAsync());
 
-    public async Task DeleteAsync(int userId, int receiverUserId)
+    public async Task DeleteAsync(int id, int receiverUserId)
     {
         var query = $"delete from {DbClient.FriendsRequestsTable} " +
                     "where " +
-                    $"(sender_user_id = {userId} and receiver_user_id = {receiverUserId})" +
-                    $" or (sender_user_id = {receiverUserId} and receiver_user_id = {userId})";
+                    $"(sender_user_id = {id} and receiver_user_id = {receiverUserId})" +
+                    $" or (sender_user_id = {receiverUserId} and receiver_user_id = {id})";
 
         await dbClient.ExecuteCmdAsync(query,
             async cmd => await cmd.ExecuteNonQueryAsync());
     }
-
+ 
     public async Task<FriendsInfo> GetFriendsAsync(int userId)
     {
         var dataSet = await dbClient.GetDataSetASync(
