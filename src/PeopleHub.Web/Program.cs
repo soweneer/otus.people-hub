@@ -26,6 +26,16 @@ builder.Services.AddPeopleHubInfrastructure(dbConnectionString);
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+    {
+        Title = "PeopleHub API",
+        Version = "v1"
+    });
+});
+
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
@@ -36,6 +46,12 @@ if (!app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "PeopleHub API v1");
+});
 
 app.UseRouting();
 

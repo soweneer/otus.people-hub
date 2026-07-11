@@ -28,9 +28,11 @@ public record SearchUserPaginatedRequest
     [StringLength(100)]
     public string LastName { get; set; } = string.Empty;
 
+    [FromQuery(Name = "take")]
     [Range(1, int.MaxValue, ErrorMessage = "take не может быть <= 1")]
     public int? Take { get; set; } = 50;
 
+    [FromQuery(Name = "skip")]
     [Range(0, int.MaxValue, ErrorMessage = "skip не может быть <= 0")]
     public int? Skip { get; set; } = 0;
 }

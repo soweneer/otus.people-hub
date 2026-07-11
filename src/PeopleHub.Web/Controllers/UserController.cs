@@ -32,8 +32,12 @@ namespace PeopleHub.Controllers
             return PartialView("_UserRows", users);
         }
 
-        [HttpGet]
+        [HttpGet("/user/search")]
         [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(UserResponse[]), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IResult> Search(SearchUserPaginatedRequest request)
         {
             if (!ModelState.IsValid)
