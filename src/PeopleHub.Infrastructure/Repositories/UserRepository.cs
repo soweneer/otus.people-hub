@@ -96,7 +96,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : string.Empty;
 
         var selectQuery = $"""
-            select u.id, u.surname || ' ' || u.name as name, u.age, u.city as city
+            select u.id, u.surname || ' ' || u.name as name, u.age, u.city
             from {DbClient.UsersTable} u
             {whereClause}
             order by u.id
