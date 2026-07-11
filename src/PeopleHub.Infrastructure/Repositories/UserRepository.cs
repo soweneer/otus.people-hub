@@ -29,7 +29,8 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
                 await using var dataReader = await cmd.ExecuteReaderAsync();
                 dataTable.Load(dataReader);
             },
-            [("email", email)]);
+            [("email", email)],
+            readOnly: true);
 
         return dataTable.Rows.Count == 0
             ? throw new UnknownUserException(email)

@@ -4,7 +4,7 @@ using Npgsql;
 namespace PeopleHub.Infrastructure.Db;
 
 // ReSharper disable once AsyncVoidLambda
-internal sealed class DbClient(string connectionString)
+internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 {
     public const string UsersTable = "users";
     public const string FriendsRequestsTable = "friend_requests";
@@ -122,16 +122,20 @@ internal sealed class DbClient(string connectionString)
 
     #endregion
 
-    private async Task<NpgsqlConnection> GetSqlConnectionAsync()
+    // Чтение уходит на любой из слейвов (round-robin, см. Load Balance Hosts в строке подключения),
+    // при недоступности обоих — на мастер; запись всегда на мастер.
+    private async Task<NpgsqlConnection> GetSqlConnectionAsync(bool readOnly)
     {
-        var connection = new NpgsqlConnection(connectionString);
+        var connection = dataSource.CreateConnection(readOnly
+            ? TargetSessionAttributes.PreferStandby
+            : TargetSessionAttributes.Primary);
         await connection.OpenAsync();
         return connection;
     }
 
     public async Task<DataTable> GetDataTableAsync(string query, CancellationToken cancellationToken)
     {
-        await using var connection = await GetSqlConnectionAsync();
+        await using var connection = await GetSqlConnectionAsync(readOnly: true);
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = query;
 
@@ -144,7 +148,7 @@ internal sealed class DbClient(string connectionString)
 
     public async Task<DataSet> GetDataSetASync(string query)
     {
-        await using var connection = await GetSqlConnectionAsync();
+        await using var connection = await GetSqlConnectionAsync(readOnly: true);
         using var dataAdapter = new NpgsqlDataAdapter(query, connection);
         var dataSet = new DataSet();
         dataAdapter.Fill(dataSet);
@@ -257,10 +261,11 @@ internal sealed class DbClient(string connectionString)
     public Task ExecuteNonQuery(string query, IEnumerable<(string, object)> parameters = null) =>
         ExecuteCmdAsync(query, async cmd => await cmd.ExecuteNonQueryAsync(), parameters);
 
-    public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters = null)
+    public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters = null,
+        bool readOnly = false)
     {
         var scalar = new object();
-        await ExecuteCmdAsync(query, async cmd => scalar = await cmd.ExecuteScalarAsync(), parameters);
+        await ExecuteCmdAsync(query, async cmd => scalar = await cmd.ExecuteScalarAsync(), parameters, readOnly);
 
         return scalar;
     }
@@ -272,15 +277,15 @@ internal sealed class DbClient(string connectionString)
         {
             var dataReader = await cmd.ExecuteReaderAsync();
             dataTable.Load(dataReader);
-        }, parameters);
+        }, parameters, readOnly: true);
 
         return dataTable;
     }
 
     public async Task ExecuteCmdAsync(string parametrizedQuery, Func<NpgsqlCommand, Task> cmdAction,
-        IEnumerable<(string, object)> parameters = null)
+        IEnumerable<(string, object)> parameters = null, bool readOnly = false)
     {
-        await using var connection = await GetSqlConnectionAsync();
+        await using var connection = await GetSqlConnectionAsync(readOnly);
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = parametrizedQuery;
 

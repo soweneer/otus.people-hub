@@ -24,7 +24,8 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
     {
         var dbValue = await dbClient.ExecuteScalarAsync(
             $"SELECT 1 FROM {DbClient.AccountsTable} WHERE email = @email",
-            [("email", email)]);
+            [("email", email)],
+            readOnly: true);
 
         return dbValue is not null;
     }
