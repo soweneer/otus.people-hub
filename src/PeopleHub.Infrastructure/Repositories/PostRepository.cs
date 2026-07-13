@@ -21,4 +21,23 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
             ? null
             : Convert.ToInt64(postId);
     }
+
+    public async Task<bool> UpdateAsync(long id, int authorUserId, string text, CancellationToken cancellationToken)
+    {
+        const string query =
+            $"UPDATE {DbClient.PostsTable} " +
+            "SET text = @text " +
+            "WHERE id = @id AND author_user_id = @authorUserId";
+
+        var affectedRows = 0;
+        await dbClient.ExecuteCmdAsync(query,
+            async cmd => affectedRows = await cmd.ExecuteNonQueryAsync(),
+            [
+                ("text", text),
+                ("id", id),
+                ("authorUserId", authorUserId)
+            ]);
+
+        return affectedRows > 0;
+    }
 }

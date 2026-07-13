@@ -10,4 +10,11 @@ public class PostService(IPostRepository postRepository, IUserRepository userRep
 
         return await postRepository.CreateAsync(authorUserId, text, cancellationToken);
     }
+
+    public async Task<bool> UpdateAsync(string authorEmail, long postId, string text, CancellationToken cancellationToken = default)
+    {
+        var authorUserId = await userRepository.GetUserIdAsync(authorEmail, cancellationToken);
+
+        return await postRepository.UpdateAsync(postId, authorUserId, text, cancellationToken);
+    }
 }

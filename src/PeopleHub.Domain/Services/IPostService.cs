@@ -3,4 +3,5 @@ namespace PeopleHub.Domain.Services;
 public interface IPostService
 {
     Task<long?> CreateAsync(string authorEmail, string text, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(string authorEmail, long postId, string text, CancellationToken cancellationToken = default);
 }

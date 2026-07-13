@@ -30,5 +30,34 @@ namespace PeopleHub.Controllers
                 ? Results.Problem("Не удалось создать пост")
                 : Results.Json(postId.Value.ToString());
         }
+
+        [HttpPut("/post/update")]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IResult> Update([FromBody] UpdatePostRequest request)
+        {
+            if (!long.TryParse(request?.Id, out var postId))
+            {
+                return Results.BadRequest("Параметр id обязателен и должен быть числом");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Text))
+            {
+                return Results.BadRequest("Параметр text обязателен");
+            }
+
+            var updated = await postService.UpdateAsync(
+                User.Identity!.Name,
+                postId,
+                request.Text.Trim(),
+                HttpContext.RequestAborted);
+
+            return updated
+                ? Results.Ok("Успешно изменен пост")
+                : Results.BadRequest($"Пост [{request.Id}] не найден или принадлежит другому пользователю");
+        }
     }
 }
