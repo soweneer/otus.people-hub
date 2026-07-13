@@ -218,7 +218,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
             
             create index if not exists ix_{{PostsTable}}_author_user_id on {{PostsTable}} (author_user_id, id desc);
 
-            create extension pg_trgm;
+            create extension if not exists pg_trgm;
             create index if not exists ix_{{UsersTable}}_surname_name on {{UsersTable}} using gin (surname gin_trgm_ops, name gin_trgm_ops);
             """;
         #endregion

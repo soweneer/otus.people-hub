@@ -1,18 +1,22 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.Services;
+using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
 {
     [Authorize]
-    public class FriendsController(IFriendRequestService friendRequestService, IUserService userService) : Controller
+    public class FriendsController(IFriendRequestService friendRequestService, IPostService postService) : Controller
     {
+        private const int FeedLimit = 20;
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
             var friendsInfo = await friendRequestService.GetFriendsAsync(User.Identity!.Name, HttpContext.RequestAborted);
+            var feed = await postService.GetFeedAsync(User.Identity!.Name, 0, FeedLimit, HttpContext.RequestAborted);
 
-            return View(friendsInfo);
+            return View(new FriendsViewModel(friendsInfo, feed));
         }
 
         [HttpGet]

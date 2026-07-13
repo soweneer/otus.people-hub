@@ -1,4 +1,4 @@
-@model PeopleHub.Domain.Model.FriendsInfo
+@model PeopleHub.Model.FriendsViewModel
 
 @{
     ViewBag.Title = "Мои друзья";
@@ -9,26 +9,29 @@
     <li class="nav-item">
         <a class="nav-link active" id="friends-tab" data-bs-toggle="tab" href="#friends" role="tab" aria-controls="friends" aria-selected="true">Друзья</a>
     </li>
-    @if (Model.Incoming.Any())
+    <li class="nav-item">
+        <a class="nav-link" id="feed-tab" data-bs-toggle="tab" href="#feed" role="tab" aria-controls="feed" aria-selected="false">Лента</a>
+    </li>
+    @if (Model.FriendsInfo.Incoming.Any())
     {
         <li class="nav-item">
             <a class="nav-link" id="income-tab" data-bs-toggle="tab" href="#income" role="tab" aria-controls="income" aria-selected="false">
-                Входящие <span class="badge badge-pill badge-success">@Model.Incoming.Count</span>
+                Входящие <span class="badge badge-pill badge-success">@Model.FriendsInfo.Incoming.Count</span>
             </a>
         </li>
     }
-    @if (Model.Outgoing.Any())
+    @if (Model.FriendsInfo.Outgoing.Any())
     {
         <li class="nav-item">
             <a class="nav-link" id="outcome-tab" data-bs-toggle="tab" href="#outcome" role="tab" aria-controls="outcome" aria-selected="false">
-                Исходящие <span class="badge badge-pill badge-success">@Model.Outgoing.Count</span>
+                Исходящие <span class="badge badge-pill badge-success">@Model.FriendsInfo.Outgoing.Count</span>
             </a>
         </li>
     }
 </ul>
 <div class="tab-content">
     <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
-        @if (Model.Friends.Any())
+        @if (Model.FriendsInfo.Friends.Any())
         {
             <table class="table table-striped table-bordered table-hover">
                 <thead class="thead-light">
@@ -40,7 +43,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var friend in Model.Friends)
+                @foreach (var friend in Model.FriendsInfo.Friends)
                 {
                     <tr>
                         <td>
@@ -63,7 +66,35 @@
             <div class="alert alert-info">У вас пока нет друзей</div>
         }
     </div>
-    @if (Model.Incoming.Any())
+    <div class="tab-pane fade" id="feed" role="tabpanel" aria-labelledby="feed-tab">
+        @if (Model.Feed.Any())
+        {
+            var authorNames = Model.FriendsInfo.Friends.ToDictionary(f => f.User.Id, f => f.User.Name);
+            foreach (var post in Model.Feed)
+            {
+                <div class="card mt-3">
+                    <div class="card-header">
+                        @if (authorNames.TryGetValue(post.AuthorUserId, out var authorName))
+                        {
+                            <a href="@Url.Action("User", "User", new {userId = post.AuthorUserId})">@authorName</a>
+                        }
+                        else
+                        {
+                            <span>Пользователь #@post.AuthorUserId</span>
+                        }
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">@post.Text</p>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info mt-3">В ленте пока нет постов</div>
+        }
+    </div>
+    @if (Model.FriendsInfo.Incoming.Any())
     {
         <div class="tab-pane fade" id="income" role="tabpanel" aria-labelledby="income-tab">
             <table class="table table-striped table-bordered table-hover">
@@ -76,7 +107,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var friend in Model.Incoming)
+                @foreach (var friend in Model.FriendsInfo.Incoming)
                 {
                     <tr>
                         <td>
@@ -96,7 +127,7 @@
             </table>
         </div>
     }
-    @if (Model.Outgoing.Any())
+    @if (Model.FriendsInfo.Outgoing.Any())
     {
         <div class="tab-pane fade" id="outcome" role="tabpanel" aria-labelledby="outcome-tab">
             <table class="table table-striped table-bordered table-hover">
@@ -109,7 +140,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach (var friend in Model.Outgoing)
+                @foreach (var friend in Model.FriendsInfo.Outgoing)
                 {
                     <tr>
                         <td>
