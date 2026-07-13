@@ -9,6 +9,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
     public const string UsersTable = "users";
     public const string FriendsRequestsTable = "friend_requests";
     public const string AccountsTable = "accounts";
+    public const string PostsTable = "posts";
 
     private const string LegacyUsersTable = "persons";
 
@@ -171,12 +172,26 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         return tableList;
     }
 
-    private static bool TablesCreated(IEnumerable<string> tableNames) =>
-        tableNames.OrderBy(t => t).SequenceEqual([
+    private const string CreatePostsTableSql =
+        $$"""
+            create table if not exists {{PostsTable}} (
+                id bigint generated always as identity primary key,
+                author_user_id integer not null,
+                text text not null,
+                created_at timestamptz not null default now(),
+                constraint posts_ibfk_1 foreign key (author_user_id) references {{UsersTable}} (id) on delete cascade
+            );
+
+            create index if not exists ix_{{PostsTable}}_author_user_id on {{PostsTable}} (author_user_id, id desc);
+        """;
+
+    private static bool TablesCreated(ICollection<string> tableNames) =>
+        new[]
+        {
             AccountsTable,
             FriendsRequestsTable,
             UsersTable
-        ]);
+        }.All(tableNames.Contains);
 
     private async Task MigrateLegacySchemaAsync()
     {
@@ -200,15 +215,21 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         if (tableNames.Contains(LegacyUsersTable))
         {
             await MigrateLegacySchemaAsync();
-            return;
+        }
+        else if (!TablesCreated(tableNames))
+        {
+            await CreateBaseTablesAsync();
         }
 
-        if (TablesCreated(tableNames))
-            return;
+        await ExecuteCmdAsync(CreatePostsTableSql, async cmd => await cmd.ExecuteNonQueryAsync());
+    }
 
+    private async Task CreateBaseTablesAsync()
+    {
         const string query =
             #region SQL для создания базовых таблиц
             $$"""
+                drop table if exists {{PostsTable}};
                 drop table if exists {{FriendsRequestsTable}};
                 drop table if exists {{AccountsTable}};
                 drop table if exists {{UsersTable}};

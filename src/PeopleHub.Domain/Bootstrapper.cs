@@ -10,6 +10,7 @@ namespace PeopleHub.Domain
             services.AddScoped<IFriendRequestService, FriendRequestService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IPostService, PostService>();
 
             return services;
         }
