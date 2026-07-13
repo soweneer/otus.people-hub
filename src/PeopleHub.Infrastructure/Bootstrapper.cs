@@ -12,8 +12,6 @@ namespace PeopleHub.Infrastructure
     {
         public static IServiceCollection AddPeopleHubInfrastructure(this IServiceCollection services, string dbConnectionString)
         {
-            // Строка подключения перечисляет все ноды кластера (мастер + реплики);
-            // multi-host data source сам определяет, кто из них primary, а кто standby
             services.AddSingleton(new NpgsqlDataSourceBuilder(dbConnectionString).BuildMultiHost());
             services.AddScoped(sp => new DbClient(sp.GetRequiredService<NpgsqlMultiHostDataSource>()));
             services.AddScoped<IAccountRepository, AccountRepository>();

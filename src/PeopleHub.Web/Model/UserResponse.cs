@@ -2,9 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace PeopleHub.Model;
 
-/// <summary>
-/// Схема "User" из openapi.json (OtusTeam/highload); birthdate не возвращается — в БД хранится только возраст.
-/// </summary>
 public sealed record UserResponse(
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("first_name")] string FirstName,
