@@ -16,4 +16,6 @@ public interface IFriendRequestRepository
     Task RejectAsync(int id, int receiverPersonId);
     
     Task SendAsync(int senderPersonId, int receiverPersonId);
+
+    Task SetFriendAsync(int userId, int friendUserId);
 }

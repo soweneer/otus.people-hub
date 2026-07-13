@@ -9,6 +9,8 @@ public interface IFriendRequestService
     Task<FriendsInfo> GetFriendsAsync(string email, CancellationToken cancellationToken);
 
     Task SendAsync(string initiatorEmail, int receiverPersonId, CancellationToken cancellationToken);
+
+    Task<bool> SetFriendAsync(string initiatorEmail, int friendUserId, CancellationToken cancellationToken);
     
     Task ApproveAsync(string receiverEmail, int id, CancellationToken cancellationToken);
     

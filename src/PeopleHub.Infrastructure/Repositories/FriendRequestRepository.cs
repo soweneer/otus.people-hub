@@ -110,4 +110,21 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             $"values ({senderUserId}, {receiverUserId}, {FriendRequestStatus.Sent:D})",
             async cmd => await cmd.ExecuteNonQueryAsync()
         );
+
+    public Task SetFriendAsync(int userId, int friendUserId) =>
+        dbClient.ExecuteCmdAsync(
+            $"""
+             with updated as (
+                 update {DbClient.FriendsRequestsTable}
+                 set status = {FriendRequestStatus.Approved:D}
+                 where (sender_user_id = {userId} and receiver_user_id = {friendUserId})
+                    or (sender_user_id = {friendUserId} and receiver_user_id = {userId})
+                 returning id
+             )
+             insert into {DbClient.FriendsRequestsTable} (sender_user_id, receiver_user_id, status)
+             select {userId}, {friendUserId}, {FriendRequestStatus.Approved:D}
+             where not exists (select 1 from updated)
+             """,
+            async cmd => await cmd.ExecuteNonQueryAsync()
+        );
 }

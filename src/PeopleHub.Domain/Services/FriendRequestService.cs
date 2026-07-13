@@ -28,6 +28,18 @@ internal sealed class FriendRequestService(IUserRepository userRepository,
         await friendRequestRepository.SendAsync(senderUserId, receiverUserId);
     }
 
+    public async Task<bool> SetFriendAsync(string initiatorEmail, int friendUserId, CancellationToken cancellationToken)
+    {
+        var userId = await userRepository.GetUserIdAsync(initiatorEmail, cancellationToken);
+        if (userId == friendUserId || await userRepository.GetAsync(friendUserId, cancellationToken) is null)
+        {
+            return false;
+        }
+
+        await friendRequestRepository.SetFriendAsync(userId, friendUserId);
+        return true;
+    }
+
     public async Task ApproveAsync(string receiverEmail, int id, CancellationToken cancellationToken)
     {
         var receiverUserId = await userRepository.GetUserIdAsync(receiverEmail, cancellationToken);

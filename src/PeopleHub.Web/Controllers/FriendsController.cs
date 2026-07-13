@@ -19,6 +19,50 @@ namespace PeopleHub.Controllers
             return View(new FriendsViewModel(friendsInfo, feed));
         }
 
+        [HttpPut("/friend/set/{user_id}")]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IResult> SetFriend([FromRoute(Name = "user_id")] string userId)
+        {
+            if (!int.TryParse(userId, out var friendUserId))
+            {
+                return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
+            }
+
+            var added = await friendRequestService.SetFriendAsync(
+                User.Identity!.Name,
+                friendUserId,
+                HttpContext.RequestAborted);
+
+            return added
+                ? Results.Ok("Пользователь успешно добавлен в друзья")
+                : Results.BadRequest($"Пользователь [{userId}] не найден или является текущим пользователем");
+        }
+
+        [HttpPut("/friend/delete/{user_id}")]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IResult> DeleteFriend([FromRoute(Name = "user_id")] string userId)
+        {
+            if (!int.TryParse(userId, out var friendUserId))
+            {
+                return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
+            }
+
+            await friendRequestService.CancelAsync(
+                User.Identity!.Name,
+                friendUserId,
+                HttpContext.RequestAborted);
+
+            return Results.Ok("Пользователь успешно удален из друзей");
+        }
+
         [HttpGet]
         public async Task<IActionResult> SendFriendRequest(int targetUserId, string returnUrl)
         {

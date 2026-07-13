@@ -13,6 +13,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(opt =>
     {
         opt.LoginPath = new PathString("/Account/SignIn");
+        opt.Events.OnRedirectToLogin = context =>
+        {
+                context.Request.Path.StartsWithSegments("/post"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+            else
+            {
+                context.Response.Redirect(context.RedirectUri);
+            }
+
+            return Task.CompletedTask;
+        };
     });
 
 // ---------------------------------------------------------------------------------------------------------------------------------
