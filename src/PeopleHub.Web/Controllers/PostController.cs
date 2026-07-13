@@ -103,5 +103,34 @@ namespace PeopleHub.Controllers
                 ? Results.NotFound($"Пост [{id}] не найден")
                 : Results.Json(new PostResponse(post.Id.ToString(), post.Text, post.AuthorUserId.ToString()));
         }
+
+        [HttpGet("/post/feed")]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(PostResponse[]), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IResult> Feed(int offset = 0, int limit = 10)
+        {
+            if (offset < 0)
+            {
+                return Results.BadRequest("Параметр offset должен быть не меньше 0");
+            }
+
+            if (limit < 1)
+            {
+                return Results.BadRequest("Параметр limit должен быть не меньше 1");
+            }
+
+            var posts = await postService.GetFeedAsync(
+                User.Identity!.Name,
+                offset,
+                limit,
+                HttpContext.RequestAborted);
+
+            return Results.Json(posts
+                .Select(p => new PostResponse(p.Id.ToString(), p.Text, p.AuthorUserId.ToString()))
+                .ToArray());
+        }
     }
 }

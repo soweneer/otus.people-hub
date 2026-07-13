@@ -1,4 +1,6 @@
+using System.Data;
 using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
 
@@ -51,6 +53,40 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
             ]);
 
         return affectedRows > 0;
+    }
+
+    public async Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(int userId, int offset, int limit, CancellationToken cancellationToken)
+    {
+        var query = $"""
+            select p.id, p.text, p.author_user_id
+            from {DbClient.PostsTable} p
+            where p.author_user_id in (
+                select case
+                        when fr.sender_user_id = @userId then fr.receiver_user_id
+                        else fr.sender_user_id
+                    end
+                from {DbClient.FriendsRequestsTable} fr
+                where (fr.sender_user_id = @userId or fr.receiver_user_id = @userId)
+                    and fr.status = @approvedStatus
+            )
+            order by p.id desc
+            limit {limit} offset {offset};
+            """;
+
+        var dataTable = await dbClient.ExecuteDataTableAsync(query,
+            [
+                ("userId", userId),
+                ("approvedStatus", (int)FriendRequestStatus.Approved)
+            ]);
+
+        if (dataTable is null || dataTable.Rows.Count == 0)
+        {
+            return [];
+        }
+
+        return dataTable.Rows.Cast<DataRow>()
+            .Select(Post.ExtractFromRow)
+            .ToArray();
     }
 
     public async Task<bool> DeleteAsync(long id, int authorUserId, CancellationToken cancellationToken)

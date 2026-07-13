@@ -28,4 +28,11 @@ public class PostService(IPostRepository postRepository, IUserRepository userRep
 
         return await postRepository.DeleteAsync(postId, authorUserId, cancellationToken);
     }
+
+    public async Task<IReadOnlyCollection<Post>> GetFeedAsync(string email, int offset, int limit, CancellationToken cancellationToken = default)
+    {
+        var userId = await userRepository.GetUserIdAsync(email, cancellationToken);
+
+        return await postRepository.GetFriendsFeedAsync(userId, offset, limit, cancellationToken);
+    }
 }
