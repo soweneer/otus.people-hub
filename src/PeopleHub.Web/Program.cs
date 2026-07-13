@@ -15,6 +15,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         opt.LoginPath = new PathString("/Account/SignIn");
         opt.Events.OnRedirectToLogin = context =>
         {
+            if (context.Request.Path.StartsWithSegments("/friend") ||
                 context.Request.Path.StartsWithSegments("/post"))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
