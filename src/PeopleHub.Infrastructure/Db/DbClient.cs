@@ -11,8 +11,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
     public const string AccountsTable = "accounts";
     public const string PostsTable = "posts";
 
-    private const string LegacyUsersTable = "persons";
-
     #region SQL для генерации тестовых данных
 
     private const string GenDataProcedureSql =
@@ -154,37 +152,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         return dataSet;
     }
 
-    private async Task<List<string>> GetTableNamesAsync()
-    {
-        var tableList = new List<string>();
-
-        await ExecuteCmdAsync("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
-            async cmd =>
-            {
-                var dataReader = await cmd.ExecuteReaderAsync();
-
-                while (await dataReader.ReadAsync())
-                {
-                    tableList.Add(dataReader[0].ToString());
-                }
-            });
-
-        return tableList;
-    }
-
-    private const string CreatePostsTableSql =
-        $$"""
-            create table if not exists {{PostsTable}} (
-                id bigint generated always as identity primary key,
-                author_user_id integer not null,
-                text text not null,
-                created_at timestamptz not null default now(),
-                constraint posts_ibfk_1 foreign key (author_user_id) references {{UsersTable}} (id) on delete cascade
-            );
-
-            create index if not exists ix_{{PostsTable}}_author_user_id on {{PostsTable}} (author_user_id, id desc);
-        """;
-
     private static bool TablesCreated(ICollection<string> tableNames) =>
         new[]
         {
@@ -193,35 +160,9 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
             UsersTable
         }.All(tableNames.Contains);
 
-    private async Task MigrateLegacySchemaAsync()
-    {
-        const string query =
-            $$"""
-                alter table {{LegacyUsersTable}} rename to {{UsersTable}};
-                alter table {{AccountsTable}} rename column person_id to user_id;
-                alter table {{FriendsRequestsTable}} rename column sender_person_id to sender_user_id;
-                alter table {{FriendsRequestsTable}} rename column receiver_person_id to receiver_user_id;
-                alter index if exists ix_{{LegacyUsersTable}}_surname_name rename to ix_{{UsersTable}}_surname_name;
-
-                {{GenDataProcedureSql}}
-            """;
-
-        await ExecuteCmdAsync(query, async cmd => await cmd.ExecuteNonQueryAsync());
-    }
-
     public async Task EnsureDbCreated()
     {
-        var tableNames = await GetTableNamesAsync();
-        if (tableNames.Contains(LegacyUsersTable))
-        {
-            await MigrateLegacySchemaAsync();
-        }
-        else if (!TablesCreated(tableNames))
-        {
-            await CreateBaseTablesAsync();
-        }
-
-        await ExecuteCmdAsync(CreatePostsTableSql, async cmd => await cmd.ExecuteNonQueryAsync());
+        await CreateBaseTablesAsync();
     }
 
     private async Task CreateBaseTablesAsync()
@@ -267,9 +208,18 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 
                 alter user postgres with password 'postgres';
 
-                create extension pg_trgm;
-                create index if not exists ix_{{UsersTable}}_surname_name
-                    on {{UsersTable}} using gin (surname gin_trgm_ops, name gin_trgm_ops);
+                      create table if not exists {{PostsTable}} (
+                id bigint generated always as identity primary key,
+                author_user_id integer not null,
+                text text not null,
+                created_at timestamptz not null default now(),
+                constraint posts_ibfk_1 foreign key (author_user_id) references {{UsersTable}} (id) on delete cascade
+            );
+            
+            create index if not exists ix_{{PostsTable}}_author_user_id on {{PostsTable}} (author_user_id, id desc);
+
+            create extension pg_trgm;
+            create index if not exists ix_{{UsersTable}}_surname_name on {{UsersTable}} using gin (surname gin_trgm_ops, name gin_trgm_ops);
             """;
         #endregion
 
