@@ -59,5 +59,28 @@ namespace PeopleHub.Controllers
                 ? Results.Ok("Успешно изменен пост")
                 : Results.BadRequest($"Пост [{request.Id}] не найден или принадлежит другому пользователю");
         }
+
+        [HttpPut("/post/delete/{id}")]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IResult> Delete(string id)
+        {
+            if (!long.TryParse(id, out var postId))
+            {
+                return Results.BadRequest("Параметр id обязателен и должен быть числом");
+            }
+
+            var deleted = await postService.DeleteAsync(
+                User.Identity!.Name,
+                postId,
+                HttpContext.RequestAborted);
+
+            return deleted
+                ? Results.Ok("Успешно удален пост")
+                : Results.BadRequest($"Пост [{id}] не найден или принадлежит другому пользователю");
+        }
     }
 }
