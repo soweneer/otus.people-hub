@@ -25,6 +25,9 @@ public class UserService(IUserRepository userRepository) : IUserService
     public Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default) =>
         userRepository.GetAsync(id, cancellationToken);
 
+    public Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
+        userRepository.CreateAsync(personalInfo, cancellationToken);
+
     public async Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default)
     {
         var userId = await userRepository.GetUserIdAsync(email, cancellationToken);

@@ -66,6 +66,34 @@ namespace PeopleHub.Controllers
                 .ToArray());
         }
 
+        [HttpPost("/user/register")]
+        [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IResult> Register([FromBody] RegisterUserRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request?.FirstName) || string.IsNullOrWhiteSpace(request.SecondName))
+            {
+                return Results.BadRequest("Параметры first_name и second_name обязательны");
+            }
+
+            var userId = await userService.CreateAsync(
+                new PersonalInfo(
+                    request.FirstName.Trim(),
+                    request.SecondName.Trim(),
+                    request.Age ?? 18,
+                    request.City ?? string.Empty,
+                    request.Biography,
+                    request.Gender ?? 0),
+                HttpContext.RequestAborted);
+
+            return userId is null
+                ? Results.Problem("Не удалось создать пользователя")
+                : Results.Json(new RegisterUserResponse(userId.Value.ToString()));
+        }
+
         [HttpGet("/user/{id:int}")]
         [AllowAnonymous]
         [ApiExplorerSettings(IgnoreApi = false)]

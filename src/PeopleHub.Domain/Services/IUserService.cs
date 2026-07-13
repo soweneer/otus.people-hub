@@ -12,6 +12,8 @@ public interface IUserService
 
     Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default);
 
+    Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default);
+
     Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default);
 
     Task<PersonalInfo> UpdateAsync(string email, PersonalInfo personalInfo, CancellationToken cancellationToken = default);

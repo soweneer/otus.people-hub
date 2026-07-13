@@ -23,7 +23,7 @@ const idsPerIteration = 5;
 const thinkDelay = 0.2;
 
 export const options = {
-  stages: [{ duration: '200s', target: 2000 }],
+  stages: [{ duration: '200s', target: Number(__ENV.TARGET_VUS || 2000) }],
   summaryTrendStats: ['min', 'avg', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
   thresholds: {
     'http_req_duration{name:user/search}': ['p(95)<2000'],

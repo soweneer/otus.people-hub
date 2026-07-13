@@ -125,7 +125,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
     private async Task<NpgsqlConnection> GetSqlConnectionAsync(bool readOnly)
     {
         var connection = dataSource.CreateConnection(readOnly
-            ? TargetSessionAttributes.PreferStandby
+            ? TargetSessionAttributes.Standby
             : TargetSessionAttributes.Primary);
         await connection.OpenAsync();
         return connection;

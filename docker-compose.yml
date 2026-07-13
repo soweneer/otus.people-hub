@@ -19,7 +19,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # с postgres:18 данные лежат в /var/lib/postgresql/<major>/docker, поэтому монтируем каталог уровнем выше
       - pg-master-data:/var/lib/postgresql
       - ./docker/master-init.sh:/docker-entrypoint-initdb.d/master-init.sh:ro
     healthcheck:
@@ -39,6 +38,7 @@ services:
       REPLICATION_USER: replicator
       REPLICATION_PASSWORD: replicator
       REPLICATION_SLOT: replica_1_slot
+      REPLICA_NAME: replica_1
     entrypoint: [ "bash", "/usr/local/bin/replica-init.sh" ]
     ports:
       - "5433:5432"
@@ -65,6 +65,7 @@ services:
       REPLICATION_USER: replicator
       REPLICATION_PASSWORD: replicator
       REPLICATION_SLOT: replica_2_slot
+      REPLICA_NAME: replica_2
     entrypoint: [ "bash", "/usr/local/bin/replica-init.sh" ]
     ports:
       - "5434:5432"
