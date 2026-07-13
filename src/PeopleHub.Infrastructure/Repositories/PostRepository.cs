@@ -1,3 +1,4 @@
+using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
 
@@ -5,6 +6,17 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class PostRepository(DbClient dbClient) : IPostRepository
 {
+    public async Task<Post> GetAsync(long id, CancellationToken cancellationToken)
+    {
+        var dataTable = await dbClient.ExecuteDataTableAsync(
+            $"select id, text, author_user_id from {DbClient.PostsTable} where id = @id",
+            [("id", id)]);
+
+        return dataTable is null || dataTable.Rows.Count == 0
+            ? null
+            : Post.ExtractFromRow(dataTable.Rows[0]);
+    }
+
     public async Task<long?> CreateAsync(int authorUserId, string text, CancellationToken cancellationToken)
     {
         const string query =

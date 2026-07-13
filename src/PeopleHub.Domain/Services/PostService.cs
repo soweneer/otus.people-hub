@@ -1,9 +1,13 @@
+using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Domain.Services;
 
 public class PostService(IPostRepository postRepository, IUserRepository userRepository) : IPostService
 {
+    public Task<Post> GetAsync(long postId, CancellationToken cancellationToken = default) =>
+        postRepository.GetAsync(postId, cancellationToken);
+
     public async Task<long?> CreateAsync(string authorEmail, string text, CancellationToken cancellationToken = default)
     {
         var authorUserId = await userRepository.GetUserIdAsync(authorEmail, cancellationToken);

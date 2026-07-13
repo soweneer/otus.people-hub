@@ -82,5 +82,26 @@ namespace PeopleHub.Controllers
                 ? Results.Ok("Успешно удален пост")
                 : Results.BadRequest($"Пост [{id}] не найден или принадлежит другому пользователю");
         }
+
+        [HttpGet("/post/get/{id}")]
+        [AllowAnonymous]
+        [ApiExplorerSettings(IgnoreApi = false)]
+        [Produces("application/json")]
+        [ProducesResponseType(typeof(PostResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IResult> GetById(string id)
+        {
+            if (!long.TryParse(id, out var postId))
+            {
+                return Results.BadRequest("Параметр id обязателен и должен быть числом");
+            }
+
+            var post = await postService.GetAsync(postId, HttpContext.RequestAborted);
+
+            return post is null
+                ? Results.NotFound($"Пост [{id}] не найден")
+                : Results.Json(new PostResponse(post.Id.ToString(), post.Text, post.AuthorUserId.ToString()));
+        }
     }
 }
