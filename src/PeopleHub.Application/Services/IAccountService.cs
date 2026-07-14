@@ -1,7 +1,8 @@
+using PeopleHub.Application.Models;
 using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Model;
 
-namespace PeopleHub.Domain.Services;
+namespace PeopleHub.Application.Services;
 
 public interface IAccountService
 {

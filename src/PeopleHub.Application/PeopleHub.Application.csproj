@@ -8,12 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Npgsql" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\PeopleHub.Application\PeopleHub.Application.csproj" />
-      <ProjectReference Include="..\PeopleHub.Domain\PeopleHub.Domain.csproj" />
+        <ProjectReference Include="..\PeopleHub.Domain\PeopleHub.Domain.csproj" />
     </ItemGroup>
 
 </Project>

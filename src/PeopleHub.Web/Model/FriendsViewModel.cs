@@ -1,8 +1,7 @@
-using PeopleHub.Domain.Entities;
-using PeopleHub.Domain.Model;
+using PeopleHub.Application.Models;
 
 namespace PeopleHub.Model;
 
 public sealed record FriendsViewModel(
     FriendsInfo FriendsInfo,
-    IReadOnlyCollection<Post> Feed);
+    IReadOnlyCollection<FeedPost> Feed);

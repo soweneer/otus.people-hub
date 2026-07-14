@@ -1,11 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
-using PeopleHub.Domain.Services;
+using PeopleHub.Application.Services;
 
-namespace PeopleHub.Domain
+namespace PeopleHub.Application
 {
     public static class Bootstrapper
     {
-        public static IServiceCollection AddPeopleHubDomain(this IServiceCollection services)
+        public static IServiceCollection AddPeopleHubApplication(this IServiceCollection services)
         {
             services.AddScoped<IFriendRequestService, FriendRequestService>();
             services.AddScoped<IUserService, UserService>();

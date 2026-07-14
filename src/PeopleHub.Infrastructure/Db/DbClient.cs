@@ -121,6 +121,9 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 
     #endregion
 
+    private NpgsqlConnection _transactionConnection;
+    private NpgsqlTransaction _transaction;
+
     private async Task<NpgsqlConnection> GetSqlConnectionAsync(bool readOnly)
     {
         var connection = dataSource.CreateConnection(readOnly
@@ -128,6 +131,37 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
             : TargetSessionAttributes.Primary);
         await connection.OpenAsync();
         return connection;
+    }
+
+    public async Task<T> ExecuteInTransactionAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken = default)
+    {
+        if (_transaction is not null)
+        {
+            // уже внутри транзакции — вложенный вызов присоединяется к ней
+            return await action();
+        }
+
+        _transactionConnection = dataSource.CreateConnection(TargetSessionAttributes.Primary);
+        await _transactionConnection.OpenAsync(cancellationToken);
+        _transaction = await _transactionConnection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var result = await action();
+            await _transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+        catch
+        {
+            await _transaction.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+        finally
+        {
+            await _transaction.DisposeAsync();
+            await _transactionConnection.DisposeAsync();
+            _transaction = null;
+            _transactionConnection = null;
+        }
     }
 
     public async Task<DataTable> GetDataTableAsync(string query, CancellationToken cancellationToken)
@@ -141,15 +175,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         dataTable.Load(dataReader);
 
         return dataTable;
-    }
-
-    public async Task<DataSet> GetDataSetASync(string query)
-    {
-        await using var connection = await GetSqlConnectionAsync(readOnly: true);
-        using var dataAdapter = new NpgsqlDataAdapter(query, connection);
-        var dataSet = new DataSet();
-        dataAdapter.Fill(dataSet);
-        return dataSet;
     }
 
     public async Task EnsureDbCreated()
@@ -240,20 +265,34 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
     public async Task ExecuteCmdAsync(string parametrizedQuery, Func<NpgsqlCommand, Task> cmdAction,
         IEnumerable<(string, object)> parameters = null, bool readOnly = false)
     {
-        await using var connection = await GetSqlConnectionAsync(readOnly);
-        await using var cmd = connection.CreateCommand();
-        cmd.CommandText = parametrizedQuery;
-
-        if (parameters is not null)
+        if (_transactionConnection is not null)
         {
-            foreach (var parameter in parameters)
-            {
-                cmd.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
-            }
+            await using var transactionCmd = _transactionConnection.CreateCommand();
+            transactionCmd.Transaction = _transaction;
+            FillCommand(transactionCmd, parametrizedQuery, parameters);
+            await cmdAction(transactionCmd);
+            return;
         }
 
-        await cmdAction(cmd);
+        await using var connection = await GetSqlConnectionAsync(readOnly);
+        await using var cmd = connection.CreateCommand();
+        FillCommand(cmd, parametrizedQuery, parameters);
 
-        await connection.CloseAsync();
+        await cmdAction(cmd);
+    }
+
+    private static void FillCommand(NpgsqlCommand cmd, string parametrizedQuery, IEnumerable<(string, object)> parameters)
+    {
+        cmd.CommandText = parametrizedQuery;
+
+        if (parameters is null)
+        {
+            return;
+        }
+
+        foreach (var parameter in parameters)
+        {
+            cmd.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
+        }
     }
 }

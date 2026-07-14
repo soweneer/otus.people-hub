@@ -1,21 +1,16 @@
-﻿using PeopleHub.Domain.Entities;
-using PeopleHub.Domain.Model;
+using PeopleHub.Domain.Entities;
 
 namespace PeopleHub.Domain.Repositories;
 
 public interface IFriendRequestRepository
 {
-    Task ApproveAsync(int id, int receiverPersonId);
-    
-    Task DeleteAsync(int id, int receiverPersonId);
-    
-    Task<FriendsInfo> GetFriendsAsync(int userId);
-    
-    Task<FriendRequest> GetAsync(int id);
-    
-    Task RejectAsync(int id, int receiverPersonId);
-    
-    Task SendAsync(int senderPersonId, int receiverPersonId);
+    Task<FriendRequest> GetAsync(int id, CancellationToken cancellationToken = default);
 
-    Task SetFriendAsync(int userId, int friendUserId);
+    Task<FriendRequest> FindBetweenAsync(int userId, int otherUserId, CancellationToken cancellationToken = default);
+
+    Task AddAsync(FriendRequest request, CancellationToken cancellationToken = default);
+
+    Task SaveStatusAsync(FriendRequest request, CancellationToken cancellationToken = default);
+
+    Task DeleteBetweenAsync(int userId, int otherUserId, CancellationToken cancellationToken = default);
 }

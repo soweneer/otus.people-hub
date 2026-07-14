@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.Services;
+using PeopleHub.Application.Services;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
@@ -14,8 +14,8 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var friendsInfo = await friendRequestService.GetFriendsAsync(User.Identity!.Name, HttpContext.RequestAborted);
-            var feed = await postService.GetFeedAsync(User.Identity!.Name, 0, FeedLimit, HttpContext.RequestAborted);
+            var friendsInfo = await friendRequestService.GetFriendsAsync(HttpContext.RequestAborted);
+            var feed = await postService.GetFeedAsync(0, FeedLimit, HttpContext.RequestAborted);
 
             return View(new FriendsViewModel(friendsInfo, feed));
         }
@@ -35,7 +35,6 @@ namespace PeopleHub.Controllers
             }
 
             var added = await friendRequestService.SetFriendAsync(
-                User.Identity!.Name,
                 friendUserId,
                 HttpContext.RequestAborted);
 
@@ -59,7 +58,6 @@ namespace PeopleHub.Controllers
             }
 
             await friendRequestService.CancelAsync(
-                User.Identity!.Name,
                 friendUserId,
                 HttpContext.RequestAborted);
 
@@ -69,8 +67,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> SendFriendRequest(int targetUserId, string returnUrl)
         {
-            await friendRequestService.SendAsync(User.Identity!.Name, targetUserId,
-                HttpContext.RequestAborted);
+            await friendRequestService.SendAsync(targetUserId, HttpContext.RequestAborted);
 
             return string.IsNullOrWhiteSpace(returnUrl)
                 ? RedirectToAction("Index", "User")
@@ -80,7 +77,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> CancelRequest(int targetUserId, string returnUrl)
         {
-            await friendRequestService.CancelAsync(User.Identity!.Name, targetUserId, HttpContext.RequestAborted);
+            await friendRequestService.CancelAsync(targetUserId, HttpContext.RequestAborted);
 
             return string.IsNullOrWhiteSpace(returnUrl)
                 ? RedirectToAction("Index")
@@ -90,7 +87,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Approve(int friendRequestId)
         {
-            await friendRequestService.ApproveAsync(User.Identity!.Name, friendRequestId, HttpContext.RequestAborted);
+            await friendRequestService.ApproveAsync(friendRequestId, HttpContext.RequestAborted);
 
             return RedirectToAction("Index");
         }
@@ -98,7 +95,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> Reject(int friendRequestId)
         {
-            await friendRequestService.RejectAsync(User.Identity!.Name, friendRequestId, HttpContext.RequestAborted);
+            await friendRequestService.RejectAsync(friendRequestId, HttpContext.RequestAborted);
 
             return RedirectToAction("Index");
         }

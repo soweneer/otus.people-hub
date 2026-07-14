@@ -118,8 +118,8 @@
                         <td>@friend.User.Age</td>
                         <td>@friend.User.City</td>
                         <td>
-                            <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("Approve", "Friends", new {requestId = friend.FriendRequestId})"><i class="fa fa-user-plus"></i></a>
-                            <a class="btn btn-secondary" title="Оставить в подписчиках" href="@Url.Action("Reject", "Friends", new {requestId = friend.FriendRequestId})"><i class="fa fa-ban"></i></a>
+                            <a class="btn btn-success" title="Добавить в друзья" href="@Url.Action("Approve", "Friends", new {friendRequestId = friend.FriendRequestId})"><i class="fa fa-user-plus"></i></a>
+                            <a class="btn btn-secondary" title="Оставить в подписчиках" href="@Url.Action("Reject", "Friends", new {friendRequestId = friend.FriendRequestId})"><i class="fa fa-ban"></i></a>
                         </td>
                     </tr>
                 }

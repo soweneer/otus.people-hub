@@ -2,8 +2,9 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using PeopleHub.Application;
+using PeopleHub.Application.Abstractions;
 using PeopleHub.Auth;
-using PeopleHub.Domain;
 using PeopleHub.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,7 +40,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-builder.Services.AddPeopleHubDomain();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+builder.Services.AddPeopleHubApplication();
 var dbConnectionString = builder.Configuration.GetConnectionString("PostgreSql");
 if (string.IsNullOrEmpty(dbConnectionString))
     throw new MissingMemberException("Connection string is absent");

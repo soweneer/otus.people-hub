@@ -1,6 +1,4 @@
-using PeopleHub.Domain.Enums;
-
-namespace PeopleHub.Domain.Model;
+namespace PeopleHub.Application.Models;
 
 public sealed record FriendInfoLite(UserLite User, int FriendRequestId);
 

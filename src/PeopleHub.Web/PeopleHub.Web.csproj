@@ -11,12 +11,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="14.1.0" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
       <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\PeopleHub.Application\PeopleHub.Application.csproj" />
       <ProjectReference Include="..\PeopleHub.Domain\PeopleHub.Domain.csproj" />
       <ProjectReference Include="..\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj" />
     </ItemGroup>

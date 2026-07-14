@@ -1,5 +1,5 @@
 using PeopleHub.Domain.Enums;
 
-namespace PeopleHub.Domain.Model;
+namespace PeopleHub.Application.Models;
 
 public sealed record UserInfo(UserLite User, FriendRequestStatus Status);

@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.Repositories;
-using PeopleHub.Domain.Services;
+using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Controllers
 {
     [AllowAnonymous]
     [Route("admin/db")]
-    public class DbController(IAdminRepository adminRepository) : Controller
+    public class DbController(IDbMigrator dbMigrator) : Controller
     {
 
         [HttpGet("migrate")]
         public async Task<IActionResult> MigrateDb()
         {
             // TODO перенести это в какой-нито sandbox
-            await adminRepository.MigrateAsync();
+            await dbMigrator.MigrateAsync();
 
             return Ok("Ok");
         }

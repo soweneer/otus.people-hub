@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PeopleHub.Application.Models;
+using PeopleHub.Application.Services;
 using PeopleHub.Auth;
 using PeopleHub.Domain.Enums;
-using PeopleHub.Domain.Model;
-using PeopleHub.Domain.Services;
 using PeopleHub.Extensions;
 using PeopleHub.Model;
 

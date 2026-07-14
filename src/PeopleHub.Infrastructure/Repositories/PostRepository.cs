@@ -1,6 +1,5 @@
 using System.Data;
 using PeopleHub.Domain.Entities;
-using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
 
@@ -8,7 +7,7 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class PostRepository(DbClient dbClient) : IPostRepository
 {
-    public async Task<Post> GetAsync(long id, CancellationToken cancellationToken)
+    public async Task<Post> GetAsync(long id, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"select id, text, author_user_id from {DbClient.PostsTable} where id = @id",
@@ -16,10 +15,10 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
 
         return dataTable is null || dataTable.Rows.Count == 0
             ? null
-            : Post.ExtractFromRow(dataTable.Rows[0]);
+            : ExtractPost(dataTable.Rows[0]);
     }
 
-    public async Task<long?> CreateAsync(int authorUserId, string text, CancellationToken cancellationToken)
+    public async Task<long?> AddAsync(Post post, CancellationToken cancellationToken = default)
     {
         const string query =
             $"INSERT INTO {DbClient.PostsTable} (author_user_id, text) " +
@@ -27,8 +26,8 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
 
         var postId = await dbClient.ExecuteScalarAsync(query,
             [
-                ("authorUserId", authorUserId),
-                ("text", text)
+                ("authorUserId", post.AuthorUserId),
+                ("text", post.Text)
             ]);
 
         return postId is null or DBNull
@@ -36,7 +35,7 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
             : Convert.ToInt64(postId);
     }
 
-    public async Task<bool> UpdateAsync(long id, int authorUserId, string text, CancellationToken cancellationToken)
+    public async Task<bool> UpdateAsync(Post post, CancellationToken cancellationToken = default)
     {
         const string query =
             $"UPDATE {DbClient.PostsTable} " +
@@ -47,49 +46,15 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
         await dbClient.ExecuteCmdAsync(query,
             async cmd => affectedRows = await cmd.ExecuteNonQueryAsync(),
             [
-                ("text", text),
-                ("id", id),
-                ("authorUserId", authorUserId)
+                ("text", post.Text),
+                ("id", post.Id),
+                ("authorUserId", post.AuthorUserId)
             ]);
 
         return affectedRows > 0;
     }
 
-    public async Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(int userId, int offset, int limit, CancellationToken cancellationToken)
-    {
-        var query = $"""
-            select p.id, p.text, p.author_user_id
-            from {DbClient.PostsTable} p
-            where p.author_user_id in (
-                select case
-                        when fr.sender_user_id = @userId then fr.receiver_user_id
-                        else fr.sender_user_id
-                    end
-                from {DbClient.FriendsRequestsTable} fr
-                where (fr.sender_user_id = @userId or fr.receiver_user_id = @userId)
-                    and fr.status = @approvedStatus
-            )
-            order by p.id desc
-            limit {limit} offset {offset};
-            """;
-
-        var dataTable = await dbClient.ExecuteDataTableAsync(query,
-            [
-                ("userId", userId),
-                ("approvedStatus", (int)FriendRequestStatus.Approved)
-            ]);
-
-        if (dataTable is null || dataTable.Rows.Count == 0)
-        {
-            return [];
-        }
-
-        return dataTable.Rows.Cast<DataRow>()
-            .Select(Post.ExtractFromRow)
-            .ToArray();
-    }
-
-    public async Task<bool> DeleteAsync(long id, int authorUserId, CancellationToken cancellationToken)
+    public async Task<bool> DeleteAsync(long id, int authorUserId, CancellationToken cancellationToken = default)
     {
         const string query =
             $"DELETE FROM {DbClient.PostsTable} " +
@@ -105,4 +70,11 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
 
         return affectedRows > 0;
     }
+
+    private static Post ExtractPost(DataRow row) =>
+        Post.Restore(
+            Convert.ToInt64(row["id"]),
+            Convert.ToInt32(row["author_user_id"]),
+            row["text"].ToString()
+        );
 }

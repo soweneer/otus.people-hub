@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Domain.Services;
+using PeopleHub.Application.Services;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
@@ -23,7 +23,6 @@ namespace PeopleHub.Controllers
             }
 
             var postId = await postService.CreateAsync(
-                User.Identity!.Name,
                 request.Text.Trim(),
                 HttpContext.RequestAborted);
 
@@ -51,7 +50,6 @@ namespace PeopleHub.Controllers
             }
 
             var updated = await postService.UpdateAsync(
-                User.Identity!.Name,
                 postId,
                 request.Text.Trim(),
                 HttpContext.RequestAborted);
@@ -75,7 +73,6 @@ namespace PeopleHub.Controllers
             }
 
             var deleted = await postService.DeleteAsync(
-                User.Identity!.Name,
                 postId,
                 HttpContext.RequestAborted);
 
@@ -117,7 +114,6 @@ namespace PeopleHub.Controllers
             const int limit = 1000;
 
             var posts = await postService.GetFeedAsync(
-                User.Identity!.Name,
                 offset,
                 limit,
                 HttpContext.RequestAborted);

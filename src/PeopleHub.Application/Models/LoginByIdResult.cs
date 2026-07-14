@@ -1,4 +1,4 @@
-namespace PeopleHub.Domain.Model;
+namespace PeopleHub.Application.Models;
 
 public enum LoginByIdStatus
 {

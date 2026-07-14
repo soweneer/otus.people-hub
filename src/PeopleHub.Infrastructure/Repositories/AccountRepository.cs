@@ -1,46 +1,47 @@
 using System.Data;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Repositories;
+using PeopleHub.Domain.ValueObjects;
 using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Infrastructure.Repositories;
 
 internal class AccountRepository(DbClient dbClient) : IAccountRepository
 {
-    public async Task<int?> CreateAsync(string email, string password, int userId)
+    public async Task<int> CreateAsync(Account account, CancellationToken cancellationToken = default)
     {
         var scalar = await dbClient.ExecuteScalarAsync(
             $"INSERT INTO {DbClient.AccountsTable} (email, password, user_id) " +
-            $"VALUES (@email, @password, @userId) RETURNING id",
+            "VALUES (@email, @password, @userId) RETURNING id",
             [
-                ("email", email),
-                ("password", password),
-                ("userId", userId)
+                ("email", account.Email.Value),
+                ("password", account.Password.Value),
+                ("userId", account.UserId)
             ]);
 
         return Convert.ToInt32(scalar);
     }
 
-    public async Task<bool> ExistsAsync(string email)
+    public async Task<bool> ExistsAsync(Email email, CancellationToken cancellationToken = default)
     {
         var dbValue = await dbClient.ExecuteScalarAsync(
             $"SELECT 1 FROM {DbClient.AccountsTable} WHERE email = @email",
-            [("email", email)],
+            [("email", email.Value)],
             readOnly: true);
 
         return dbValue is not null;
     }
 
-    public async Task<Account> FindByEmailAsync(string email)
+    public async Task<Account> FindByEmailAsync(Email email, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"SELECT * FROM {DbClient.AccountsTable} WHERE email = @email",
-            [("email", email)]);
+            [("email", email.Value)]);
 
         return ExtractAccount(dataTable);
     }
 
-    public async Task<Account> FindByUserIdAsync(int userId)
+    public async Task<Account> FindByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"SELECT * FROM {DbClient.AccountsTable} WHERE user_id = @userId",
@@ -57,11 +58,11 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
         }
 
         var dataRow = dataTable.Rows[0];
-        return new Account(
-            int.Parse(dataRow["id"].ToString()),
-            dataRow["email"].ToString(),
-            dataRow["password"].ToString(),
-             int.Parse(dataRow["user_id"].ToString())
+        return Account.Restore(
+            Convert.ToInt32(dataRow["id"]),
+            Email.Create(dataRow["email"].ToString()),
+            new PasswordHash(dataRow["password"].ToString()),
+            Convert.ToInt32(dataRow["user_id"])
         );
     }
 }

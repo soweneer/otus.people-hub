@@ -1,6 +1,4 @@
 using System.Data;
-using PeopleHub.Domain.Entities;
-using PeopleHub.Domain.Enums;
 using PeopleHub.Domain.Exceptions;
 using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
@@ -10,7 +8,7 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class UserRepository(DbClient dbClient) : IUserRepository
 {
-    public async Task<int> GetUserIdAsync(string email, CancellationToken cancellationToken)
+    public async Task<int> GetUserIdAsync(string email, CancellationToken cancellationToken = default)
     {
         const string query =
             $"""
@@ -37,7 +35,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Convert.ToInt32(dataTable.Rows[0]["id"]);
     }
 
-    public async Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken)
+    public async Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"select * from {DbClient.UsersTable} where id = @id",
@@ -59,7 +57,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
         );
     }
 
-    public async Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken)
+    public async Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default)
     {
         var (name, surname, age, city, bio, gender) = personalInfo;
 
@@ -73,7 +71,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
                 ("age", age),
                 ("gender", gender),
                 ("city", city),
-                ("bio", bio)
+                ("bio", (object)bio ?? DBNull.Value)
             ]);
 
         return userId is null or DBNull
@@ -81,130 +79,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Convert.ToInt32(userId);
     }
 
-    public async Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter searchFilter, CancellationToken cancellationToken)
-    {
-        var (firstName, lastName, skip, take) = searchFilter;
-
-        var conditions = new List<string>();
-        var parameters = new List<(string, object)>();
-        if (!string.IsNullOrWhiteSpace(lastName))
-        {
-            conditions.Add("u.surname ilike @surname");
-            parameters.Add(("surname", $"%{lastName}%"));
-        }
-        if (!string.IsNullOrWhiteSpace(firstName))
-        {
-            conditions.Add("u.name ilike @name");
-            parameters.Add(("name", $"%{firstName}%"));
-        }
-        var whereClause = conditions.Count > 0
-            ? $"where {string.Join(" and ", conditions)}"
-            : string.Empty;
-
-        var selectQuery = $"""
-            select u.id, u.name, u.surname, u.city, u.bio
-            from {DbClient.UsersTable} u
-            {whereClause}
-            order by u.id
-            limit {take} offset {skip};
-            """;
-
-        var dataTable = await dbClient.ExecuteDataTableAsync(selectQuery, parameters);
-        if (dataTable is null || dataTable.Rows.Count == 0)
-        {
-            return [];
-        }
-
-        return dataTable.Rows.Cast<DataRow>()
-            .Select(row => new SearchedUser(
-                int.Parse(row["id"].ToString()),
-                row["name"].ToString(),
-                row["surname"].ToString(),
-                row["city"].ToString(),
-                row["bio"].ToString()))
-            .ToArray();
-    }
-
-    public async Task<IReadOnlyCollection<UserInfo>> SearchFriendsAsync(string currentUserEmail, SearchFilter searchFilter, CancellationToken cancellationToken)
-    {
-        var (firstName, lastName, skip, take) = searchFilter;
-
-        var userId = await GetUserIdAsync(currentUserEmail, cancellationToken);
-
-        var conditions = new List<string>();
-        var parameters = new List<(string, object)>();
-        if (!string.IsNullOrWhiteSpace(lastName))
-        {
-            conditions.Add("u.surname like @surname");
-            parameters.Add(("surname", lastName + "%"));
-        }
-        if (!string.IsNullOrWhiteSpace(firstName))
-        {
-            conditions.Add("u.name like @name");
-            parameters.Add(("name", firstName + "%"));
-        }
-        var whereClause = conditions.Count > 0
-            ? $"where {string.Join(" and ", conditions)}"
-            : string.Empty;
-
-        var selectQuery = $"""
-            with my_friends as (
-                select distinct friend_id, status from
-                (
-                    select sender_user_id as friend_id, status from {DbClient.FriendsRequestsTable} where receiver_user_id = {userId}
-                    union all
-                    select receiver_user_id as friend_id, status from {DbClient.FriendsRequestsTable} where sender_user_id = {userId}
-                )
-            )
-            select u.id, u.surname || ' ' || u.name as name, u.age, u.city, f.status
-            from
-                {DbClient.UsersTable} u
-                left join my_friends f on friend_id = u.id
-            {whereClause}
-            order by u.id
-            limit {take} offset {skip};
-            """;
-
-        var dataTable = await dbClient.ExecuteDataTableAsync(selectQuery, parameters);
-        if (dataTable is null || dataTable.Rows.Count == 0)
-        {
-            return [];
-        }
-
-        return dataTable.Rows.Cast<DataRow>()
-            .Select(row => new UserInfo(
-                new UserLite(
-                    int.Parse(row["id"].ToString()),
-                    row["name"].ToString(),
-                    int.Parse(row["age"].ToString()),
-                    row["city"].ToString()
-                    ),
-                Convert.IsDBNull(row["status"])
-                    ? FriendRequestStatus.None
-                    : Enum.Parse<FriendRequestStatus>(row["status"].ToString())))
-            .ToArray();
-    }
-
-    public async Task<Friend> GetAsync(int id, int viewerUserId, CancellationToken cancellationToken = default)
-    {
-        var query = $"""
-            select
-                    u.*, fr.status
-            from
-                    {DbClient.UsersTable} u
-                    left join {DbClient.FriendsRequestsTable} fr
-                        on (u.id = fr.receiver_user_id and fr.sender_user_id = {viewerUserId})
-                               or (u.id = fr.sender_user_id and fr.receiver_user_id = {viewerUserId})
-            where u.id = {id};
-            """;
-        var dataTable = await dbClient.GetDataTableAsync(query, cancellationToken);
-
-        return dataTable.Rows.Count == 0
-            ? null
-            : Friend.ExtractFromRow(dataTable.Rows[0]);
-    }
-
-    public async Task UpdateAsync(int id, PersonalInfo personalInfo, CancellationToken cancellationToken)
+    public async Task UpdateAsync(int id, PersonalInfo personalInfo, CancellationToken cancellationToken = default)
     {
         var (name, surname, age, city, bio, gender) = personalInfo;
 
@@ -219,7 +94,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
                 ("age", age),
                 ("gender", gender),
                 ("city", city),
-                ("bio", bio),
+                ("bio", (object)bio ?? DBNull.Value),
                 ("userId", id)
             ]);
     }

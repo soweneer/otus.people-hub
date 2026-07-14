@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PeopleHub.Application.Models;
+using PeopleHub.Application.Services;
 using PeopleHub.Domain.Model;
-using PeopleHub.Exceptions;
 using PeopleHub.Extensions;
-using PeopleHub.Domain.Services;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
@@ -24,8 +24,7 @@ namespace PeopleHub.Controllers
         [HttpGet]
         public async Task<IActionResult> LoadMore(int skip, string firstName, string lastName)
         {
-            var users = await userService.SearchAsync(
-                User.Identity!.Name,
+            var users = await userService.SearchWithFriendStatusAsync(
                 new SearchFilter(firstName ?? string.Empty, lastName ?? string.Empty, skip, PageSize),
                 HttpContext.RequestAborted);
 
@@ -136,20 +135,19 @@ namespace PeopleHub.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> UserById(int id)
         {
-            var userInfo = await userService.GetByEmailAsync(User.Identity!.Name, id, HttpContext.RequestAborted);
+            var userInfo = await userService.GetWithFriendStatusAsync(id, HttpContext.RequestAborted);
 
             return userInfo == null
-                ? throw new UnknownUserException(id)
+                ? NotFound()
                 : View("User", userInfo);
         }
 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
-            var userInfo = await userService.GetProfileAsync(User.Identity!.Name, HttpContext.RequestAborted);
+            var userInfo = await userService.GetProfileAsync(HttpContext.RequestAborted);
 
             return View(userInfo);
         }
@@ -162,7 +160,7 @@ namespace PeopleHub.Controllers
                 return View();
             }
 
-            var updatedUser = await userService.UpdateAsync(User.Identity!.Name, updateRequest.ExtractPersonalInfo(), HttpContext.RequestAborted);
+            var updatedUser = await userService.UpdateProfileAsync(updateRequest.ExtractPersonalInfo(), HttpContext.RequestAborted);
             TempData["SuccessMessage"] = "Профиль успешно сохранен";
 
             return View(updatedUser);
