@@ -111,17 +111,10 @@ namespace PeopleHub.Controllers
         [ProducesResponseType(typeof(PostResponse[]), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IResult> Feed(int offset = 0, int limit = 10)
+        public async Task<IResult> Feed()
         {
-            if (offset < 0)
-            {
-                return Results.BadRequest("Параметр offset должен быть не меньше 0");
-            }
-
-            if (limit < 1)
-            {
-                return Results.BadRequest("Параметр limit должен быть не меньше 1");
-            }
+            const int offset = 0;
+            const int limit = 1000;
 
             var posts = await postService.GetFeedAsync(
                 User.Identity!.Name,
