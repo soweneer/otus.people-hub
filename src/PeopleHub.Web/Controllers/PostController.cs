@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.Services;
@@ -5,7 +6,7 @@ using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PostController(IPostService postService) : Controller
     {
         [HttpPost("/post/create")]

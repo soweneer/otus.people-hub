@@ -15,6 +15,19 @@ public class AccountService(IUserRepository userRepository,
         return account is not null && passwordHasher.Verify(account.Password, password);
     }
 
+    public async Task<LoginByIdResult> LoginByUserIdAsync(int userId, string password, CancellationToken cancellationToken = default)
+    {
+        var account = await accountRepository.FindByUserIdAsync(userId);
+        if (account is null)
+        {
+            return LoginByIdResult.UserNotFound;
+        }
+
+        return passwordHasher.Verify(account.Password, password)
+            ? LoginByIdResult.Success(account.Email)
+            : LoginByIdResult.InvalidPassword;
+    }
+
     public async Task<SignUpStatus> SignUpAsync(string email, string password, PersonalInfo personalInfo,
         CancellationToken cancellationToken = default)
     {

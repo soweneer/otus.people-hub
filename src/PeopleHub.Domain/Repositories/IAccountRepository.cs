@@ -9,4 +9,6 @@ public interface IAccountRepository
     Task<bool> ExistsAsync(string email);
 
     Task<Account> FindByEmailAsync(string email);
+
+    Task<Account> FindByUserIdAsync(int userId);
 }

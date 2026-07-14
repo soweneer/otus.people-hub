@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Domain.Services;
@@ -20,6 +21,7 @@ namespace PeopleHub.Controllers
         }
 
         [HttpPut("/friend/set/{user_id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -43,6 +45,7 @@ namespace PeopleHub.Controllers
         }
 
         [HttpPut("/friend/delete/{user_id}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]

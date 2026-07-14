@@ -1,3 +1,4 @@
+using System.Data;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
@@ -35,6 +36,21 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"SELECT * FROM {DbClient.AccountsTable} WHERE email = @email",
             [("email", email)]);
+
+        return ExtractAccount(dataTable);
+    }
+
+    public async Task<Account> FindByUserIdAsync(int userId)
+    {
+        var dataTable = await dbClient.ExecuteDataTableAsync(
+            $"SELECT * FROM {DbClient.AccountsTable} WHERE user_id = @userId",
+            [("userId", userId)]);
+
+        return ExtractAccount(dataTable);
+    }
+
+    private static Account ExtractAccount(DataTable dataTable)
+    {
         if (dataTable.Rows.Count == 0)
         {
             return null;
