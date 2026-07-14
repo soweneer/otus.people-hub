@@ -124,7 +124,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
     private async Task<NpgsqlConnection> GetSqlConnectionAsync(bool readOnly)
     {
         var connection = dataSource.CreateConnection(readOnly
-            ? TargetSessionAttributes.Standby
+            ? TargetSessionAttributes.PreferStandby
             : TargetSessionAttributes.Primary);
         await connection.OpenAsync();
         return connection;
@@ -152,20 +152,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         return dataSet;
     }
 
-    private static bool TablesCreated(ICollection<string> tableNames) =>
-        new[]
-        {
-            AccountsTable,
-            FriendsRequestsTable,
-            UsersTable
-        }.All(tableNames.Contains);
-
     public async Task EnsureDbCreated()
-    {
-        await CreateBaseTablesAsync();
-    }
-
-    private async Task CreateBaseTablesAsync()
     {
         const string query =
             #region SQL для создания базовых таблиц
