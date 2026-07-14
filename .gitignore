@@ -30,4 +30,4 @@ msbuild.wrn
 
 # React SPA
 node_modules/
-src/PeopleHub.Web/wwwroot/
+src/backend/PeopleHub.Web/wwwroot/

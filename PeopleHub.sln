@@ -1,12 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Web", "src\PeopleHub.Web\PeopleHub.Web.csproj", "{B940CD26-6C28-4C2E-9BF8-6F35C203C958}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Web", "src\backend\PeopleHub.Web\PeopleHub.Web.csproj", "{B940CD26-6C28-4C2E-9BF8-6F35C203C958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Domain", "src\PeopleHub.Domain\PeopleHub.Domain.csproj", "{A1B2C3D4-1111-2222-3333-444455556666}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Domain", "src\backend\PeopleHub.Domain\PeopleHub.Domain.csproj", "{A1B2C3D4-1111-2222-3333-444455556666}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Infrastructure", "src\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj", "{A1B2C3D4-1111-2222-3333-444455557777}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Infrastructure", "src\backend\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj", "{A1B2C3D4-1111-2222-3333-444455557777}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Application", "src\PeopleHub.Application\PeopleHub.Application.csproj", "{DE90427C-C4EB-4251-9860-B7E4DF74B086}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeopleHub.Application", "src\backend\PeopleHub.Application\PeopleHub.Application.csproj", "{DE90427C-C4EB-4251-9860-B7E4DF74B086}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
