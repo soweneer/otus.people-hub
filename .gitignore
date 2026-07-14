@@ -27,3 +27,7 @@ bld/
 msbuild.log
 msbuild.err
 msbuild.wrn
+
+# React SPA
+node_modules/
+src/PeopleHub.Web/wwwroot/

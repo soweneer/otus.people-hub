@@ -9,7 +9,7 @@ namespace PeopleHub.Controllers
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PostController(IPostService postService) : Controller
     {
-        [HttpPost("/post/create")]
+        [HttpPost("/api/post/create")]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
@@ -31,7 +31,7 @@ namespace PeopleHub.Controllers
                 : Results.Json(postId.Value.ToString());
         }
 
-        [HttpPut("/post/update")]
+        [HttpPut("/api/post/update")]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -59,7 +59,7 @@ namespace PeopleHub.Controllers
                 : Results.BadRequest($"Пост [{request.Id}] не найден или принадлежит другому пользователю");
         }
 
-        [HttpPut("/post/delete/{id}")]
+        [HttpPut("/api/post/delete/{id}")]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -81,7 +81,7 @@ namespace PeopleHub.Controllers
                 : Results.BadRequest($"Пост [{id}] не найден или принадлежит другому пользователю");
         }
 
-        [HttpGet("/post/get/{id}")]
+        [HttpGet("/api/post/get/{id}")]
         [AllowAnonymous]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
@@ -102,7 +102,7 @@ namespace PeopleHub.Controllers
                 : Results.Json(new PostResponse(post.Id.ToString(), post.Text, post.AuthorUserId.ToString()));
         }
 
-        [HttpGet("/post/feed")]
+        [HttpGet("/api/post/feed")]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(typeof(PostResponse[]), StatusCodes.Status200OK)]

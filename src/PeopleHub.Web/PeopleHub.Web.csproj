@@ -8,6 +8,8 @@
         <RootNamespace>PeopleHub</RootNamespace>
         <LangVersion>latest</LangVersion>
         <UserSecretsId>6d4ee67e-9d9e-4d5f-a06e-0b628b7045ff</UserSecretsId>
+        <SpaRoot>ClientApp\</SpaRoot>
+        <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     </PropertyGroup>
 
     <ItemGroup>

@@ -8,12 +8,8 @@ using PeopleHub.Auth;
 using PeopleHub.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllersWithViews();
-builder.Services.Configure<CookiePolicyOptions>(options =>
-{
-    options.CheckConsentNeeded = _ => true;
-    options.MinimumSameSitePolicy = SameSiteMode.None;
-});
+builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddSingleton<JwtTokenIssuer>();
@@ -23,7 +19,17 @@ var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(opt =>
     {
-        opt.LoginPath = new PathString("/Account/SignIn");
+        // Фронтенд — React SPA: вместо редиректов на страницу логина возвращаем коды статуса
+        opt.Events.OnRedirectToLogin = ctx =>
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        opt.Events.OnRedirectToAccessDenied = ctx =>
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
     })
     .AddJwtBearer(opt =>
     {
@@ -49,9 +55,6 @@ if (string.IsNullOrEmpty(dbConnectionString))
 builder.Services.AddPeopleHubInfrastructure(dbConnectionString);
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-builder.Services.AddRazorPages();
-builder.Services.AddControllersWithViews();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -65,7 +68,7 @@ builder.Services.AddSwaggerGen(options =>
         Type = Microsoft.OpenApi.SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        Description = "JWT-токен из POST /login (без префикса 'Bearer ')"
+        Description = "JWT-токен из POST /api/login (без префикса 'Bearer ')"
     });
     options.AddSecurityRequirement(document => new Microsoft.OpenApi.OpenApiSecurityRequirement
     {
@@ -76,7 +79,7 @@ builder.Services.AddSwaggerGen(options =>
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler();
     app.UseHsts();
 }
 
@@ -93,8 +96,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}");
-app.MapRazorPages();
+app.MapControllers();
+// SPA: все не-API маршруты отдают React-приложение
+app.MapFallbackToFile("index.html");
 app.Run();

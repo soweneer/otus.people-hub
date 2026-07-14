@@ -5,7 +5,7 @@ using PeopleHub.Infrastructure.Db;
 namespace PeopleHub.Controllers
 {
     [AllowAnonymous]
-    [Route("admin/db")]
+    [Route("api/admin/db")]
     public class DbController(IDbMigrator dbMigrator) : Controller
     {
 

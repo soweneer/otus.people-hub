@@ -2,26 +2,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Services;
-using PeopleHub.Model;
 
 namespace PeopleHub.Controllers
 {
-    [Authorize]
-    public class FriendsController(IFriendRequestService friendRequestService, IPostService postService) : Controller
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    public class FriendsController(IFriendRequestService friendRequestService) : Controller
     {
-        private const int FeedLimit = 20;
-
-        [HttpGet]
-        public async Task<IActionResult> Index()
-        {
-            var friendsInfo = await friendRequestService.GetFriendsAsync(HttpContext.RequestAborted);
-            var feed = await postService.GetFeedAsync(0, FeedLimit, HttpContext.RequestAborted);
-
-            return View(new FriendsViewModel(friendsInfo, feed));
-        }
-
-        [HttpPut("/friend/set/{user_id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("/api/friend/set/{user_id}")]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -43,8 +30,7 @@ namespace PeopleHub.Controllers
                 : Results.BadRequest($"Пользователь [{userId}] не найден или является текущим пользователем");
         }
 
-        [HttpPut("/friend/delete/{user_id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpPut("/api/friend/delete/{user_id}")]
         [ApiExplorerSettings(IgnoreApi = false)]
         [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -62,42 +48,6 @@ namespace PeopleHub.Controllers
                 HttpContext.RequestAborted);
 
             return Results.Ok("Пользователь успешно удален из друзей");
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> SendFriendRequest(int targetUserId, string returnUrl)
-        {
-            await friendRequestService.SendAsync(targetUserId, HttpContext.RequestAborted);
-
-            return string.IsNullOrWhiteSpace(returnUrl)
-                ? RedirectToAction("Index", "User")
-                : Redirect(returnUrl);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> CancelRequest(int targetUserId, string returnUrl)
-        {
-            await friendRequestService.CancelAsync(targetUserId, HttpContext.RequestAborted);
-
-            return string.IsNullOrWhiteSpace(returnUrl)
-                ? RedirectToAction("Index")
-                : Redirect(returnUrl);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Approve(int friendRequestId)
-        {
-            await friendRequestService.ApproveAsync(friendRequestId, HttpContext.RequestAborted);
-
-            return RedirectToAction("Index");
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Reject(int friendRequestId)
-        {
-            await friendRequestService.RejectAsync(friendRequestId, HttpContext.RequestAborted);
-
-            return RedirectToAction("Index");
         }
     }
 }
