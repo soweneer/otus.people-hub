@@ -1,10 +1,9 @@
-namespace PeopleHub.Domain.Enums
+namespace PeopleHub.Domain.Enums;
+
+public enum FriendRequestStatus
 {
-    public enum FriendRequestStatus
-    {
-        None = -1,
-        Sent = 0,
-        Rejected = 1,
-        Approved = 2
-    }
+    None = -1,
+    Sent = 0,
+    Rejected = 1,
+    Approved = 2
 }

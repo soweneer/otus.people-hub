@@ -1,15 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PeopleHub.Model
-{
-    public sealed class SignInRequest
-    {
-        [DataType(DataType.EmailAddress)]
-        [Required(ErrorMessage ="Не указан email")]
-        public string Email { get; set; }
+namespace PeopleHub.Model;
 
-        [Required(ErrorMessage = "Не указан пароль")]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
-    }
+public sealed class SignInRequest
+{
+    [DataType(DataType.EmailAddress)]
+    [Required(ErrorMessage ="Не указан email")]
+    public string Email { get; set; }
+
+    [Required(ErrorMessage = "Не указан пароль")]
+    [DataType(DataType.Password)]
+    public string Password { get; set; }
 }

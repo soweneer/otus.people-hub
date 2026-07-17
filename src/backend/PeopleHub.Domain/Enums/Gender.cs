@@ -1,8 +1,7 @@
-namespace PeopleHub.Domain.Enums
+namespace PeopleHub.Domain.Enums;
+
+public enum Gender: int
 {
-    public enum Gender: int
-    {
-        Female,
-        Male
-    }
+    Female,
+    Male
 }

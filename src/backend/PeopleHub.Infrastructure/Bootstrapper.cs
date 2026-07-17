@@ -8,29 +8,28 @@ using PeopleHub.Infrastructure.Helpers;
 using PeopleHub.Infrastructure.Queries;
 using PeopleHub.Infrastructure.Repositories;
 
-namespace PeopleHub.Infrastructure
+namespace PeopleHub.Infrastructure;
+
+public static class Bootstrapper
 {
-    public static class Bootstrapper
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, string dbConnectionString)
     {
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services, string dbConnectionString)
-        {
-            services.AddSingleton(new NpgsqlDataSourceBuilder(dbConnectionString).BuildMultiHost());
-            services.AddScoped(sp => new DbClient(sp.GetRequiredService<NpgsqlMultiHostDataSource>()));
+        services.AddSingleton(new NpgsqlDataSourceBuilder(dbConnectionString).BuildMultiHost());
+        services.AddScoped(sp => new DbClient(sp.GetRequiredService<NpgsqlMultiHostDataSource>()));
 
-            services.AddScoped<IAccountRepository, AccountRepository>();
-            services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<IAccountRepository, AccountRepository>();
+        services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPostRepository, PostRepository>();
 
-            services.AddScoped<IUserQueries, UserQueries>();
-            services.AddScoped<IFriendQueries, FriendQueries>();
-            services.AddScoped<IFeedRepository, FeedRepository>();
+        services.AddScoped<IUserQueries, UserQueries>();
+        services.AddScoped<IFriendQueries, FriendQueries>();
+        services.AddScoped<IFeedRepository, FeedRepository>();
 
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IDbMigrator, DbMigrator>();
-            services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IDbMigrator, DbMigrator>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
-            return services;
-        }
+        return services;
     }
 }
