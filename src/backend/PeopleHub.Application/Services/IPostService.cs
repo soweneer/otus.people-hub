@@ -3,7 +3,7 @@ using PeopleHub.Domain.Entities;
 
 namespace PeopleHub.Application.Services;
 
-public interface IPostService
+public partial interface IPostService
 {
     Task<long?> CreateAsync(string text, CancellationToken cancellationToken = default);
 
@@ -12,6 +12,4 @@ public interface IPostService
     Task<bool> UpdateAsync(long postId, string text, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteAsync(long postId, CancellationToken cancellationToken = default);
-
-    Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int offset, int limit, CancellationToken cancellationToken = default);
 }

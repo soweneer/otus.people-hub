@@ -64,7 +64,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             ]);
 
     private static FriendRequest ExtractFriendRequest(DataRow row) =>
-        FriendRequest.Restore(
+        new FriendRequest(
             Convert.ToInt32(row["id"]),
             Convert.ToInt32(row["sender_user_id"]),
             Convert.ToInt32(row["receiver_user_id"]),

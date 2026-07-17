@@ -3,20 +3,12 @@ using PeopleHub.Domain.Exceptions;
 
 namespace PeopleHub.Domain.Entities;
 
-public sealed class FriendRequest
+public sealed class FriendRequest(int id, int senderUserId, int receiverUserId, FriendRequestStatus status)
 {
-    private FriendRequest(int id, int senderUserId, int receiverUserId, FriendRequestStatus status)
-    {
-        Id = id;
-        SenderUserId = senderUserId;
-        ReceiverUserId = receiverUserId;
-        Status = status;
-    }
-
-    public int Id { get; }
-    public int SenderUserId { get; }
-    public int ReceiverUserId { get; }
-    public FriendRequestStatus Status { get; private set; }
+    public int Id { get; } = id;
+    public int SenderUserId { get; } = senderUserId;
+    public int ReceiverUserId { get; } = receiverUserId;
+    public FriendRequestStatus Status { get; private set; } = status;
 
     public static FriendRequest Send(int senderUserId, int receiverUserId)
     {
@@ -29,9 +21,6 @@ public sealed class FriendRequest
         EnsureDifferentUsers(userId, friendUserId);
         return new FriendRequest(0, userId, friendUserId, FriendRequestStatus.Approved);
     }
-
-    public static FriendRequest Restore(int id, int senderUserId, int receiverUserId, FriendRequestStatus status) =>
-        new(id, senderUserId, receiverUserId, status);
 
     public void Approve(int byUserId)
     {

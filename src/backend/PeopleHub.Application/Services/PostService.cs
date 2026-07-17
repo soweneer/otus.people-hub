@@ -5,9 +5,7 @@ using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Application.Services;
 
-public class PostService(IPostRepository postRepository,
-    IPostQueries postQueries,
-    ICurrentUser currentUser) : IPostService
+public class PostService(IPostRepository postRepository, ICurrentUser currentUser) : IPostService
 {
     public Task<Post> GetAsync(long postId, CancellationToken cancellationToken = default) =>
         postRepository.GetAsync(postId, cancellationToken);
@@ -39,12 +37,5 @@ public class PostService(IPostRepository postRepository,
         var authorUserId = await currentUser.GetUserIdAsync(cancellationToken);
 
         return await postRepository.DeleteAsync(postId, authorUserId, cancellationToken);
-    }
-
-    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int offset, int limit, CancellationToken cancellationToken = default)
-    {
-        var userId = await currentUser.GetUserIdAsync(cancellationToken);
-
-        return await postQueries.GetFriendsFeedAsync(userId, offset, limit, cancellationToken);
     }
 }

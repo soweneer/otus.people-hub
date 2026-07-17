@@ -58,7 +58,7 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
         }
 
         var dataRow = dataTable.Rows[0];
-        return Account.Restore(
+        return new Account(
             Convert.ToInt32(dataRow["id"]),
             Email.Create(dataRow["email"].ToString()),
             new PasswordHash(dataRow["password"].ToString()),

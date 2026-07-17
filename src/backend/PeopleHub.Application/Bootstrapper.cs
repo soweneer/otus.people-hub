@@ -11,6 +11,7 @@ namespace PeopleHub.Application
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IFeedService, FeedService>();
 
             return services;
         }

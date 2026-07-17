@@ -52,7 +52,7 @@ builder.Services.AddPeopleHubApplication();
 var dbConnectionString = builder.Configuration.GetConnectionString("PostgreSql");
 if (string.IsNullOrEmpty(dbConnectionString))
     throw new MissingMemberException("Connection string is absent");
-builder.Services.AddPeopleHubInfrastructure(dbConnectionString);
+builder.Services.AddInfrastructure(dbConnectionString);
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 builder.Services.AddEndpointsApiExplorer();
@@ -75,6 +75,7 @@ builder.Services.AddSwaggerGen(options =>
         [new Microsoft.OpenApi.OpenApiSecuritySchemeReference("bearerAuth", document)] = []
     });
 });
+
 
 var app = builder.Build();
 if (!app.Environment.IsDevelopment())

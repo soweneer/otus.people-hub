@@ -7,7 +7,7 @@ using PeopleHub.Model;
 namespace PeopleHub.Controllers
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class PostController(IPostService postService) : Controller
+    public class PostController : Controller
     {
         [HttpPost("/api/post/create")]
         [ApiExplorerSettings(IgnoreApi = false)]
@@ -15,7 +15,9 @@ namespace PeopleHub.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IResult> Create([FromBody] CreatePostRequest request)
+        public async Task<IResult> Create(
+            [FromBody] CreatePostRequest request, 
+            [FromServices] IPostService postService)
         {
             if (string.IsNullOrWhiteSpace(request?.Text))
             {
@@ -37,7 +39,9 @@ namespace PeopleHub.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IResult> Update([FromBody] UpdatePostRequest request)
+        public async Task<IResult> Update(
+            [FromBody] UpdatePostRequest request,
+            [FromServices] IPostService postService)
         {
             if (!long.TryParse(request?.Id, out var postId))
             {
@@ -65,7 +69,7 @@ namespace PeopleHub.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IResult> Delete(string id)
+        public async Task<IResult> Delete(string id, [FromServices] IPostService postService)
         {
             if (!long.TryParse(id, out var postId))
             {
@@ -88,7 +92,7 @@ namespace PeopleHub.Controllers
         [ProducesResponseType(typeof(PostResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IResult> GetById(string id)
+        public async Task<IResult> GetById(string id, [FromServices] IPostService postService)
         {
             if (!long.TryParse(id, out var postId))
             {
@@ -108,12 +112,12 @@ namespace PeopleHub.Controllers
         [ProducesResponseType(typeof(PostResponse[]), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IResult> Feed()
+        public async Task<IResult> Feed([FromServices] IFeedService feedService)
         {
             const int offset = 0;
             const int limit = 1000;
 
-            var posts = await postService.GetFeedAsync(
+            var posts = await feedService.GetFeedAsync(
                 offset,
                 limit,
                 HttpContext.RequestAborted);

@@ -2,24 +2,13 @@ using PeopleHub.Domain.ValueObjects;
 
 namespace PeopleHub.Domain.Entities;
 
-public sealed class Account
+public sealed class Account(int id, Email email, PasswordHash password, int userId)
 {
-    private Account(int id, Email email, PasswordHash password, int userId)
-    {
-        Id = id;
-        Email = email;
-        Password = password;
-        UserId = userId;
-    }
-
-    public int Id { get; }
-    public Email Email { get; }
-    public PasswordHash Password { get; }
-    public int UserId { get; }
+    public int Id { get; } = id;
+    public Email Email { get; } = email;
+    public PasswordHash Password { get; } = password;
+    public int UserId { get; } = userId;
 
     public static Account Create(Email email, PasswordHash password, int userId) =>
         new(0, email, password, userId);
-
-    public static Account Restore(int id, Email email, PasswordHash password, int userId) =>
-        new(id, email, password, userId);
 }
