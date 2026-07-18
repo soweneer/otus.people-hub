@@ -5,24 +5,25 @@ using PeopleHub.Domain.Model;
 using PeopleHub.Extensions;
 using PeopleHub.Model;
 
-namespace PeopleHub.Controllers.Api;
+namespace PeopleHub.Controllers;
 
-[ApiController]
 [Route("api/profile")]
 [Authorize]
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class ProfileApiController(IUserService userService) : ControllerBase
+public sealed class ProfileController(IUserService userService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<PersonalInfo>> Get()
     {
-        return Ok(await userService.GetProfileAsync(User.Identity?.Name, HttpContext.RequestAborted));
+        var userEmail = User.Identity!.Name;
+        return Ok(await userService.GetProfileAsync(userEmail, HttpContext.RequestAborted));
     }
 
     [HttpPut]
     public async Task<ActionResult<PersonalInfo>> Update([FromBody] UpdateMyProfileRequest request)
     {
-        var updated = await userService.UpdateProfileAsync(User.Identity?.Name, request.ExtractPersonalInfo(), HttpContext.RequestAborted);
+        var userEmail = User.Identity!.Name;
+        var updated = await userService.UpdateProfileAsync(userEmail, request.ExtractPersonalInfo(), HttpContext.RequestAborted);
 
         return Ok(updated);
     }

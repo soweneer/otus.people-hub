@@ -6,9 +6,8 @@ namespace PeopleHub.Controllers;
 
 [AllowAnonymous]
 [Route("api/admin/db")]
-public class DbController(IDbMigrator dbMigrator) : Controller
+public sealed class DbController(IDbMigrator dbMigrator) : ControllerBase
 {
-
     [HttpGet("migrate")]
     public async Task<IActionResult> MigrateDb()
     {

@@ -7,7 +7,7 @@ public sealed record ApiError(
 
 public sealed record MeResponse(
     [property: JsonPropertyName("authenticated")] bool Authenticated,
-    [property: JsonPropertyName("email")] string Email);
+    [property: JsonPropertyName("email")] string Email = null);
 
 public sealed record SendFriendRequestBody(
     [property: JsonPropertyName("targetUserId")] int TargetUserId);

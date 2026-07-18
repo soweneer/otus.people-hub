@@ -7,24 +7,49 @@ using PeopleHub.Model;
 
 namespace PeopleHub.Controllers;
 
-public class UserController(IUserService userService) : Controller
+[ApiExplorerSettings(IgnoreApi = true)]
+public sealed class UsersController(IUserService userService) : ControllerBase
 {
+    [HttpGet("/api/users")]
+    [Authorize]
+    public async Task<ActionResult<IReadOnlyCollection<UserInfo>>> Search(
+        [FromQuery] SearchUserRequest filter,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 20)
+    {
+        var userEmail = User.Identity!.Name;
+        var users = await userService.SearchWithFriendStatusAsync(
+            userEmail,
+            new SearchFilter(
+                filter.FirstName?.Trim() ?? string.Empty,
+                filter.LastName?.Trim() ?? string.Empty,
+                Math.Max(skip, 0),
+                Math.Clamp(take, 1, 100)),
+            HttpContext.RequestAborted);
+
+        return Ok(users);
+    }
+
+    [HttpGet("/api/users/{id:int}")]
+    [Authorize]
+    public async Task<ActionResult<FriendInfo>> GetById(int id)
+    {
+        var userEmail = User.Identity!.Name;
+        var user = await userService.GetWithFriendStatusAsync(userEmail, id, HttpContext.RequestAborted);
+
+        return user is null
+            ? NotFound(new ApiError($"Пользователь [{id}] не найден"))
+            : Ok(user);
+    }
+
     [HttpGet("/api/user/search")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
     [ProducesResponseType(typeof(UserResponse[]), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IResult> Search(SearchUserPaginatedRequest request)
+    public async Task<IResult> SearchAnonymous([FromQuery] SearchUserPaginatedRequest request)
     {
-        if (!ModelState.IsValid)
-        {
-            var error = string.Join("; ", ModelState.Values
-                .SelectMany(v => v.Errors)
-                .Select(e => e.ErrorMessage));
-            return Results.BadRequest(error);
-        }
-
         var firstName = request.FirstName?.Trim() ?? string.Empty;
         var lastName = request.LastName?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
@@ -77,7 +102,7 @@ public class UserController(IUserService userService) : Controller
     [Produces("application/json")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IResult> GetById(int id)
+    public async Task<IResult> GetByIdAnonymous(int id)
     {
         var user = await userService.GetAsync(id, HttpContext.RequestAborted);
 

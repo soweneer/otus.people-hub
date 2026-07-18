@@ -7,9 +7,8 @@ using PeopleHub.Model;
 
 namespace PeopleHub.Controllers;
 
-[Authorize(AuthenticationSchemes =
-    $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}")]
-public class PostController : Controller
+[Authorize(AuthenticationSchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}")]
+public sealed class PostController : ControllerBase
 {
     [HttpPost("/api/post/create")]
     [ApiExplorerSettings(IgnoreApi = false)]
@@ -26,8 +25,9 @@ public class PostController : Controller
             return Results.BadRequest("Параметр text обязателен");
         }
 
+        var userEmail = User.Identity!.Name;
         var postId = await postService.CreateAsync(
-            User.Identity?.Name,
+            userEmail,
             request.Text.Trim(),
             HttpContext.RequestAborted);
 
@@ -56,8 +56,9 @@ public class PostController : Controller
             return Results.BadRequest("Параметр text обязателен");
         }
 
+        var userEmail = User.Identity!.Name;
         var updated = await postService.UpdateAsync(
-            User.Identity?.Name,
+            userEmail,
             postId,
             request.Text.Trim(),
             HttpContext.RequestAborted);
@@ -67,6 +68,7 @@ public class PostController : Controller
             : Results.BadRequest($"Пост [{request.Id}] не найден или принадлежит другому пользователю");
     }
 
+    [Authorize]
     [HttpPut("/api/post/delete/{id}")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
@@ -80,8 +82,9 @@ public class PostController : Controller
             return Results.BadRequest("Параметр id обязателен и должен быть числом");
         }
 
+        var userEmail = User.Identity!.Name;
         var deleted = await postService.DeleteAsync(
-            User.Identity?.Name,
+            userEmail,
             postId,
             HttpContext.RequestAborted);
 
@@ -119,8 +122,9 @@ public class PostController : Controller
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> Feed([FromServices] IFeedService feedService)
     {
+        var userEmail = User.Identity!.Name;
         var posts = await feedService.GetFeedAsync(
-            User.Identity?.Name,
+            userEmail,
             HttpContext.RequestAborted);
 
         return Results.Json(posts
