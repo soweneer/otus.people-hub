@@ -70,6 +70,7 @@ export interface FeedPost {
   authorUserId: number;
 }
 
+export interface PostFeedItemResponse {
   id: string;
   text: string;
   author_user_id: string;
