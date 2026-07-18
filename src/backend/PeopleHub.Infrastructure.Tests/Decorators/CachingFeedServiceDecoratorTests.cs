@@ -86,6 +86,47 @@ public sealed class CachingFeedServiceDecoratorTests
     }
 
     [Fact]
+    public async Task GetFeedAsync_CacheMiss_StoresEntryWithTtl()
+    {
+        var recordingCache = new RecordingCache(_cache);
+        var decorator = new CachingFeedServiceDecorator(_underlyingService, recordingCache);
+
+        await decorator.GetFeedAsync(Email);
+
+        Assert.NotNull(recordingCache.LastSetOptions);
+        Assert.Equal(CachingFeedServiceDecorator.CacheTtl, recordingCache.LastSetOptions.AbsoluteExpirationRelativeToNow);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_AfterTtlExpires_CallsUnderlyingServiceAgain()
+    {
+        var clock = new TestClock();
+        var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions { Clock = clock }));
+        var decorator = new CachingFeedServiceDecorator(_underlyingService, cache);
+
+        await decorator.GetFeedAsync(Email);
+        clock.Advance(CachingFeedServiceDecorator.CacheTtl + TimeSpan.FromSeconds(1));
+        var feedAfterExpiration = await decorator.GetFeedAsync(Email);
+
+        Assert.Equal(2, _underlyingService.Calls.Count);
+        Assert.Equal(DefaultFeed, feedAfterExpiration);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_BeforeTtlExpires_StillServesFromCache()
+    {
+        var clock = new TestClock();
+        var cache = new MemoryDistributedCache(Options.Create(new MemoryDistributedCacheOptions { Clock = clock }));
+        var decorator = new CachingFeedServiceDecorator(_underlyingService, cache);
+
+        await decorator.GetFeedAsync(Email);
+        clock.Advance(CachingFeedServiceDecorator.CacheTtl - TimeSpan.FromSeconds(1));
+        await decorator.GetFeedAsync(Email);
+
+        Assert.Single(_underlyingService.Calls);
+    }
+
+    [Fact]
     public async Task GetFeedAsync_EmptyFeed_IsCachedToo()
     {
         var underlyingService = new FeedServiceStub([]);
@@ -97,6 +138,42 @@ public sealed class CachingFeedServiceDecoratorTests
         Assert.Empty(firstFeed);
         Assert.Empty(secondFeed);
         Assert.Single(underlyingService.Calls);
+    }
+
+    private sealed class TestClock : Microsoft.Extensions.Internal.ISystemClock
+    {
+        public DateTimeOffset UtcNow { get; private set; } = DateTimeOffset.UtcNow;
+
+        public void Advance(TimeSpan delta) => UtcNow += delta;
+    }
+
+    private sealed class RecordingCache(IDistributedCache inner) : IDistributedCache
+    {
+        public DistributedCacheEntryOptions LastSetOptions { get; private set; }
+
+        public byte[] Get(string key) => inner.Get(key);
+
+        public Task<byte[]> GetAsync(string key, CancellationToken token = default) => inner.GetAsync(key, token);
+
+        public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        {
+            LastSetOptions = options;
+            inner.Set(key, value, options);
+        }
+
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
+        {
+            LastSetOptions = options;
+            return inner.SetAsync(key, value, options, token);
+        }
+
+        public void Refresh(string key) => inner.Refresh(key);
+
+        public Task RefreshAsync(string key, CancellationToken token = default) => inner.RefreshAsync(key, token);
+
+        public void Remove(string key) => inner.Remove(key);
+
+        public Task RemoveAsync(string key, CancellationToken token = default) => inner.RemoveAsync(key, token);
     }
 
     private sealed class FeedServiceStub(Func<string, IReadOnlyCollection<FeedPost>> feedByEmail) : IFeedService

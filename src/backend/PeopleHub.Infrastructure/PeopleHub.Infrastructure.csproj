@@ -8,14 +8,18 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="10.0.10" />
       <PackageReference Include="Npgsql" Version="10.0.2" />
       <PackageReference Include="Scrutor.AspNetCore" Version="3.3.0" />
-      <PackageReference Include="StackExchange.Redis.Extensions.AspNetCore" Version="12.6.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\PeopleHub.Application\PeopleHub.Application.csproj" />
       <ProjectReference Include="..\PeopleHub.Domain\PeopleHub.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <InternalsVisibleTo Include="PeopleHub.Infrastructure.Tests" />
     </ItemGroup>
 
 </Project>

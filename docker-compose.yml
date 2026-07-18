@@ -10,12 +10,15 @@ services:
       - "5432:5432"
     volumes:
       - pg-master-data:/var/lib/postgresql
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d people_hub" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+
+  redis:
+    image: redis:8.0-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
 
 volumes:
   pg-master-data:
+  redis-data:

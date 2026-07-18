@@ -5,7 +5,7 @@ namespace PeopleHub.Application;
 
 public static class Bootstrapper
 {
-    public static IServiceCollection AddPeopleHubApplication(this IServiceCollection services)
+    public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IFriendRequestService, FriendRequestService>();
         services.AddScoped<IUserService, UserService>();

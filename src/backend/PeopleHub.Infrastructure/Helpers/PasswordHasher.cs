@@ -7,7 +7,16 @@ internal class PasswordHasher : IPasswordHasher
 {
     private const int SaltSize = 0x10;
     private const int KeySize = 0x20;
-    private const int Iterations = 0x3e8;
+    private const int HashSize = 1 + SaltSize + KeySize;
+    private const byte CurrentVersion = 1;
+
+    // Версия формата (первый байт хеша) -> число итераций PBKDF2.
+    // Версия 0 — legacy-хеши, выпущенные до перехода на 600k итераций.
+    private static readonly IReadOnlyDictionary<byte, int> IterationsByVersion = new Dictionary<byte, int>
+    {
+        [0] = 1_000,
+        [1] = 600_000
+    };
 
     public string Hash(string password)
     {
@@ -17,11 +26,13 @@ internal class PasswordHasher : IPasswordHasher
         }
 
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
-        var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, KeySize);
+        var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, IterationsByVersion[CurrentVersion],
+            HashAlgorithmName.SHA256, KeySize);
 
-        var dst = new byte[0x31];
+        var dst = new byte[HashSize];
+        dst[0] = CurrentVersion;
         Buffer.BlockCopy(salt, 0, dst, 1, SaltSize);
-        Buffer.BlockCopy(key, 0, dst, 0x11, KeySize);
+        Buffer.BlockCopy(key, 0, dst, 1 + SaltSize, KeySize);
         return Convert.ToBase64String(dst);
     }
 
@@ -37,7 +48,7 @@ internal class PasswordHasher : IPasswordHasher
         }
 
         var src = Convert.FromBase64String(hash);
-        if (src.Length != 0x31 || src[0] != 0)
+        if (src.Length != HashSize || !IterationsByVersion.TryGetValue(src[0], out var iterations))
         {
             return false;
         }
@@ -45,9 +56,9 @@ internal class PasswordHasher : IPasswordHasher
         var salt = new byte[SaltSize];
         Buffer.BlockCopy(src, 1, salt, 0, SaltSize);
         var storedKey = new byte[KeySize];
-        Buffer.BlockCopy(src, 0x11, storedKey, 0, KeySize);
+        Buffer.BlockCopy(src, 1 + SaltSize, storedKey, 0, KeySize);
 
-        var computedKey = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, KeySize);
-        return storedKey.SequenceEqual(computedKey);
+        var computedKey = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, KeySize);
+        return CryptographicOperations.FixedTimeEquals(storedKey, computedKey);
     }
 }
