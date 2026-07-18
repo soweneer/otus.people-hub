@@ -6,6 +6,7 @@ using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Infrastructure.Queries;
 
+// TODO this is probably repo
 internal sealed class FriendQueries(DbClient dbClient) : IFriendQueries
 {
     public async Task<FriendsInfo> GetFriendsAsync(int userId, CancellationToken cancellationToken = default)

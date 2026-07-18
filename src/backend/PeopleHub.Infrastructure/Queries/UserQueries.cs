@@ -6,6 +6,7 @@ using PeopleHub.Infrastructure.Db;
 
 namespace PeopleHub.Infrastructure.Queries;
 
+// TODO this is probably repo
 internal sealed class UserQueries(DbClient dbClient) : IUserQueries
 {
     public async Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default)

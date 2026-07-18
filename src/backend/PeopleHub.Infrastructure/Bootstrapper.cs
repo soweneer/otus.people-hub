@@ -1,9 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using PeopleHub.Application.Abstractions;
+using PeopleHub.Application.Services;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Domain.Services;
 using PeopleHub.Infrastructure.Db;
+using PeopleHub.Infrastructure.Decorators;
 using PeopleHub.Infrastructure.Helpers;
 using PeopleHub.Infrastructure.Queries;
 using PeopleHub.Infrastructure.Repositories;
@@ -29,6 +31,7 @@ public static class Bootstrapper
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IDbMigrator, DbMigrator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.Decorate<IFeedService, CachingFeedServiceDecorator>();
 
         return services;
     }

@@ -9,6 +9,8 @@
 
     <ItemGroup>
       <PackageReference Include="Npgsql" Version="10.0.2" />
+      <PackageReference Include="Scrutor.AspNetCore" Version="3.3.0" />
+      <PackageReference Include="StackExchange.Redis.Extensions.AspNetCore" Version="12.6.0" />
     </ItemGroup>
 
     <ItemGroup>
