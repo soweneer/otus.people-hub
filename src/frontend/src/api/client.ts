@@ -4,6 +4,7 @@ import type {
   FriendsInfo,
   MeResponse,
   PersonalInfo,
+  PostFeedItemResponse,
   ProfileData,
   SignUpData,
   UserInfo,
@@ -33,7 +34,11 @@ async function extractError(res: Response): Promise<string> {
   return `Ошибка запроса (${res.status})`;
 }
 
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(
+  url: string,
+  options: RequestInit = {},
+  { notifyUnauthorized = true }: { notifyUnauthorized?: boolean } = {},
+): Promise<T> {
   const res = await fetch(url, {
     credentials: 'same-origin',
     ...options,
@@ -44,7 +49,7 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!res.ok) {
-    if (res.status === 401) {
+    if (res.status === 401 && notifyUnauthorized) {
       window.dispatchEvent(new Event('auth:unauthorized'));
     }
     throw new ApiError(await extractError(res), res.status);
@@ -105,5 +110,10 @@ export const friendsApi = {
 };
 
 export const feedApi = {
-  get: (offset = 0, limit = 20) => request<FeedPost[]>(`/api/feed?offset=${offset}&limit=${limit}`),
+    return posts.map((p) => ({
+      id: Number(p.id),
+      text: p.text,
+      authorUserId: Number(p.author_user_id),
+    }));
+  },
 };

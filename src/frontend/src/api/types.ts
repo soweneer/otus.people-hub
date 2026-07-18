@@ -70,6 +70,11 @@ export interface FeedPost {
   authorUserId: number;
 }
 
+  id: string;
+  text: string;
+  author_user_id: string;
+}
+
 export interface SignUpData {
   name: string;
   surname: string;

@@ -3,28 +3,37 @@ import { Link } from 'react-router-dom';
 import { feedApi, friendsApi } from '../api/client';
 import type { FeedPost, FriendInfoLite, FriendsInfo } from '../api/types';
 
-const FEED_LIMIT = 20;
-
 type TabKey = 'friends' | 'feed' | 'incoming' | 'outgoing';
 
 export function FriendsPage() {
   const [info, setInfo] = useState<FriendsInfo | null>(null);
   const [feed, setFeed] = useState<FeedPost[]>([]);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>('friends');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setError(null);
+    setFeedError(null);
+
+    const friendsPromise = friendsApi.get();
+    const feedPromise = feedApi.get();
+
     try {
-      const [friendsInfo, feedPosts] = await Promise.all([friendsApi.get(), feedApi.get(0, FEED_LIMIT)]);
-      setInfo(friendsInfo);
-      setFeed(feedPosts);
+      setInfo(await friendsPromise);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось загрузить данные');
-    } finally {
-      setLoading(false);
     }
+
+    try {
+      setFeed(await feedPromise);
+    } catch (e) {
+      setFeed([]);
+      setFeedError(e instanceof Error ? e.message : 'Не удалось загрузить ленту');
+    }
+
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -132,6 +141,7 @@ export function FriendsPage() {
         )}
         {effectiveTab === 'feed' && (
           <div>
+            {feedError && <div className="alert alert-warning mt-3">{feedError}</div>}
             {feed.length > 0 ? (
               feed.map((post) => (
                 <div className="card mt-3" key={post.id}>
@@ -148,7 +158,7 @@ export function FriendsPage() {
                 </div>
               ))
             ) : (
-              <div className="alert alert-info mt-3">В ленте пока нет постов</div>
+              !feedError && <div className="alert alert-info mt-3">В ленте пока нет постов</div>
             )}
           </div>
         )}
