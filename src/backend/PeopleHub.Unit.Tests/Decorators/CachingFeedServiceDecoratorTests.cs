@@ -12,13 +12,12 @@ public sealed class CachingFeedServiceDecoratorTests
 {
     private const string Email = "user@example.com";
 
-    // Ожидаемый TTL записи в кэше; должен совпадать с приватным CacheTtl декоратора.
     private static readonly TimeSpan ExpectedCacheTtl = TimeSpan.FromMinutes(5);
 
     private static readonly IReadOnlyCollection<FeedPost> DefaultFeed =
     [
-        new FeedPost(1, "первый пост", 10),
-        new FeedPost(2, "второй пост", 20)
+        new(1, "первый пост", 10),
+        new(2, "второй пост", 20)
     ];
 
     private readonly FeedServiceStub _underlyingService = new(DefaultFeed);

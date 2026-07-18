@@ -7,7 +7,7 @@ namespace PeopleHub.Infrastructure.Decorators;
 
 public sealed class CachingFeedServiceDecorator(IFeedService underlyingService, IDistributedCache cache) : IFeedService
 {
-    internal static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(5);
 
     public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(string email, CancellationToken cancellationToken = default)
     {
