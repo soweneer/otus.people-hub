@@ -1,4 +1,5 @@
 using System.Data;
+using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Exceptions;
 using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
@@ -35,7 +36,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Convert.ToInt32(dataTable.Rows[0]["id"]);
     }
 
-    public async Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<User?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"select * from {DbClient.UsersTable} where id = @id",
@@ -47,19 +48,21 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
         }
 
         var dataRow = dataTable.Rows[0];
-        return new PersonalInfo(
-            dataRow["name"].ToString(),
-            dataRow["surname"].ToString(),
-            int.Parse(dataRow["age"].ToString()),
-            dataRow["city"].ToString(),
-            dataRow["bio"].ToString(),
-            int.Parse(dataRow["gender"].ToString())
-        );
+        return User.Restore(
+            Convert.ToInt32(dataRow["id"]),
+            new PersonalInfo(
+                dataRow["name"].ToString(),
+                dataRow["surname"].ToString(),
+                int.Parse(dataRow["age"].ToString()),
+                dataRow["city"].ToString(),
+                dataRow["bio"].ToString(),
+                int.Parse(dataRow["gender"].ToString())
+            ));
     }
 
-    public async Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default)
+    public async Task<int?> CreateAsync(User user, CancellationToken cancellationToken = default)
     {
-        var (name, surname, age, city, bio, gender) = personalInfo;
+        var (name, surname, age, city, bio, gender) = user.PersonalInfo;
 
         const string query =
             $"INSERT INTO {DbClient.UsersTable} (surname, name, age, gender, city, bio) " +
@@ -79,9 +82,9 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             : Convert.ToInt32(userId);
     }
 
-    public async Task UpdateAsync(int id, PersonalInfo personalInfo, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)
     {
-        var (name, surname, age, city, bio, gender) = personalInfo;
+        var (name, surname, age, city, bio, gender) = user.PersonalInfo;
 
         await dbClient.ExecuteCmdAsync(
             $"UPDATE {DbClient.UsersTable} " +
@@ -95,7 +98,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
                 ("gender", gender),
                 ("city", city),
                 ("bio", (object)bio ?? DBNull.Value),
-                ("userId", id)
+                ("userId", user.Id)
             ]);
     }
 }

@@ -1,5 +1,6 @@
 using PeopleHub.Application.Abstractions;
 using PeopleHub.Application.Models;
+using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Exceptions;
 using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
@@ -28,26 +29,32 @@ public class UserService(IUserRepository userRepository,
         return await userQueries.GetWithFriendStatusAsync(targetUserId, viewerUserId, cancellationToken);
     }
 
-    public Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default) =>
-        userRepository.GetAsync(id, cancellationToken);
+    public async Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default) =>
+        (await userRepository.GetAsync(id, cancellationToken))?.PersonalInfo;
 
     public Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
-        userRepository.CreateAsync(personalInfo, cancellationToken);
+        userRepository.CreateAsync(User.Create(personalInfo), cancellationToken);
 
     public async Task<PersonalInfo> GetProfileAsync(CancellationToken cancellationToken = default)
     {
         var userId = await currentUser.GetUserIdAsync(cancellationToken);
 
-        return await userRepository.GetAsync(userId, cancellationToken)
+        var user = await userRepository.GetAsync(userId, cancellationToken)
             ?? throw new UnknownUserException(currentUser.Email);
+
+        return user.PersonalInfo;
     }
 
     public async Task<PersonalInfo> UpdateProfileAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default)
     {
         var userId = await currentUser.GetUserIdAsync(cancellationToken);
 
-        await userRepository.UpdateAsync(userId, personalInfo, cancellationToken);
+        var user = await userRepository.GetAsync(userId, cancellationToken)
+            ?? throw new UnknownUserException(currentUser.Email);
 
-        return personalInfo;
+        user.UpdatePersonalInfo(personalInfo);
+        await userRepository.UpdateAsync(user, cancellationToken);
+
+        return user.PersonalInfo;
     }
 }

@@ -56,7 +56,7 @@ public class AccountService(IUserRepository userRepository,
 
         return await unitOfWork.ExecuteAsync(async () =>
         {
-            var userId = await userRepository.CreateAsync(personalInfo, cancellationToken);
+            var userId = await userRepository.CreateAsync(User.Create(personalInfo), cancellationToken);
             if (userId is null)
             {
                 return SignUpStatus.Failed;
