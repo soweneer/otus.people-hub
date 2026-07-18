@@ -1,13 +1,22 @@
 ﻿using Microsoft.Extensions.Caching.Distributed;
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
+using System.Text.Json;
 
 namespace PeopleHub.Infrastructure.Decorators;
 
 public sealed class CachingFeedServiceDecorator(IFeedService underlyingService, IDistributedCache cache) : IFeedService
 {
-    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(string email, int offset, int limit, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(string email, CancellationToken cancellationToken = default)
     {
-        return await underlyingService.GetFeedAsync(email, offset, limit, cancellationToken);
+        var feedKey = $"feed:{email}";
+        var feedJson = await cache.GetStringAsync(feedKey, token: cancellationToken);
+        if (feedJson != null) 
+            return JsonSerializer.Deserialize<IReadOnlyCollection<FeedPost>>(feedJson);
+
+        var feed = await underlyingService.GetFeedAsync(email, cancellationToken);
+        feedJson = JsonSerializer.Serialize(feed);
+        await cache.SetStringAsync(feedKey, feedJson, cancellationToken);
+        return feed;
     }
 }

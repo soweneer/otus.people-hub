@@ -117,13 +117,8 @@ public class PostController : Controller
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> Feed([FromServices] IFeedService feedService)
     {
-        const int offset = 0;
-        const int limit = 1000;
-
         var posts = await feedService.GetFeedAsync(
             User.Identity?.Name,
-            offset,
-            limit,
             HttpContext.RequestAborted);
 
         return Results.Json(posts
