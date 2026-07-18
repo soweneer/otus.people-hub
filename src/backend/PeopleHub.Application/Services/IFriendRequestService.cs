@@ -4,15 +4,15 @@ namespace PeopleHub.Application.Services;
 
 public interface IFriendRequestService
 {
-    Task CancelAsync(int otherUserId, CancellationToken cancellationToken = default);
+    Task CancelAsync(string email, int otherUserId, CancellationToken cancellationToken = default);
 
-    Task<FriendsInfo> GetFriendsAsync(CancellationToken cancellationToken = default);
+    Task<FriendsInfo> GetFriendsAsync(string email, CancellationToken cancellationToken = default);
 
-    Task SendAsync(int receiverUserId, CancellationToken cancellationToken = default);
+    Task SendAsync(string email, int receiverUserId, CancellationToken cancellationToken = default);
 
-    Task<bool> SetFriendAsync(int friendUserId, CancellationToken cancellationToken = default);
+    Task<bool> SetFriendAsync(string email, int friendUserId, CancellationToken cancellationToken = default);
 
-    Task ApproveAsync(int requestId, CancellationToken cancellationToken = default);
+    Task ApproveAsync(string email, int requestId, CancellationToken cancellationToken = default);
 
-    Task RejectAsync(int requestId, CancellationToken cancellationToken = default);
+    Task RejectAsync(string email, int requestId, CancellationToken cancellationToken = default);
 }

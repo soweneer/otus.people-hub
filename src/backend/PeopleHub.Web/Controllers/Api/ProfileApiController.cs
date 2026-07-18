@@ -16,13 +16,13 @@ public sealed class ProfileApiController(IUserService userService) : ControllerB
     [HttpGet]
     public async Task<ActionResult<PersonalInfo>> Get()
     {
-        return Ok(await userService.GetProfileAsync(HttpContext.RequestAborted));
+        return Ok(await userService.GetProfileAsync(User.Identity?.Name, HttpContext.RequestAborted));
     }
 
     [HttpPut]
     public async Task<ActionResult<PersonalInfo>> Update([FromBody] UpdateMyProfileRequest request)
     {
-        var updated = await userService.UpdateProfileAsync(request.ExtractPersonalInfo(), HttpContext.RequestAborted);
+        var updated = await userService.UpdateProfileAsync(User.Identity?.Name, request.ExtractPersonalInfo(), HttpContext.RequestAborted);
 
         return Ok(updated);
     }

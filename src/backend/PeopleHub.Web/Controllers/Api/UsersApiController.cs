@@ -19,6 +19,7 @@ public sealed class UsersApiController(IUserService userService) : ControllerBas
         [FromQuery] int take = 20)
     {
         var users = await userService.SearchWithFriendStatusAsync(
+            User.Identity?.Name,
             new SearchFilter(
                 filter.FirstName?.Trim() ?? string.Empty,
                 filter.LastName?.Trim() ?? string.Empty,
@@ -32,7 +33,7 @@ public sealed class UsersApiController(IUserService userService) : ControllerBas
     [HttpGet("{id:int}")]
     public async Task<ActionResult<FriendInfo>> GetById(int id)
     {
-        var user = await userService.GetWithFriendStatusAsync(id, HttpContext.RequestAborted);
+        var user = await userService.GetWithFriendStatusAsync(User.Identity?.Name, id, HttpContext.RequestAborted);
 
         return user is null
             ? NotFound(new ApiError($"Пользователь [{id}] не найден"))

@@ -15,13 +15,13 @@ public sealed class FriendsApiController(IFriendRequestService friendRequestServ
     [HttpGet]
     public async Task<ActionResult<FriendsInfo>> Get()
     {
-        return Ok(await friendRequestService.GetFriendsAsync(HttpContext.RequestAborted));
+        return Ok(await friendRequestService.GetFriendsAsync(User.Identity?.Name, HttpContext.RequestAborted));
     }
 
     [HttpPost("requests")]
     public async Task<IActionResult> Send([FromBody] SendFriendRequestBody body)
     {
-        await friendRequestService.SendAsync(body.TargetUserId, HttpContext.RequestAborted);
+        await friendRequestService.SendAsync(User.Identity?.Name, body.TargetUserId, HttpContext.RequestAborted);
 
         return NoContent();
     }
@@ -29,7 +29,7 @@ public sealed class FriendsApiController(IFriendRequestService friendRequestServ
     [HttpDelete("{userId:int}")]
     public async Task<IActionResult> Cancel(int userId)
     {
-        await friendRequestService.CancelAsync(userId, HttpContext.RequestAborted);
+        await friendRequestService.CancelAsync(User.Identity?.Name, userId, HttpContext.RequestAborted);
 
         return NoContent();
     }
@@ -37,7 +37,7 @@ public sealed class FriendsApiController(IFriendRequestService friendRequestServ
     [HttpPost("requests/{requestId:int}/approve")]
     public async Task<IActionResult> Approve(int requestId)
     {
-        await friendRequestService.ApproveAsync(requestId, HttpContext.RequestAborted);
+        await friendRequestService.ApproveAsync(User.Identity?.Name, requestId, HttpContext.RequestAborted);
 
         return NoContent();
     }
@@ -45,7 +45,7 @@ public sealed class FriendsApiController(IFriendRequestService friendRequestServ
     [HttpPost("requests/{requestId:int}/reject")]
     public async Task<IActionResult> Reject(int requestId)
     {
-        await friendRequestService.RejectAsync(requestId, HttpContext.RequestAborted);
+        await friendRequestService.RejectAsync(User.Identity?.Name, requestId, HttpContext.RequestAborted);
 
         return NoContent();
     }

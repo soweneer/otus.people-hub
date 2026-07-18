@@ -22,6 +22,7 @@ public class FriendsController(IFriendRequestService friendRequestService) : Con
         }
 
         var added = await friendRequestService.SetFriendAsync(
+            User.Identity?.Name,
             friendUserId,
             HttpContext.RequestAborted);
 
@@ -44,6 +45,7 @@ public class FriendsController(IFriendRequestService friendRequestService) : Con
         }
 
         await friendRequestService.CancelAsync(
+            User.Identity?.Name,
             friendUserId,
             HttpContext.RequestAborted);
 

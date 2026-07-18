@@ -17,6 +17,7 @@ public sealed class FeedApiController(IFeedService feedService) : ControllerBase
         [FromQuery] int limit = 20)
     {
         var posts = await feedService.GetFeedAsync(
+            User.Identity?.Name,
             Math.Max(offset, 0),
             Math.Clamp(limit, 1, 100),
             HttpContext.RequestAborted);

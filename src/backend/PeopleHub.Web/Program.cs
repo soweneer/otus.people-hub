@@ -46,8 +46,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddPeopleHubApplication();
 var dbConnectionString = builder.Configuration.GetConnectionString("PostgreSql");
 if (string.IsNullOrEmpty(dbConnectionString))

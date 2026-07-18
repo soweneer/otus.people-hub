@@ -25,6 +25,7 @@ public class PostController : Controller
         }
 
         var postId = await postService.CreateAsync(
+            User.Identity?.Name,
             request.Text.Trim(),
             HttpContext.RequestAborted);
 
@@ -54,6 +55,7 @@ public class PostController : Controller
         }
 
         var updated = await postService.UpdateAsync(
+            User.Identity?.Name,
             postId,
             request.Text.Trim(),
             HttpContext.RequestAborted);
@@ -77,6 +79,7 @@ public class PostController : Controller
         }
 
         var deleted = await postService.DeleteAsync(
+            User.Identity?.Name,
             postId,
             HttpContext.RequestAborted);
 
@@ -118,6 +121,7 @@ public class PostController : Controller
         const int limit = 1000;
 
         var posts = await feedService.GetFeedAsync(
+            User.Identity?.Name,
             offset,
             limit,
             HttpContext.RequestAborted);

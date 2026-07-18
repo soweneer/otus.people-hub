@@ -8,23 +8,22 @@ using PeopleHub.Domain.Repositories;
 namespace PeopleHub.Application.Services;
 
 public class UserService(IUserRepository userRepository,
-    IUserQueries userQueries,
-    ICurrentUser currentUser) : IUserService
+    IUserQueries userQueries) : IUserService
 {
     public Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default) =>
         userQueries.SearchAsync(filter, cancellationToken);
 
-    public async Task<IReadOnlyCollection<UserInfo>> SearchWithFriendStatusAsync(SearchFilter filter,
+    public async Task<IReadOnlyCollection<UserInfo>> SearchWithFriendStatusAsync(string email, SearchFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var viewerUserId = await currentUser.GetUserIdAsync(cancellationToken);
+        var viewerUserId = await userRepository.GetUserIdAsync(email, cancellationToken);
 
         return await userQueries.SearchWithFriendStatusAsync(viewerUserId, filter, cancellationToken);
     }
 
-    public async Task<FriendInfo> GetWithFriendStatusAsync(int targetUserId, CancellationToken cancellationToken = default)
+    public async Task<FriendInfo> GetWithFriendStatusAsync(string email, int targetUserId, CancellationToken cancellationToken = default)
     {
-        var viewerUserId = await currentUser.GetUserIdAsync(cancellationToken);
+        var viewerUserId = await userRepository.GetUserIdAsync(email, cancellationToken);
 
         return await userQueries.GetWithFriendStatusAsync(targetUserId, viewerUserId, cancellationToken);
     }
@@ -35,22 +34,22 @@ public class UserService(IUserRepository userRepository,
     public Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
         userRepository.CreateAsync(User.Create(personalInfo), cancellationToken);
 
-    public async Task<PersonalInfo> GetProfileAsync(CancellationToken cancellationToken = default)
+    public async Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default)
     {
-        var userId = await currentUser.GetUserIdAsync(cancellationToken);
+        var userId = await userRepository.GetUserIdAsync(email, cancellationToken);
 
         var user = await userRepository.GetAsync(userId, cancellationToken)
-            ?? throw new UnknownUserException(currentUser.Email);
+            ?? throw new UnknownUserException(email);
 
         return user.PersonalInfo;
     }
 
-    public async Task<PersonalInfo> UpdateProfileAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default)
+    public async Task<PersonalInfo> UpdateProfileAsync(string email, PersonalInfo personalInfo, CancellationToken cancellationToken = default)
     {
-        var userId = await currentUser.GetUserIdAsync(cancellationToken);
+        var userId = await userRepository.GetUserIdAsync(email, cancellationToken);
 
         var user = await userRepository.GetAsync(userId, cancellationToken)
-            ?? throw new UnknownUserException(currentUser.Email);
+            ?? throw new UnknownUserException(email);
 
         user.UpdatePersonalInfo(personalInfo);
         await userRepository.UpdateAsync(user, cancellationToken);

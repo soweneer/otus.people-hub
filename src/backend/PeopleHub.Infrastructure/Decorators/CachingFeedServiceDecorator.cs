@@ -6,8 +6,8 @@ namespace PeopleHub.Infrastructure.Decorators;
 
 public sealed class CachingFeedServiceDecorator(IFeedService underlyingService, IDistributedCache cache) : IFeedService
 {
-    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int offset, int limit, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(string email, int offset, int limit, CancellationToken cancellationToken = default)
     {
-        return await underlyingService.GetFeedAsync(offset, limit, cancellationToken);
+        return await underlyingService.GetFeedAsync(email, offset, limit, cancellationToken);
     }
 }

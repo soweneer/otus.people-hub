@@ -4,5 +4,5 @@ namespace PeopleHub.Application.Services;
 
 public interface IFeedService
 {
-    Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int offset, int limit, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(string email, int offset, int limit, CancellationToken cancellationToken = default);
 }
