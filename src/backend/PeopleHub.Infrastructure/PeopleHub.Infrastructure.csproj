@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <InternalsVisibleTo Include="PeopleHub.Infrastructure.Tests" />
+      <InternalsVisibleTo Include="PeopleHub.Unit.Tests" />
     </ItemGroup>
 
 </Project>

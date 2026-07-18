@@ -6,11 +6,14 @@ using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
 using PeopleHub.Infrastructure.Decorators;
 
-namespace PeopleHub.Infrastructure.Tests.Decorators;
+namespace PeopleHub.Unit.Tests.Decorators;
 
 public sealed class CachingFeedServiceDecoratorTests
 {
     private const string Email = "user@example.com";
+
+    // Ожидаемый TTL записи в кэше; должен совпадать с приватным CacheTtl декоратора.
+    private static readonly TimeSpan ExpectedCacheTtl = TimeSpan.FromMinutes(5);
 
     private static readonly IReadOnlyCollection<FeedPost> DefaultFeed =
     [
@@ -94,7 +97,7 @@ public sealed class CachingFeedServiceDecoratorTests
         await decorator.GetFeedAsync(Email);
 
         Assert.NotNull(recordingCache.LastSetOptions);
-        Assert.Equal(CachingFeedServiceDecorator.CacheTtl, recordingCache.LastSetOptions.AbsoluteExpirationRelativeToNow);
+        Assert.Equal(ExpectedCacheTtl, recordingCache.LastSetOptions.AbsoluteExpirationRelativeToNow);
     }
 
     [Fact]
@@ -105,7 +108,7 @@ public sealed class CachingFeedServiceDecoratorTests
         var decorator = new CachingFeedServiceDecorator(_underlyingService, cache);
 
         await decorator.GetFeedAsync(Email);
-        clock.Advance(CachingFeedServiceDecorator.CacheTtl + TimeSpan.FromSeconds(1));
+        clock.Advance(ExpectedCacheTtl + TimeSpan.FromSeconds(1));
         var feedAfterExpiration = await decorator.GetFeedAsync(Email);
 
         Assert.Equal(2, _underlyingService.Calls.Count);
@@ -120,7 +123,7 @@ public sealed class CachingFeedServiceDecoratorTests
         var decorator = new CachingFeedServiceDecorator(_underlyingService, cache);
 
         await decorator.GetFeedAsync(Email);
-        clock.Advance(CachingFeedServiceDecorator.CacheTtl - TimeSpan.FromSeconds(1));
+        clock.Advance(ExpectedCacheTtl - TimeSpan.FromSeconds(1));
         await decorator.GetFeedAsync(Email);
 
         Assert.Single(_underlyingService.Calls);

@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using PeopleHub.Infrastructure.Helpers;
 
-namespace PeopleHub.Infrastructure.Tests.Helpers;
+namespace PeopleHub.Unit.Tests.Helpers;
 
 public sealed class PasswordHasherTests
 {
