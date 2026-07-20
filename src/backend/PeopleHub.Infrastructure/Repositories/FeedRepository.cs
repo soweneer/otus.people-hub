@@ -23,7 +23,7 @@ internal sealed class FeedRepository(DbClient dbClient) : IFeedRepository
                          where (fr.sender_user_id = @userId or fr.receiver_user_id = @userId)
                              and fr.status = @approvedStatus
                      )
-                     order by p.id desc
+                     order by p.created_at desc
                      limit {limit} offset {offset};
                      """;
 

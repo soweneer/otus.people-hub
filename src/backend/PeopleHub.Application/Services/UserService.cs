@@ -56,4 +56,7 @@ public class UserService(IUserRepository userRepository,
 
         return user.PersonalInfo;
     }
+
+    // TODO crutch! set user-id in auth claim!!
+    public async Task<int> GetUserId(string email, CancellationToken cancellationToken = default) => await userRepository.GetUserIdAsync(email, cancellationToken);
 }

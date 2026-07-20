@@ -4,7 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
-using PeopleHub.Infrastructure.Decorators;
+using PeopleHub.Infrastructure.Caching;
 
 namespace PeopleHub.Unit.Tests.Decorators;
 

@@ -32,6 +32,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// SPA: все не-API маршруты отдают React-приложение
 app.MapFallbackToFile("index.html");
 app.Run();

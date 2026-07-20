@@ -64,7 +64,19 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
 
         return NoContent();
     }
+    
+    private async Task Authenticate(string userName)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimsIdentity.DefaultNameClaimType, userName)
+        };
 
+        var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
+    }
+
+    // auth for swagger, postman and k6
     [HttpPost("/api/login")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
@@ -92,16 +104,5 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
             LoginByIdStatus.UserNotFound => Results.NotFound($"Пользователь [{request.Id}] не найден"),
             _ => Results.BadRequest("Неверные данные пользователя")
         };
-    }
-
-    private async Task Authenticate(string userName)
-    {
-        var claims = new List<Claim>
-        {
-            new(ClaimsIdentity.DefaultNameClaimType, userName)
-        };
-
-        var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
     }
 }

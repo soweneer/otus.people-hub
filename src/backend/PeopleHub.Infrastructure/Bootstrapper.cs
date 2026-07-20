@@ -5,11 +5,12 @@ using PeopleHub.Application.Abstractions;
 using PeopleHub.Application.Services;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Domain.Services;
+using PeopleHub.Infrastructure.Caching;
 using PeopleHub.Infrastructure.Db;
-using PeopleHub.Infrastructure.Decorators;
 using PeopleHub.Infrastructure.Helpers;
 using PeopleHub.Infrastructure.Queries;
 using PeopleHub.Infrastructure.Repositories;
+using StackExchange.Redis;
 
 namespace PeopleHub.Infrastructure;
 
@@ -36,15 +37,9 @@ public static class Bootstrapper
         services.AddScoped<IDbMigrator, DbMigrator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         
-        var redisConnectionString = configuration.GetConnectionString("Redis");
-        if (string.IsNullOrEmpty(redisConnectionString))
-            throw new MissingMemberException("Redis connection string is absent");
-        services.AddStackExchangeRedisCache(options =>
-        {
-            options.Configuration = redisConnectionString;
-            options.InstanceName = "people-hub:";
-        });
         services.Decorate<IFeedService, CachingFeedServiceDecorator>();
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+        services.AddScoped<IFeedCacheService, RedisFeedCacheService>();
 
         return services;
     }
