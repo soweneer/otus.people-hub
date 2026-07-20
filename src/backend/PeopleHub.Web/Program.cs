@@ -1,6 +1,7 @@
 using PeopleHub.Application;
 using PeopleHub.Extensions;
 using PeopleHub.Infrastructure;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -31,6 +32,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapMetrics();
 
 app.MapFallbackToFile("index.html");
 app.Run();
