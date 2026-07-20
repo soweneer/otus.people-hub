@@ -18,7 +18,5 @@ public interface IUserService
     Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default);
 
     Task<PersonalInfo> UpdateProfileAsync(string email, PersonalInfo personalInfo, CancellationToken cancellationToken = default);
-    
-    // TODO костыль! убрать user id в claims
-    Task<int> GetUserId(string email, CancellationToken cancellationToken = default);
+
 }

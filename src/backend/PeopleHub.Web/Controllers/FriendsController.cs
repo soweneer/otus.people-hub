@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -11,14 +12,13 @@ namespace PeopleHub.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class FriendsController(IFriendRequestService friendRequestService) : ControllerBase
 {
-    private const string AnySchemes =
-        $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}";
+    private const string AnySchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}";
 
     [HttpGet("/api/friends")]
     [Authorize]
     public async Task<ActionResult<FriendsInfo>> Get()
     {
-        var userEmail = User.Identity!.Name;
+        var userEmail = User.Identity?.Name;
         return Ok(await friendRequestService.GetFriendsAsync(userEmail, HttpContext.RequestAborted));
     }
 

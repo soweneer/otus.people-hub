@@ -14,16 +14,18 @@ public class AccountService(IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork) : IAccountService
 {
-    public async Task<bool> CanLoginAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<int?> CanLoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         if (!Email.TryCreate(email, out var accountEmail))
         {
-            return false;
+            return null;
         }
 
         var account = await accountRepository.FindByEmailAsync(accountEmail, cancellationToken);
 
-        return account is not null && passwordHasher.Verify(account.Password.Value, password);
+        return account is not null && passwordHasher.Verify(account.Password.Value, password)
+            ? account.UserId 
+            : null;
     }
 
     public async Task<LoginByIdResult> LoginByUserIdAsync(int userId, string password, CancellationToken cancellationToken = default)
@@ -39,17 +41,13 @@ public class AccountService(IUserRepository userRepository,
             : LoginByIdResult.InvalidPassword;
     }
 
-    public async Task<SignUpStatus> SignUpAsync(string email, string password, PersonalInfo personalInfo,
+    public async Task<int?> SignUpAsync(string email, string password, PersonalInfo personalInfo,
         CancellationToken cancellationToken = default)
     {
-        if (!Email.TryCreate(email, out var accountEmail))
+        if (!Email.TryCreate(email, out var accountEmail) ||
+            await accountRepository.ExistsAsync(accountEmail, cancellationToken))
         {
-            return SignUpStatus.Failed;
-        }
-
-        if (await accountRepository.ExistsAsync(accountEmail, cancellationToken))
-        {
-            return SignUpStatus.AlreadyExists;
+            return null;
         }
 
         var passwordHash = new PasswordHash(passwordHasher.Hash(password));
@@ -59,12 +57,12 @@ public class AccountService(IUserRepository userRepository,
             var userId = await userRepository.CreateAsync(User.Create(personalInfo), cancellationToken);
             if (userId is null)
             {
-                return SignUpStatus.Failed;
+                return null;
             }
 
             await accountRepository.CreateAsync(Account.Create(accountEmail, passwordHash, userId.Value), cancellationToken);
 
-            return SignUpStatus.Success;
+            return userId;
         }, cancellationToken);
     }
 }

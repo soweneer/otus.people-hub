@@ -7,8 +7,7 @@ using PeopleHub.Domain.Repositories;
 
 namespace PeopleHub.Application.Services;
 
-public class UserService(IUserRepository userRepository,
-    IUserQueries userQueries) : IUserService
+public class UserService(IUserRepository userRepository, IUserQueries userQueries) : IUserService
 {
     public Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default) =>
         userQueries.SearchAsync(filter, cancellationToken);
@@ -56,7 +55,4 @@ public class UserService(IUserRepository userRepository,
 
         return user.PersonalInfo;
     }
-
-    // TODO crutch! set user-id in auth claim!!
-    public async Task<int> GetUserId(string email, CancellationToken cancellationToken = default) => await userRepository.GetUserIdAsync(email, cancellationToken);
 }

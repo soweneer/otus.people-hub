@@ -16,7 +16,7 @@ public class JwtOptions
 
 public sealed class JwtTokenIssuer(IOptions<JwtOptions> options)
 {
-    public string CreateToken(string email)
+    public string CreateToken(string email, int userId)
     {
         var jwt = options.Value;
         var credentials = new SigningCredentials(
@@ -26,7 +26,7 @@ public sealed class JwtTokenIssuer(IOptions<JwtOptions> options)
         var token = new JwtSecurityToken(
             issuer: jwt.Issuer,
             audience: jwt.Audience,
-            claims: [new Claim(ClaimTypes.Name, email)],
+            claims: [new Claim(ClaimTypes.Name, email), new Claim(ClaimTypes.NameIdentifier, userId.ToString())],
             expires: DateTime.UtcNow.AddHours(jwt.ExpiresHours),
             signingCredentials: credentials);
 

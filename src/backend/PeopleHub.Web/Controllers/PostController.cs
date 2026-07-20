@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,13 @@ namespace PeopleHub.Controllers;
 [Authorize(AuthenticationSchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}")]
 public sealed class PostController : ControllerBase
 {
+    private readonly int _userId;
+
+    public PostController(int userId)
+    {
+        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
+
     [HttpPost("/api/post/create")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
@@ -122,10 +130,7 @@ public sealed class PostController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> Feed([FromServices] IFeedService feedService)
     {
-        var userEmail = User.Identity!.Name;
-        var posts = await feedService.GetFeedAsync(
-            userEmail,
-            HttpContext.RequestAborted);
+        var posts = await feedService.GetFeedAsync(_userId, HttpContext.RequestAborted);
 
         return Results.Json(posts
             .Select(p => new PostResponse(p.Id.ToString(), p.Text, p.AuthorUserId.ToString()))

@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
 using PeopleHub.Auth;
-using PeopleHub.Domain.Enums;
 using PeopleHub.Extensions;
 using PeopleHub.Model;
 
@@ -29,10 +28,11 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
     [HttpPost("signin"), AllowAnonymous]
     public async Task<IActionResult> SignIn([FromBody] SignInRequest request)
     {
-        if (!await accountService.CanLoginAsync(request.Email, request.Password, HttpContext.RequestAborted))
+        var userId = await accountService.CanLoginAsync(request.Email, request.Password, HttpContext.RequestAborted);
+        if (userId is null)
             return BadRequest(new ApiError("Неверные данные пользователя"));
-
-        await Authenticate(request.Email);
+        
+        await Authenticate(request.Email, userId.Value);
 
         return Ok(new MeResponse(true, request.Email));
     }
@@ -40,21 +40,17 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
     [HttpPost("signup"), AllowAnonymous]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request)
     {
-        var status = await accountService.SignUpAsync(request.Email, request.Password,
+        var userId = await accountService.SignUpAsync(request.Email, request.Password,
             request.ExtractPersonalInfo(),
             HttpContext.RequestAborted);
 
-        switch (status)
+        if (!userId.HasValue)
         {
-            case SignUpStatus.Success:
-                await Authenticate(request.Email);
-                return Ok(new MeResponse(true, request.Email));
-            case SignUpStatus.AlreadyExists:
-                return Conflict(new ApiError("Такой пользователь уже существует в базе"));
-            case SignUpStatus.Failed:
-            default:
-                return BadRequest(new ApiError("Не удалось зарегистрировать пользователя"));
+            return BadRequest(new ApiError("Не удалось зарегистрировать пользователя"));
         }
+
+        await Authenticate(request.Email, userId.Value);
+        return Ok(new MeResponse(true, request.Email));
     }
 
     [HttpPost("signout"), Authorize]
@@ -65,11 +61,12 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
         return NoContent();
     }
     
-    private async Task Authenticate(string userName)
+    private async Task Authenticate(string email, int userId)
     {
         var claims = new List<Claim>
         {
-            new(ClaimsIdentity.DefaultNameClaimType, userName)
+            new(ClaimsIdentity.DefaultNameClaimType, email),
+            new(ClaimTypes.NameIdentifier, userId.ToString())
         };
 
         var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
@@ -100,7 +97,7 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
 
         return result.Status switch
         {
-            LoginByIdStatus.Success => Results.Json(new LoginResponse(tokenIssuer.CreateToken(result.Email))),
+            LoginByIdStatus.Success => Results.Json(new LoginResponse(tokenIssuer.CreateToken(result.Email, userId))),
             LoginByIdStatus.UserNotFound => Results.NotFound($"Пользователь [{request.Id}] не найден"),
             _ => Results.BadRequest("Неверные данные пользователя")
         };
