@@ -13,4 +13,6 @@ public interface IFriendRequestRepository
     Task SaveStatusAsync(FriendRequest request, CancellationToken cancellationToken = default);
 
     Task DeleteBetweenAsync(long userId, long otherUserId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<long>> GetFriendIdsAsync(long userId, CancellationToken cancellationToken = default);
 }

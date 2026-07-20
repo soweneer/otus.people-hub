@@ -38,8 +38,11 @@ public static class Bootstrapper
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         
         services.Decorate<IFeedService, CachingFeedServiceDecorator>();
+        services.Decorate<IPostService, FeedCacheCorrectingPostServiceDecorator>();
         services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
         services.AddScoped<IFeedCacheService, RedisFeedCacheService>();
+        services.AddSingleton<FeedCacheCorrectionQueue>();
+        services.AddHostedService<FeedCacheCorrectionWorker>();
 
         return services;
     }

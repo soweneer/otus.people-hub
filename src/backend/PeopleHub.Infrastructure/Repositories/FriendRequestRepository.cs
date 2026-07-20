@@ -63,6 +63,23 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
                 ("otherUserId", otherUserId)
             ]);
 
+    public async Task<IReadOnlyCollection<long>> GetFriendIdsAsync(long userId, CancellationToken cancellationToken = default)
+    {
+        var dataTable = await dbClient.ExecuteDataTableAsync(
+            "select case when sender_user_id = @userId then receiver_user_id else sender_user_id end as friend_id " +
+            $"from {DbClient.FriendsRequestsTable} " +
+            "where (sender_user_id = @userId or receiver_user_id = @userId) and status = @approvedStatus",
+            [
+                ("userId", userId),
+                ("approvedStatus", (int)FriendRequestStatus.Approved)
+            ],
+            cancellationToken);
+
+        return dataTable.Rows.Cast<DataRow>()
+            .Select(row => Convert.ToInt64(row["friend_id"]))
+            .ToArray();
+    }
+
     private static FriendRequest ExtractFriendRequest(DataRow row) =>
         new FriendRequest(
             Convert.ToInt64(row["id"]),

@@ -123,6 +123,36 @@ public sealed class CachingFeedServiceDecoratorTests
 
         public Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId) =>
             Task.FromResult(_store.GetValueOrDefault(userId, []));
+
+        public Task AddPostAsync(long userId, FeedPost post)
+        {
+            if (_store.TryGetValue(userId, out var feed))
+            {
+                _store[userId] = [post, .. feed];
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task UpdatePostAsync(long userId, FeedPost post)
+        {
+            if (_store.TryGetValue(userId, out var feed))
+            {
+                _store[userId] = [.. feed.Select(p => p.Id == post.Id ? post : p)];
+            }
+
+            return Task.CompletedTask;
+        }
+
+        public Task RemovePostAsync(long userId, long postId)
+        {
+            if (_store.TryGetValue(userId, out var feed))
+            {
+                _store[userId] = [.. feed.Where(p => p.Id != postId)];
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FeedServiceStub(Func<long, IReadOnlyCollection<FeedPost>> feedByUserId) : IFeedService
