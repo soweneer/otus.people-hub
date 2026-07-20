@@ -37,6 +37,7 @@ public static class Bootstrapper
         services.AddScoped<IDbMigrator, DbMigrator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         
+        services.Configure<FeatureFlagsOptions>(configuration.GetSection("FeatureFlags"));
         services.Decorate<IFeedService, CachingFeedServiceDecorator>();
         services.Decorate<IPostService, FeedCacheCorrectingPostServiceDecorator>();
         services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));

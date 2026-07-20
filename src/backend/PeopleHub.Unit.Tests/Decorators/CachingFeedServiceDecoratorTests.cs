@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Options;
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
+using PeopleHub.Infrastructure;
 using PeopleHub.Infrastructure.Caching;
 
 namespace PeopleHub.Unit.Tests.Decorators;
@@ -20,7 +22,7 @@ public sealed class CachingFeedServiceDecoratorTests
 
     public CachingFeedServiceDecoratorTests()
     {
-        _decorator = new CachingFeedServiceDecorator(_underlyingService, _cacheService);
+        _decorator = new CachingFeedServiceDecorator(_underlyingService, _cacheService, new FeatureFlagsStub(true));
     }
 
     [Fact]
@@ -79,7 +81,7 @@ public sealed class CachingFeedServiceDecoratorTests
     public async Task GetFeedAsync_EmptyFeed_IsNotCached()
     {
         var underlyingService = new FeedServiceStub([]);
-        var decorator = new CachingFeedServiceDecorator(underlyingService, _cacheService);
+        var decorator = new CachingFeedServiceDecorator(underlyingService, _cacheService, new FeatureFlagsStub(true));
 
         var firstFeed = await decorator.GetFeedAsync(UserId);
         var secondFeed = await decorator.GetFeedAsync(UserId);
@@ -91,13 +93,29 @@ public sealed class CachingFeedServiceDecoratorTests
     }
 
     [Fact]
+    public async Task GetFeedAsync_CacheDisabledByFeatureFlag_BypassesCache()
+    {
+        var decorator = new CachingFeedServiceDecorator(_underlyingService, _cacheService, new FeatureFlagsStub(false));
+        await _cacheService.PushFeedAsync(UserId, [new FeedPost(99, "устаревший пост", 9)]);
+        _cacheService.Pushes.Clear();
+
+        var feed = await decorator.GetFeedAsync(UserId);
+        await decorator.GetFeedAsync(UserId);
+
+        Assert.Equal(DefaultFeed, feed);
+        Assert.Equal(2, _underlyingService.Calls.Count);
+        Assert.Empty(_cacheService.Pushes);
+    }
+
+    [Fact]
     public async Task GetFeedAsync_DifferentUsers_UseSeparateCacheEntries()
     {
         const long otherUserId = 43;
         var otherFeed = new[] { new FeedPost(3, "чужой пост", 30) };
         var decorator = new CachingFeedServiceDecorator(
             new FeedServiceStub(userId => userId == otherUserId ? otherFeed : DefaultFeed),
-            _cacheService);
+            _cacheService,
+            new FeatureFlagsStub(true));
 
         var feed = await decorator.GetFeedAsync(UserId);
         var feedForOther = await decorator.GetFeedAsync(otherUserId);
@@ -106,6 +124,15 @@ public sealed class CachingFeedServiceDecoratorTests
         Assert.Equal(otherFeed, feedForOther);
         Assert.Equal(DefaultFeed, await _cacheService.GetFeedAsync(UserId));
         Assert.Equal(otherFeed, await _cacheService.GetFeedAsync(otherUserId));
+    }
+
+    private sealed class FeatureFlagsStub(bool useCacheForFeed) : IOptionsMonitor<FeatureFlagsOptions>
+    {
+        public FeatureFlagsOptions CurrentValue { get; } = new() { UseCacheForFeed = useCacheForFeed };
+
+        public FeatureFlagsOptions Get(string name) => CurrentValue;
+
+        public IDisposable OnChange(Action<FeatureFlagsOptions, string> listener) => null;
     }
 
     private sealed class FeedCacheServiceStub : IFeedCacheService
