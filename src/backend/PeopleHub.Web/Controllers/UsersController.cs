@@ -9,16 +9,9 @@ using PeopleHub.Model;
 namespace PeopleHub.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class UsersController : ControllerBase
+public sealed class UsersController(IUserService userService) : ControllerBase
 {
-    private readonly  IUserService _userService;
-    private readonly long _userId;
-
-    public UsersController(IUserService userService)
-    {
-        _userService = userService;
-        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    }
+    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpGet("/api/users")]
     [Authorize]
@@ -27,8 +20,8 @@ public sealed class UsersController : ControllerBase
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20)
     {
-        var users = await _userService.SearchWithFriendStatusAsync(
-            _userId,
+        var users = await userService.SearchWithFriendStatusAsync(
+            UserId,
             new SearchFilter(
                 filter.FirstName?.Trim() ?? string.Empty,
                 filter.LastName?.Trim() ?? string.Empty,
@@ -43,7 +36,7 @@ public sealed class UsersController : ControllerBase
     [Authorize]
     public async Task<ActionResult<FriendInfo>> GetById(int id)
     {
-        var user = await _userService.GetWithFriendStatusAsync(_userId, id, HttpContext.RequestAborted);
+        var user = await userService.GetWithFriendStatusAsync(UserId, id, HttpContext.RequestAborted);
 
         return user is null
             ? NotFound(new ApiError($"Пользователь [{id}] не найден"))
@@ -67,7 +60,7 @@ public sealed class UsersController : ControllerBase
 
         var skip = request.Skip ?? 0;
         var take = request.Take ?? 50;
-        var users = await _userService.SearchAsync(
+        var users = await userService.SearchAsync(
             new SearchFilter(firstName, lastName, skip, take),
             HttpContext.RequestAborted);
 
@@ -89,7 +82,7 @@ public sealed class UsersController : ControllerBase
             return Results.BadRequest("Параметры first_name и second_name обязательны");
         }
 
-        var userId = await _userService.CreateAsync(
+        var userId = await userService.CreateAsync(
             new PersonalInfo(
                 request.FirstName.Trim(),
                 request.SecondName.Trim(),
@@ -112,7 +105,7 @@ public sealed class UsersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IResult> GetByIdAnonymous(int id)
     {
-        var user = await _userService.GetAsync(id, HttpContext.RequestAborted);
+        var user = await userService.GetAsync(id, HttpContext.RequestAborted);
 
         return user is null
             ? Results.NotFound($"Пользователь [{id}] не найден")

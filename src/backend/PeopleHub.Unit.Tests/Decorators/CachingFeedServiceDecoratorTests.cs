@@ -1,14 +1,12 @@
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
-using PeopleHub.Domain.Model;
 using PeopleHub.Infrastructure.Caching;
 
 namespace PeopleHub.Unit.Tests.Decorators;
 
 public sealed class CachingFeedServiceDecoratorTests
 {
-    private const string Email = "user@example.com";
-    private const int UserId = 42;
+    private const long UserId = 42;
 
     private static readonly IReadOnlyCollection<FeedPost> DefaultFeed =
     [
@@ -22,23 +20,22 @@ public sealed class CachingFeedServiceDecoratorTests
 
     public CachingFeedServiceDecoratorTests()
     {
-        _decorator = new CachingFeedServiceDecorator(_underlyingService, _cacheService,
-            new UserServiceStub(new Dictionary<string, int> { [Email] = UserId }));
+        _decorator = new CachingFeedServiceDecorator(_underlyingService, _cacheService);
     }
 
     [Fact]
     public async Task GetFeedAsync_CacheMiss_ReturnsFeedFromUnderlyingService()
     {
-        var feed = await _decorator.GetFeedAsync(Email);
+        var feed = await _decorator.GetFeedAsync(UserId);
 
         Assert.Equal(DefaultFeed, feed);
-        Assert.Equal(Email, _underlyingService.Calls.Single());
+        Assert.Equal(UserId, _underlyingService.Calls.Single());
     }
 
     [Fact]
     public async Task GetFeedAsync_CacheMiss_PushesFeedToCache()
     {
-        await _decorator.GetFeedAsync(Email);
+        await _decorator.GetFeedAsync(UserId);
 
         var (userId, feed) = Assert.Single(_cacheService.Pushes);
         Assert.Equal(UserId, userId);
@@ -48,8 +45,8 @@ public sealed class CachingFeedServiceDecoratorTests
     [Fact]
     public async Task GetFeedAsync_SecondCall_DoesNotCallUnderlyingServiceAgain()
     {
-        var firstFeed = await _decorator.GetFeedAsync(Email);
-        var secondFeed = await _decorator.GetFeedAsync(Email);
+        var firstFeed = await _decorator.GetFeedAsync(UserId);
+        var secondFeed = await _decorator.GetFeedAsync(UserId);
 
         Assert.Single(_underlyingService.Calls);
         Assert.Equal(firstFeed, secondFeed);
@@ -61,7 +58,7 @@ public sealed class CachingFeedServiceDecoratorTests
         var cachedFeed = new[] { new FeedPost(42, "пост из кэша", 7) };
         await _cacheService.PushFeedAsync(UserId, cachedFeed);
 
-        var feed = await _decorator.GetFeedAsync(Email);
+        var feed = await _decorator.GetFeedAsync(UserId);
 
         Assert.Equal(cachedFeed, feed);
         Assert.Empty(_underlyingService.Calls);
@@ -72,21 +69,20 @@ public sealed class CachingFeedServiceDecoratorTests
     {
         await _cacheService.PushFeedAsync(UserId, []);
 
-        var feed = await _decorator.GetFeedAsync(Email);
+        var feed = await _decorator.GetFeedAsync(UserId);
 
         Assert.Equal(DefaultFeed, feed);
-        Assert.Equal(Email, _underlyingService.Calls.Single());
+        Assert.Equal(UserId, _underlyingService.Calls.Single());
     }
 
     [Fact]
     public async Task GetFeedAsync_EmptyFeed_IsNotCached()
     {
         var underlyingService = new FeedServiceStub([]);
-        var decorator = new CachingFeedServiceDecorator(underlyingService, _cacheService,
-            new UserServiceStub(new Dictionary<string, int> { [Email] = UserId }));
+        var decorator = new CachingFeedServiceDecorator(underlyingService, _cacheService);
 
-        var firstFeed = await decorator.GetFeedAsync(Email);
-        var secondFeed = await decorator.GetFeedAsync(Email);
+        var firstFeed = await decorator.GetFeedAsync(UserId);
+        var secondFeed = await decorator.GetFeedAsync(UserId);
 
         Assert.Empty(firstFeed);
         Assert.Empty(secondFeed);
@@ -97,16 +93,14 @@ public sealed class CachingFeedServiceDecoratorTests
     [Fact]
     public async Task GetFeedAsync_DifferentUsers_UseSeparateCacheEntries()
     {
-        const string otherEmail = "other@example.com";
-        const int otherUserId = 43;
+        const long otherUserId = 43;
         var otherFeed = new[] { new FeedPost(3, "чужой пост", 30) };
         var decorator = new CachingFeedServiceDecorator(
-            new FeedServiceStub(email => email == otherEmail ? otherFeed : DefaultFeed),
-            _cacheService,
-            new UserServiceStub(new Dictionary<string, int> { [Email] = UserId, [otherEmail] = otherUserId }));
+            new FeedServiceStub(userId => userId == otherUserId ? otherFeed : DefaultFeed),
+            _cacheService);
 
-        var feed = await decorator.GetFeedAsync(Email);
-        var feedForOther = await decorator.GetFeedAsync(otherEmail);
+        var feed = await decorator.GetFeedAsync(UserId);
+        var feedForOther = await decorator.GetFeedAsync(otherUserId);
 
         Assert.Equal(DefaultFeed, feed);
         Assert.Equal(otherFeed, feedForOther);
@@ -116,60 +110,33 @@ public sealed class CachingFeedServiceDecoratorTests
 
     private sealed class FeedCacheServiceStub : IFeedCacheService
     {
-        private readonly Dictionary<int, IReadOnlyCollection<FeedPost>> _store = [];
+        private readonly Dictionary<long, IReadOnlyCollection<FeedPost>> _store = [];
 
-        public List<(int UserId, IReadOnlyCollection<FeedPost> Feed)> Pushes { get; } = [];
+        public List<(long UserId, IReadOnlyCollection<FeedPost> Feed)> Pushes { get; } = [];
 
-        public Task PushFeedAsync(int userId, IReadOnlyCollection<FeedPost> feedPosts)
+        public Task PushFeedAsync(long userId, IReadOnlyCollection<FeedPost> feedPosts)
         {
             Pushes.Add((userId, feedPosts));
             _store[userId] = feedPosts;
             return Task.CompletedTask;
         }
 
-        public Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int userId) =>
+        public Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId) =>
             Task.FromResult(_store.GetValueOrDefault(userId, []));
     }
 
-    private sealed class FeedServiceStub(Func<string, IReadOnlyCollection<FeedPost>> feedByEmail) : IFeedService
+    private sealed class FeedServiceStub(Func<long, IReadOnlyCollection<FeedPost>> feedByUserId) : IFeedService
     {
         public FeedServiceStub(IReadOnlyCollection<FeedPost> feed) : this(_ => feed)
         {
         }
 
-        public List<string> Calls { get; } = [];
+        public List<long> Calls { get; } = [];
 
-        public Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(string email, CancellationToken cancellationToken = default)
+        public Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId, CancellationToken cancellationToken = default)
         {
-            Calls.Add(email);
-            return Task.FromResult(feedByEmail(email));
+            Calls.Add(userId);
+            return Task.FromResult(feedByUserId(userId));
         }
-    }
-
-    private sealed class UserServiceStub(IReadOnlyDictionary<string, int> userIdByEmail) : IUserService
-    {
-        public Task<int> GetUserId(string email, CancellationToken cancellationToken = default) =>
-            Task.FromResult(userIdByEmail[email]);
-
-        public Task<IReadOnlyCollection<SearchedUser>> SearchAsync(SearchFilter filter, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
-        public Task<IReadOnlyCollection<UserInfo>> SearchWithFriendStatusAsync(string email, SearchFilter filter, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
-        public Task<FriendInfo> GetWithFriendStatusAsync(string email, int targetUserId, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
-        public Task<PersonalInfo?> GetAsync(int id, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
-        public Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
-        public Task<PersonalInfo> GetProfileAsync(string email, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
-
-        public Task<PersonalInfo> UpdateProfileAsync(string email, PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
-            throw new NotSupportedException();
     }
 }

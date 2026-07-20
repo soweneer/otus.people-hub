@@ -11,21 +11,14 @@ namespace PeopleHub.Controllers;
 [Route("api/profile")]
 [Authorize]
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class ProfileController : ControllerBase
+public sealed class ProfileController(IUserService userService) : ControllerBase
 {
-    private readonly IUserService _userService;
-    private readonly long _userId;
-
-    public ProfileController(IUserService userService)
-    {
-        _userService = userService;
-        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    }
+    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpGet]
-    public async Task<ActionResult<PersonalInfo>> Get() => Ok(await _userService.GetProfileAsync(_userId, HttpContext.RequestAborted));
+    public async Task<ActionResult<PersonalInfo>> Get() => Ok(await userService.GetProfileAsync(UserId, HttpContext.RequestAborted));
 
     [HttpPut]
     public async Task<ActionResult<PersonalInfo>> Update([FromBody] UpdateMyProfileRequest request) => 
-        Ok(await _userService.UpdateProfileAsync(_userId, request.ExtractPersonalInfo(), HttpContext.RequestAborted));
+        Ok(await userService.UpdateProfileAsync(UserId, request.ExtractPersonalInfo(), HttpContext.RequestAborted));
 }

@@ -11,12 +11,7 @@ namespace PeopleHub.Controllers;
 [Authorize(AuthenticationSchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}")]
 public sealed class PostController : ControllerBase
 {
-    private readonly long _userId;
-
-    public PostController()
-    {
-        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    }
+    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpPost("/api/post/create")]
     [ApiExplorerSettings(IgnoreApi = false)]
@@ -34,7 +29,7 @@ public sealed class PostController : ControllerBase
         }
 
         var postId = await postService.CreateAsync(
-            _userId,
+            UserId,
             request.Text.Trim(),
             HttpContext.RequestAborted);
 
@@ -64,7 +59,7 @@ public sealed class PostController : ControllerBase
         }
 
         var updated = await postService.UpdateAsync(
-            _userId,
+            UserId,
             postId,
             request.Text.Trim(),
             HttpContext.RequestAborted);
@@ -89,7 +84,7 @@ public sealed class PostController : ControllerBase
         }
 
         var deleted = await postService.DeleteAsync(
-            _userId,
+            UserId,
             postId,
             HttpContext.RequestAborted);
 
@@ -127,7 +122,7 @@ public sealed class PostController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> Feed([FromServices] IFeedService feedService)
     {
-        var posts = await feedService.GetFeedAsync(_userId, HttpContext.RequestAborted);
+        var posts = await feedService.GetFeedAsync(UserId, HttpContext.RequestAborted);
 
         return Results.Json(posts
             .Select(p => new PostResponse(p.Id.ToString(), p.Text, p.AuthorUserId.ToString()))
