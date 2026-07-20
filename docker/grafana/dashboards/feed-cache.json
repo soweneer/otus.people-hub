@@ -13,7 +13,9 @@
             "lineWidth": 2,
             "showPoints": "never"
           },
-          "unit": "ops"
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -26,18 +28,18 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(feed_cache_hits_total[1m])",
-          "legendFormat": "cache hit / s",
+          "expr": "100 * rate(feed_cache_hits_total[1m]) / (rate(feed_cache_hits_total[1m]) + rate(feed_cache_misses_total[1m]))",
+          "legendFormat": "cache hit %",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(feed_cache_misses_total[1m])",
-          "legendFormat": "cache miss / s",
+          "expr": "100 * rate(feed_cache_misses_total[1m]) / (rate(feed_cache_hits_total[1m]) + rate(feed_cache_misses_total[1m]))",
+          "legendFormat": "cache miss %",
           "refId": "B"
         }
       ],
-      "title": "Feed cache hit/miss rate",
+      "title": "Feed cache hit/miss % (окно 1m)",
       "type": "timeseries"
     },
     {
@@ -49,7 +51,10 @@
             "fillOpacity": 15,
             "lineWidth": 2,
             "showPoints": "never"
-          }
+          },
+          "max": 100,
+          "min": 0,
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -62,18 +67,18 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "feed_cache_hits_total",
-          "legendFormat": "cache hit total",
+          "expr": "100 * feed_cache_hits_total / (feed_cache_hits_total + feed_cache_misses_total)",
+          "legendFormat": "cache hit % (накопительно)",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "feed_cache_misses_total",
-          "legendFormat": "cache miss total",
+          "expr": "100 * feed_cache_misses_total / (feed_cache_hits_total + feed_cache_misses_total)",
+          "legendFormat": "cache miss % (накопительно)",
           "refId": "B"
         }
       ],
-      "title": "Feed cache hit/miss total",
+      "title": "Feed cache hit/miss % (накопительно)",
       "type": "timeseries"
     }
   ],
