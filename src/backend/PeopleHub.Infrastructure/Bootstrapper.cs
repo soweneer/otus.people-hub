@@ -37,6 +37,7 @@ public static class Bootstrapper
         services.AddScoped<IDbMigrator, DbMigrator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         
+        FeedCacheMetrics.Publish();
         services.Configure<FeatureFlagsOptions>(configuration.GetSection("FeatureFlags"));
         services.Decorate<IFeedService, CachingFeedServiceDecorator>();
         services.Decorate<IPostService, FeedCacheCorrectingPostServiceDecorator>();

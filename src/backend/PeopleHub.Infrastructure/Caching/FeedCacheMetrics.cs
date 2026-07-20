@@ -9,4 +9,10 @@ public static class FeedCacheMetrics
 
     public static readonly Counter Misses = Metrics.CreateCounter(
         "feed_cache_misses_total", "Количество промахов кэша ленты на api/post/feed");
+
+    public static void Publish()
+    {
+        Hits.IncTo(0);
+        Misses.IncTo(0);
+    }
 }
