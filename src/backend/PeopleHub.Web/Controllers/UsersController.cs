@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Models;
@@ -8,8 +9,17 @@ using PeopleHub.Model;
 namespace PeopleHub.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class UsersController(IUserService userService) : ControllerBase
+public sealed class UsersController : ControllerBase
 {
+    private readonly  IUserService _userService;
+    private readonly long _userId;
+
+    public UsersController(IUserService userService)
+    {
+        _userService = userService;
+        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
+
     [HttpGet("/api/users")]
     [Authorize]
     public async Task<ActionResult<IReadOnlyCollection<UserInfo>>> Search(
@@ -17,9 +27,8 @@ public sealed class UsersController(IUserService userService) : ControllerBase
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20)
     {
-        var userEmail = User.Identity!.Name;
-        var users = await userService.SearchWithFriendStatusAsync(
-            userEmail,
+        var users = await _userService.SearchWithFriendStatusAsync(
+            _userId,
             new SearchFilter(
                 filter.FirstName?.Trim() ?? string.Empty,
                 filter.LastName?.Trim() ?? string.Empty,
@@ -34,8 +43,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     [Authorize]
     public async Task<ActionResult<FriendInfo>> GetById(int id)
     {
-        var userEmail = User.Identity!.Name;
-        var user = await userService.GetWithFriendStatusAsync(userEmail, id, HttpContext.RequestAborted);
+        var user = await _userService.GetWithFriendStatusAsync(_userId, id, HttpContext.RequestAborted);
 
         return user is null
             ? NotFound(new ApiError($"Пользователь [{id}] не найден"))
@@ -59,7 +67,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
 
         var skip = request.Skip ?? 0;
         var take = request.Take ?? 50;
-        var users = await userService.SearchAsync(
+        var users = await _userService.SearchAsync(
             new SearchFilter(firstName, lastName, skip, take),
             HttpContext.RequestAborted);
 
@@ -81,7 +89,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
             return Results.BadRequest("Параметры first_name и second_name обязательны");
         }
 
-        var userId = await userService.CreateAsync(
+        var userId = await _userService.CreateAsync(
             new PersonalInfo(
                 request.FirstName.Trim(),
                 request.SecondName.Trim(),
@@ -104,7 +112,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IResult> GetByIdAnonymous(int id)
     {
-        var user = await userService.GetAsync(id, HttpContext.RequestAborted);
+        var user = await _userService.GetAsync(id, HttpContext.RequestAborted);
 
         return user is null
             ? Results.NotFound($"Пользователь [{id}] не найден")

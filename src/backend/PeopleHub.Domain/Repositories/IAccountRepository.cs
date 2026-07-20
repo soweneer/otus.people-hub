@@ -11,5 +11,5 @@ public interface IAccountRepository
 
     Task<Account> FindByEmailAsync(Email email, CancellationToken cancellationToken = default);
 
-    Task<Account> FindByUserIdAsync(int userId, CancellationToken cancellationToken = default);
+    Task<Account> FindByUserIdAsync(long userId, CancellationToken cancellationToken = default);
 }

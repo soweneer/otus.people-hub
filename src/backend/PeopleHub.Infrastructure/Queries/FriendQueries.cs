@@ -9,7 +9,7 @@ namespace PeopleHub.Infrastructure.Queries;
 // TODO this is probably repo
 internal sealed class FriendQueries(DbClient dbClient) : IFriendQueries
 {
-    public async Task<FriendsInfo> GetFriendsAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<FriendsInfo> GetFriendsAsync(long userId, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"""

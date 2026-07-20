@@ -8,7 +8,7 @@ public sealed class FeedService(IFeedRepository feedRepository) : IFeedService
     private const int FeedCapacity = 1000;
     private const int Offset = 0;
 
-    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId, CancellationToken cancellationToken = default)
     {
         var posts = await feedRepository.GetFriendsFeedAsync(userId, Offset, FeedCapacity);
 

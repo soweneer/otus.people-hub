@@ -8,7 +8,7 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal sealed class FeedRepository(DbClient dbClient) : IFeedRepository
 {
-    public async Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(int userId, int offset, int limit)
+    public async Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(long userId, int offset, int limit)
     {
         var query = $"""
                      select p.id, p.text, p.author_user_id

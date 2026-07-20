@@ -2,21 +2,21 @@ using PeopleHub.Domain.Exceptions;
 
 namespace PeopleHub.Domain.Entities;
 
-public sealed class Post(long id, string text, int authorUserId)
+public sealed class Post(long id, string text, long authorUserId)
 {
     public long Id { get; } = id;
-    public int AuthorUserId { get; } = authorUserId;
+    public long AuthorUserId { get; } = authorUserId;
     public string Text { get; private set; } = text;
 
-    public static Post Create(int authorUserId, string text) =>
+    public static Post Create(long authorUserId, string text) =>
         new(0, ValidateText(text), authorUserId);
 
     public static Post Restore(long id, int authorUserId, string text) =>
         new(id, text, authorUserId);
 
-    public bool IsAuthoredBy(int userId) => userId == AuthorUserId;
+    public bool IsAuthoredBy(long userId) => userId == AuthorUserId;
 
-    public void Edit(int editorUserId, string newText)
+    public void Edit(long editorUserId, string newText)
     {
         if (!IsAuthoredBy(editorUserId))
         {

@@ -11,9 +11,9 @@ namespace PeopleHub.Controllers;
 [Authorize(AuthenticationSchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}")]
 public sealed class PostController : ControllerBase
 {
-    private readonly int _userId;
+    private readonly long _userId;
 
-    public PostController(int userId)
+    public PostController()
     {
         _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     }
@@ -33,9 +33,8 @@ public sealed class PostController : ControllerBase
             return Results.BadRequest("Параметр text обязателен");
         }
 
-        var userEmail = User.Identity!.Name;
         var postId = await postService.CreateAsync(
-            userEmail,
+            _userId,
             request.Text.Trim(),
             HttpContext.RequestAborted);
 
@@ -64,9 +63,8 @@ public sealed class PostController : ControllerBase
             return Results.BadRequest("Параметр text обязателен");
         }
 
-        var userEmail = User.Identity!.Name;
         var updated = await postService.UpdateAsync(
-            userEmail,
+            _userId,
             postId,
             request.Text.Trim(),
             HttpContext.RequestAborted);
@@ -90,9 +88,8 @@ public sealed class PostController : ControllerBase
             return Results.BadRequest("Параметр id обязателен и должен быть числом");
         }
 
-        var userEmail = User.Identity!.Name;
         var deleted = await postService.DeleteAsync(
-            userEmail,
+            _userId,
             postId,
             HttpContext.RequestAborted);
 

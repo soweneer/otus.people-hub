@@ -1,3 +1,3 @@
 namespace PeopleHub.Domain.Exceptions;
 
-public sealed class UnknownUserException(string email) : Exception($"Пользователь [{email}] не найден в базе данных");
+public sealed class UnknownUserException(long id) : Exception($"Пользователь [{id}] не найден в базе данных");

@@ -4,10 +4,7 @@ namespace PeopleHub.Domain.Repositories;
 
 public interface IUserRepository
 {
-    // TODO скорее всего, после перехода на userId вместо email - неактуален
-    Task<int> GetUserIdAsync(string email, CancellationToken cancellationToken = default);
-
-    Task<User?> GetAsync(int id, CancellationToken cancellationToken = default);
+    Task<User?> GetAsync(long id, CancellationToken cancellationToken = default);
 
     Task<int?> CreateAsync(User user, CancellationToken cancellationToken = default);
 

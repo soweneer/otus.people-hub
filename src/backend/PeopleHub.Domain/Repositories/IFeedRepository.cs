@@ -4,5 +4,5 @@ namespace PeopleHub.Domain.Repositories;
 
 public interface IFeedRepository
 {
-    Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(int userId, int offset, int limit);
+    Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(long userId, int offset, int limit);
 }

@@ -10,44 +10,46 @@ using PeopleHub.Model;
 namespace PeopleHub.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class FriendsController(IFriendRequestService friendRequestService) : ControllerBase
+public sealed class FriendsController : ControllerBase
 {
+    private readonly IFriendRequestService _friendRequestService;
     private const string AnySchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}";
+    private readonly long _userId;
+
+    public FriendsController(IFriendRequestService friendRequestService)
+    {
+        _friendRequestService = friendRequestService;
+        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    }
 
     [HttpGet("/api/friends")]
     [Authorize]
-    public async Task<ActionResult<FriendsInfo>> Get()
-    {
-        var userEmail = User.Identity?.Name;
-        return Ok(await friendRequestService.GetFriendsAsync(userEmail, HttpContext.RequestAborted));
-    }
+    public async Task<ActionResult<FriendsInfo>> Get() =>
+        Ok(await _friendRequestService.GetFriendsAsync(_userId, HttpContext.RequestAborted));
 
     [HttpPost("/api/friends/requests")]
     [Authorize]
     public async Task<IActionResult> Send([FromBody] SendFriendRequestBody body)
     {
-        var userEmail = User.Identity!.Name;
-        await friendRequestService.SendAsync(userEmail, body.TargetUserId, HttpContext.RequestAborted);
+        await _friendRequestService.SendAsync(_userId, body.TargetUserId, HttpContext.RequestAborted);
 
         return NoContent();
     }
 
     [HttpDelete("/api/friends/{userId:int}")]
     [Authorize]
-    public async Task<IActionResult> Cancel(int userId)
+    public async Task<IActionResult> Cancel(long userId)
     {
-        var userEmail = User.Identity!.Name;
-        await friendRequestService.CancelAsync(userEmail, userId, HttpContext.RequestAborted);
+        await _friendRequestService.CancelAsync(_userId, userId, HttpContext.RequestAborted);
 
         return NoContent();
     }
 
     [HttpPost("/api/friends/requests/{requestId:int}/approve")]
     [Authorize]
-    public async Task<IActionResult> Approve(int requestId)
+    public async Task<IActionResult> Approve(long requestId)
     {
-        var userEmail = User.Identity!.Name;
-        await friendRequestService.ApproveAsync(userEmail, requestId, HttpContext.RequestAborted);
+        await _friendRequestService.ApproveAsync(_userId, requestId, HttpContext.RequestAborted);
 
         return NoContent();
     }
@@ -56,8 +58,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
     [Authorize]
     public async Task<IActionResult> Reject(int requestId)
     {
-        var userEmail = User.Identity!.Name;
-        await friendRequestService.RejectAsync(userEmail, requestId, HttpContext.RequestAborted);
+        await _friendRequestService.RejectAsync(_userId, requestId, HttpContext.RequestAborted);
 
         return NoContent();
     }
@@ -76,9 +77,8 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
             return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
         }
 
-        var userEmail = User.Identity!.Name;
-        var added = await friendRequestService.SetFriendAsync(
-            userEmail,
+        var added = await _friendRequestService.SetFriendAsync(
+            _userId,
             friendUserId,
             HttpContext.RequestAborted);
 
@@ -101,9 +101,8 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
             return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
         }
 
-        var userEmail = User.Identity!.Name;
-        await friendRequestService.CancelAsync(
-            userEmail,
+        await _friendRequestService.CancelAsync(
+            _userId,
             friendUserId,
             HttpContext.RequestAborted);
 

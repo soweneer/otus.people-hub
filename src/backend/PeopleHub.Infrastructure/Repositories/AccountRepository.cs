@@ -41,7 +41,7 @@ internal class AccountRepository(DbClient dbClient) : IAccountRepository
         return ExtractAccount(dataTable);
     }
 
-    public async Task<Account> FindByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<Account> FindByUserIdAsync(long userId, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"SELECT * FROM {DbClient.AccountsTable} WHERE user_id = @userId",

@@ -5,7 +5,7 @@ namespace PeopleHub.Infrastructure.Caching;
 
 public sealed class CachingFeedServiceDecorator(IFeedService underlyingService, IFeedCacheService cacheService) : IFeedService
 {
-    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId, CancellationToken cancellationToken = default)
     {
         var feed = await cacheService.GetFeedAsync(userId);
         if (feed is { Count: > 0 })

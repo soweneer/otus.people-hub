@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Services;
@@ -10,21 +11,21 @@ namespace PeopleHub.Controllers;
 [Route("api/profile")]
 [Authorize]
 [ApiExplorerSettings(IgnoreApi = true)]
-public sealed class ProfileController(IUserService userService) : ControllerBase
+public sealed class ProfileController : ControllerBase
 {
-    [HttpGet]
-    public async Task<ActionResult<PersonalInfo>> Get()
+    private readonly IUserService _userService;
+    private readonly long _userId;
+
+    public ProfileController(IUserService userService)
     {
-        var userEmail = User.Identity!.Name;
-        return Ok(await userService.GetProfileAsync(userEmail, HttpContext.RequestAborted));
+        _userService = userService;
+        _userId = int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     }
+
+    [HttpGet]
+    public async Task<ActionResult<PersonalInfo>> Get() => Ok(await _userService.GetProfileAsync(_userId, HttpContext.RequestAborted));
 
     [HttpPut]
-    public async Task<ActionResult<PersonalInfo>> Update([FromBody] UpdateMyProfileRequest request)
-    {
-        var userEmail = User.Identity!.Name;
-        var updated = await userService.UpdateProfileAsync(userEmail, request.ExtractPersonalInfo(), HttpContext.RequestAborted);
-
-        return Ok(updated);
-    }
+    public async Task<ActionResult<PersonalInfo>> Update([FromBody] UpdateMyProfileRequest request) => 
+        Ok(await _userService.UpdateProfileAsync(_userId, request.ExtractPersonalInfo(), HttpContext.RequestAborted));
 }

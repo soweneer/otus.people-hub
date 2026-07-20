@@ -44,7 +44,7 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
 
         var affectedRows = 0;
         await dbClient.ExecuteCmdAsync(query,
-            async cmd => affectedRows = await cmd.ExecuteNonQueryAsync(),
+            async cmd => affectedRows = await cmd.ExecuteNonQueryAsync(cancellationToken),
             [
                 ("text", post.Text),
                 ("id", post.Id),
@@ -54,7 +54,7 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
         return affectedRows > 0;
     }
 
-    public async Task<bool> DeleteAsync(long id, int authorUserId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(long id, long authorUserId, CancellationToken cancellationToken = default)
     {
         const string query =
             $"DELETE FROM {DbClient.PostsTable} " +
@@ -62,7 +62,7 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
 
         var affectedRows = 0;
         await dbClient.ExecuteCmdAsync(query,
-            async cmd => affectedRows = await cmd.ExecuteNonQueryAsync(),
+            async cmd => affectedRows = await cmd.ExecuteNonQueryAsync(cancellationToken),
             [
                 ("id", id),
                 ("authorUserId", authorUserId)

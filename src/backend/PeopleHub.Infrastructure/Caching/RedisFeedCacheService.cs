@@ -8,11 +8,11 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
 {
     private const int FeedCapacity = 1000;
     private const string KeyPrefix = "feed";
-    private static string RedisKeyFor(int userId) => $"{KeyPrefix}:{userId}";
+    private static string RedisKeyFor(long userId) => $"{KeyPrefix}:{userId}";
     
     private readonly IDatabase _db = redis.GetDatabase();
 
-    public async Task PushFeedAsync(int userId, IReadOnlyCollection<FeedPost> feedPosts)
+    public async Task PushFeedAsync(long userId, IReadOnlyCollection<FeedPost> feedPosts)
     {
         var redisValues = feedPosts
             .Select(post => new RedisValue(JsonSerializer.Serialize(post)))
@@ -25,7 +25,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
         await tran.ExecuteAsync();
     }
 
-    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(int userId)
+    public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId)
     {
         var cachedFeed = await _db.ListRangeAsync(RedisKeyFor(userId));
         

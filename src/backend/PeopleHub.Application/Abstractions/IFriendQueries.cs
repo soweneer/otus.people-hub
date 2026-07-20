@@ -4,5 +4,5 @@ namespace PeopleHub.Application.Abstractions;
 
 public interface IFriendQueries
 {
-    Task<FriendsInfo> GetFriendsAsync(int userId, CancellationToken cancellationToken = default);
+    Task<FriendsInfo> GetFriendsAsync(long userId, CancellationToken cancellationToken = default);
 }

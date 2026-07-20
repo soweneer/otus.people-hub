@@ -10,5 +10,5 @@ public interface IPostRepository
 
     Task<bool> UpdateAsync(Post post, CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(long id, int authorUserId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(long id, long authorUserId, CancellationToken cancellationToken = default);
 }

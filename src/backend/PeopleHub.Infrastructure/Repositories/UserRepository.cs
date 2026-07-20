@@ -1,6 +1,4 @@
-using System.Data;
 using PeopleHub.Domain.Entities;
-using PeopleHub.Domain.Exceptions;
 using PeopleHub.Domain.Model;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Db;
@@ -9,34 +7,7 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class UserRepository(DbClient dbClient) : IUserRepository
 {
-    public async Task<int> GetUserIdAsync(string email, CancellationToken cancellationToken = default)
-    {
-        const string query =
-            $"""
-                SELECT u.id
-                FROM
-                  {DbClient.AccountsTable} a
-                  LEFT JOIN {DbClient.UsersTable} u ON a.user_id = u.id
-                WHERE
-                  a.email = @email
-            """;
-
-        var dataTable = new DataTable();
-        await dbClient.ExecuteCmdAsync(query,
-            async cmd =>
-            {
-                await using var dataReader = await cmd.ExecuteReaderAsync();
-                dataTable.Load(dataReader);
-            },
-            [("email", email)],
-            readOnly: true);
-
-        return dataTable.Rows.Count == 0
-            ? throw new UnknownUserException(email)
-            : Convert.ToInt32(dataTable.Rows[0]["id"]);
-    }
-
-    public async Task<User?> GetAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<User?> GetAsync(long id, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"select * from {DbClient.UsersTable} where id = @id",
@@ -90,7 +61,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             $"UPDATE {DbClient.UsersTable} " +
                  "SET surname = @surname, name = @name, age = @age, bio = @bio, city = @city, gender = @gender " +
                  "WHERE id = @userId",
-            async cmd => await cmd.ExecuteNonQueryAsync(),
+            async cmd => await cmd.ExecuteNonQueryAsync(cancellationToken),
             [
                 ("surname", surname),
                 ("name", name),

@@ -8,7 +8,7 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestRepository
 {
-    public async Task<FriendRequest> GetAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<FriendRequest> GetAsync(long id, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"select * from {DbClient.FriendsRequestsTable} where id = @id",
@@ -19,7 +19,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
             : ExtractFriendRequest(dataTable.Rows[0]);
     }
 
-    public async Task<FriendRequest> FindBetweenAsync(int userId, int otherUserId, CancellationToken cancellationToken = default)
+    public async Task<FriendRequest> FindBetweenAsync(long userId, long otherUserId, CancellationToken cancellationToken = default)
     {
         var dataTable = await dbClient.ExecuteDataTableAsync(
             $"select * from {DbClient.FriendsRequestsTable} " +
@@ -53,7 +53,7 @@ internal class FriendRequestRepository(DbClient dbClient) : IFriendRequestReposi
                 ("status", (int)request.Status)
             ]);
 
-    public Task DeleteBetweenAsync(int userId, int otherUserId, CancellationToken cancellationToken = default) =>
+    public Task DeleteBetweenAsync(long userId, long otherUserId, CancellationToken cancellationToken = default) =>
         dbClient.ExecuteNonQuery(
             $"delete from {DbClient.FriendsRequestsTable} " +
             "where (sender_user_id = @userId and receiver_user_id = @otherUserId) " +

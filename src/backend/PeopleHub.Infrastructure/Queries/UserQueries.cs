@@ -53,7 +53,7 @@ internal sealed class UserQueries(DbClient dbClient) : IUserQueries
             .ToArray();
     }
 
-    public async Task<IReadOnlyCollection<UserInfo>> SearchWithFriendStatusAsync(int viewerUserId, SearchFilter filter,
+    public async Task<IReadOnlyCollection<UserInfo>> SearchWithFriendStatusAsync(long viewerUserId, SearchFilter filter,
         CancellationToken cancellationToken = default)
     {
         var (firstName, lastName, skip, take) = filter;
@@ -110,7 +110,7 @@ internal sealed class UserQueries(DbClient dbClient) : IUserQueries
             .ToArray();
     }
 
-    public async Task<FriendInfo> GetWithFriendStatusAsync(int userId, int viewerUserId, CancellationToken cancellationToken = default)
+    public async Task<FriendInfo> GetWithFriendStatusAsync(long userId, long viewerUserId, CancellationToken cancellationToken = default)
     {
         var query = $"""
             select
