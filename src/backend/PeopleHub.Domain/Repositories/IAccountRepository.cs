@@ -5,7 +5,7 @@ namespace PeopleHub.Domain.Repositories;
 
 public interface IAccountRepository
 {
-    Task<int> CreateAsync(Account account, CancellationToken cancellationToken = default);
+    Task<long> CreateAsync(Account account, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsAsync(Email email, CancellationToken cancellationToken = default);
 

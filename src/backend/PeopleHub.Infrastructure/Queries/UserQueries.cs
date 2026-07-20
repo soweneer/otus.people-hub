@@ -45,7 +45,7 @@ internal sealed class UserQueries(DbClient dbClient) : IUserQueries
 
         return dataTable.Rows.Cast<DataRow>()
             .Select(row => new SearchedUser(
-                Convert.ToInt32(row["id"]),
+                Convert.ToInt64(row["id"]),
                 row["name"].ToString(),
                 row["surname"].ToString(),
                 row["city"].ToString(),
@@ -101,7 +101,7 @@ internal sealed class UserQueries(DbClient dbClient) : IUserQueries
         return dataTable.Rows.Cast<DataRow>()
             .Select(row => new UserInfo(
                 new UserLite(
-                    Convert.ToInt32(row["id"]),
+                    Convert.ToInt64(row["id"]),
                     row["name"].ToString(),
                     Convert.ToInt32(row["age"]),
                     row["city"].ToString()
@@ -135,7 +135,7 @@ internal sealed class UserQueries(DbClient dbClient) : IUserQueries
 
         var row = dataTable.Rows[0];
         return new FriendInfo(
-            Convert.ToInt32(row["id"]),
+            Convert.ToInt64(row["id"]),
             row["name"].ToString(),
             row["surname"].ToString(),
             Convert.ToInt32(row["age"]),

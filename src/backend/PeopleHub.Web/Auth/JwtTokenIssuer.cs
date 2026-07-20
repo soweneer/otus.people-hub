@@ -16,7 +16,7 @@ public class JwtOptions
 
 public sealed class JwtTokenIssuer(IOptions<JwtOptions> options)
 {
-    public string CreateToken(string email, int userId)
+    public string CreateToken(string email, long userId)
     {
         var jwt = options.Value;
         var credentials = new SigningCredentials(

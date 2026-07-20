@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Services;
@@ -13,7 +12,7 @@ namespace PeopleHub.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class ProfileController(IUserService userService) : ControllerBase
 {
-    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private long UserId => User.GetUserId();
 
     [HttpGet]
     public async Task<ActionResult<PersonalInfo>> Get() => Ok(await userService.GetProfileAsync(UserId, HttpContext.RequestAborted));

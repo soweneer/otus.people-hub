@@ -1,9 +1,9 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
 using PeopleHub.Domain.Model;
+using PeopleHub.Extensions;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers;
@@ -11,7 +11,7 @@ namespace PeopleHub.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class UsersController(IUserService userService) : ControllerBase
 {
-    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private long UserId => User.GetUserId();
 
     [HttpGet("/api/users")]
     [Authorize]
@@ -32,9 +32,9 @@ public sealed class UsersController(IUserService userService) : ControllerBase
         return Ok(users);
     }
 
-    [HttpGet("/api/users/{id:int}")]
+    [HttpGet("/api/users/{id:long}")]
     [Authorize]
-    public async Task<ActionResult<FriendInfo>> GetById(int id)
+    public async Task<ActionResult<FriendInfo>> GetById(long id)
     {
         var user = await userService.GetWithFriendStatusAsync(UserId, id, HttpContext.RequestAborted);
 
@@ -97,13 +97,13 @@ public sealed class UsersController(IUserService userService) : ControllerBase
             : Results.Json(new RegisterUserResponse(userId.Value.ToString()));
     }
 
-    [HttpGet("/api/user/{id:int}")]
+    [HttpGet("/api/user/{id:long}")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IResult> GetByIdAnonymous(int id)
+    public async Task<IResult> GetByIdAnonymous(long id)
     {
         var user = await userService.GetAsync(id, HttpContext.RequestAborted);
 

@@ -1,12 +1,12 @@
 ﻿using System.Text.Json;
 using PeopleHub.Application.Models;
+using PeopleHub.Application.Services;
 using StackExchange.Redis;
 
 namespace PeopleHub.Infrastructure.Caching;
 
 public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheService
 {
-    private const int FeedCapacity = 1000;
     private const string KeyPrefix = "feed";
     private static string RedisKeyFor(long userId) => $"{KeyPrefix}:{userId}";
     
@@ -21,7 +21,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
 
         var tran = _db.CreateTransaction();
         _ = tran.ListLeftPushAsync(redisKey, redisValues);
-        _  = tran.ListTrimAsync(redisKey, 0, FeedCapacity - 1);
+        _  = tran.ListTrimAsync(redisKey, 0, IFeedService.FeedCapacity - 1);
         await tran.ExecuteAsync();
     }
 

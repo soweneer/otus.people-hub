@@ -250,12 +250,13 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         return scalar;
     }
 
-    public async Task<DataTable> ExecuteDataTableAsync(string query, IEnumerable<(string, object)> parameters = null)
+    public async Task<DataTable> ExecuteDataTableAsync(string query, IEnumerable<(string, object)> parameters = null,
+        CancellationToken cancellationToken = default)
     {
         var dataTable = new DataTable();
         await ExecuteCmdAsync(query, async cmd =>
         {
-            var dataReader = await cmd.ExecuteReaderAsync();
+            var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
             dataTable.Load(dataReader);
         }, parameters, readOnly: true);
 

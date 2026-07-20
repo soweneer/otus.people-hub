@@ -36,12 +36,12 @@ internal sealed class FriendQueries(DbClient dbClient) : IFriendQueries
             var status = (FriendRequestStatus)Convert.ToInt32(row["status"]);
             var friend = new FriendInfoLite(
                 new UserLite(
-                    Convert.ToInt32(row["id"]),
+                    Convert.ToInt64(row["id"]),
                     $"{row["surname"]} {row["name"]}",
                     Convert.ToInt32(row["age"]),
                     row["city"].ToString()
                 ),
-                Convert.ToInt32(row["request_id"]));
+                Convert.ToInt64(row["request_id"]));
 
             if (status is FriendRequestStatus.Approved)
             {

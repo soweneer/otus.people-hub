@@ -10,4 +10,4 @@ public sealed record MeResponse(
     [property: JsonPropertyName("email")] string Email = null);
 
 public sealed record SendFriendRequestBody(
-    [property: JsonPropertyName("targetUserId")] int TargetUserId);
+    [property: JsonPropertyName("targetUserId")] long TargetUserId);

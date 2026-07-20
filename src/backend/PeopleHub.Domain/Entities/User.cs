@@ -3,7 +3,7 @@ using PeopleHub.Domain.Model;
 
 namespace PeopleHub.Domain.Entities;
 
-public sealed class User(int id, PersonalInfo personalInfo)
+public sealed class User(long id, PersonalInfo personalInfo)
 {
     public long Id { get; } = id;
     public PersonalInfo PersonalInfo { get; private set; } = personalInfo;
@@ -11,7 +11,7 @@ public sealed class User(int id, PersonalInfo personalInfo)
     public static User Create(PersonalInfo personalInfo) =>
         new(0, Validate(personalInfo));
 
-    public static User Restore(int id, PersonalInfo personalInfo) =>
+    public static User Restore(long id, PersonalInfo personalInfo) =>
         new(id, personalInfo);
 
     public void UpdatePersonalInfo(PersonalInfo personalInfo) =>

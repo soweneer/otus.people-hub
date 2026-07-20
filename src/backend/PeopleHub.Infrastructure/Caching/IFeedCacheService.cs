@@ -1,4 +1,4 @@
-﻿using PeopleHub.Application.Models;
+using PeopleHub.Application.Models;
 
 namespace PeopleHub.Infrastructure.Caching;
 

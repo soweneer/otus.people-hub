@@ -61,7 +61,7 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
         return NoContent();
     }
     
-    private async Task Authenticate(string email, int userId)
+    private async Task Authenticate(string email, long userId)
     {
         var claims = new List<Claim>
         {
@@ -83,7 +83,7 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IResult> Login([FromBody] LoginRequest request)
     {
-        if (!int.TryParse(request?.Id, out var userId))
+        if (!long.TryParse(request?.Id, out var userId))
         {
             return Results.BadRequest("Параметр id обязателен и должен быть числом");
         }

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PeopleHub.Auth;
 
@@ -28,9 +29,28 @@ public static class ServiceCollectionExtension
                         ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
                         return Task.CompletedTask;
                     };
+                    opt.Events.OnValidatePrincipal = ctx =>
+                    {
+                        if (!ctx.Principal.HasUserId())
+                        {
+                            ctx.RejectPrincipal();
+                        }
+                        return Task.CompletedTask;
+                    };
                 })
                 .AddJwtBearer(opt =>
                 {
+                    opt.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = ctx =>
+                        {
+                            if (!ctx.Principal.HasUserId())
+                            {
+                                ctx.Fail("В токене отсутствует идентификатор пользователя");
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
                     opt.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,

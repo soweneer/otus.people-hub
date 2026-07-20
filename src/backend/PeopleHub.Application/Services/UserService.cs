@@ -21,7 +21,7 @@ public class UserService(IUserRepository userRepository, IUserQueries userQuerie
     public async Task<PersonalInfo?> GetAsync(long id, CancellationToken cancellationToken = default) =>
         (await userRepository.GetAsync(id, cancellationToken))?.PersonalInfo;
 
-    public Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
+    public Task<long?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default) =>
         userRepository.CreateAsync(User.Create(personalInfo), cancellationToken);
 
     public async Task<PersonalInfo> GetProfileAsync(long userId, CancellationToken cancellationToken = default)

@@ -1,9 +1,9 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Services;
+using PeopleHub.Extensions;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers;
@@ -11,7 +11,7 @@ namespace PeopleHub.Controllers;
 [Authorize(AuthenticationSchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}")]
 public sealed class PostController : ControllerBase
 {
-    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private long UserId => User.GetUserId();
 
     [HttpPost("/api/post/create")]
     [ApiExplorerSettings(IgnoreApi = false)]

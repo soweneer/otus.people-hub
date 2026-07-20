@@ -20,7 +20,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
 
         var dataRow = dataTable.Rows[0];
         return User.Restore(
-            Convert.ToInt32(dataRow["id"]),
+            Convert.ToInt64(dataRow["id"]),
             new PersonalInfo(
                 dataRow["name"].ToString(),
                 dataRow["surname"].ToString(),
@@ -31,7 +31,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
             ));
     }
 
-    public async Task<int?> CreateAsync(User user, CancellationToken cancellationToken = default)
+    public async Task<long?> CreateAsync(User user, CancellationToken cancellationToken = default)
     {
         var (name, surname, age, city, bio, gender) = user.PersonalInfo;
 
@@ -50,7 +50,7 @@ internal class UserRepository(DbClient dbClient) : IUserRepository
 
         return userId is null or DBNull
             ? null
-            : Convert.ToInt32(userId);
+            : Convert.ToInt64(userId);
     }
 
     public async Task UpdateAsync(User user, CancellationToken cancellationToken = default)

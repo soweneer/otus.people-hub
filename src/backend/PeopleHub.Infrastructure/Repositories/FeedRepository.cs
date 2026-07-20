@@ -8,7 +8,8 @@ namespace PeopleHub.Infrastructure.Repositories;
 
 internal sealed class FeedRepository(DbClient dbClient) : IFeedRepository
 {
-    public async Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(long userId, int offset, int limit)
+    public async Task<IReadOnlyCollection<Post>> GetFriendsFeedAsync(long userId, int offset, int limit,
+        CancellationToken cancellationToken = default)
     {
         var query = $"""
                      select p.id, p.text, p.author_user_id
@@ -30,7 +31,7 @@ internal sealed class FeedRepository(DbClient dbClient) : IFeedRepository
         [
             ("userId", userId),
             ("approvedStatus", (int)FriendRequestStatus.Approved)
-        ]);
+        ], cancellationToken);
 
         if (dataTable is null || dataTable.Rows.Count == 0)
         {

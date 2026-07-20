@@ -11,7 +11,7 @@ public sealed class Post(long id, string text, long authorUserId)
     public static Post Create(long authorUserId, string text) =>
         new(0, ValidateText(text), authorUserId);
 
-    public static Post Restore(long id, int authorUserId, string text) =>
+    public static Post Restore(long id, long authorUserId, string text) =>
         new(id, text, authorUserId);
 
     public bool IsAuthoredBy(long userId) => userId == AuthorUserId;

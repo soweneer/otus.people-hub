@@ -1,6 +1,6 @@
 namespace PeopleHub.Application.Models;
 
-public sealed record FriendInfoLite(UserLite User, int FriendRequestId);
+public sealed record FriendInfoLite(UserLite User, long FriendRequestId);
 
 public sealed record FriendsInfo(
     IReadOnlyCollection<FriendInfoLite> Friends,

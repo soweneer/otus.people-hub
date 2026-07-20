@@ -74,7 +74,7 @@ internal class PostRepository(DbClient dbClient) : IPostRepository
     private static Post ExtractPost(DataRow row) =>
         Post.Restore(
             Convert.ToInt64(row["id"]),
-            Convert.ToInt32(row["author_user_id"]),
+            Convert.ToInt64(row["author_user_id"]),
             row["text"].ToString()
         );
 }

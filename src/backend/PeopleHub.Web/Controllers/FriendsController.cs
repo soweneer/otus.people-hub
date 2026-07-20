@@ -1,10 +1,10 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
+using PeopleHub.Extensions;
 using PeopleHub.Model;
 
 namespace PeopleHub.Controllers;
@@ -13,7 +13,7 @@ namespace PeopleHub.Controllers;
 public sealed class FriendsController(IFriendRequestService friendRequestService) : ControllerBase
 {
     private const string AnySchemes = $"{CookieAuthenticationDefaults.AuthenticationScheme},{JwtBearerDefaults.AuthenticationScheme}";
-    private long UserId => int.Parse(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private long UserId => User.GetUserId();
 
     [HttpGet("/api/friends")]
     [Authorize]
@@ -29,7 +29,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
         return NoContent();
     }
 
-    [HttpDelete("/api/friends/{userId:int}")]
+    [HttpDelete("/api/friends/{userId:long}")]
     [Authorize]
     public async Task<IActionResult> Cancel(long userId)
     {
@@ -38,7 +38,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
         return NoContent();
     }
 
-    [HttpPost("/api/friends/requests/{requestId:int}/approve")]
+    [HttpPost("/api/friends/requests/{requestId:long}/approve")]
     [Authorize]
     public async Task<IActionResult> Approve(long requestId)
     {
@@ -47,9 +47,9 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
         return NoContent();
     }
 
-    [HttpPost("/api/friends/requests/{requestId:int}/reject")]
+    [HttpPost("/api/friends/requests/{requestId:long}/reject")]
     [Authorize]
-    public async Task<IActionResult> Reject(int requestId)
+    public async Task<IActionResult> Reject(long requestId)
     {
         await friendRequestService.RejectAsync(UserId, requestId, HttpContext.RequestAborted);
 
@@ -65,7 +65,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> SetFriend([FromRoute(Name = "user_id")] string userId)
     {
-        if (!int.TryParse(userId, out var friendUserId))
+        if (!long.TryParse(userId, out var friendUserId))
         {
             return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
         }
@@ -89,7 +89,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> DeleteFriend([FromRoute(Name = "user_id")] string userId)
     {
-        if (!int.TryParse(userId, out var friendUserId))
+        if (!long.TryParse(userId, out var friendUserId))
         {
             return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
         }

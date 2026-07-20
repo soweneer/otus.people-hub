@@ -14,7 +14,7 @@ public class AccountService(IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     IUnitOfWork unitOfWork) : IAccountService
 {
-    public async Task<int?> CanLoginAsync(string email, string password, CancellationToken cancellationToken = default)
+    public async Task<long?> CanLoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         if (!Email.TryCreate(email, out var accountEmail))
         {
@@ -28,7 +28,7 @@ public class AccountService(IUserRepository userRepository,
             : null;
     }
 
-    public async Task<LoginByIdResult> LoginByUserIdAsync(int userId, string password, CancellationToken cancellationToken = default)
+    public async Task<LoginByIdResult> LoginByUserIdAsync(long userId, string password, CancellationToken cancellationToken = default)
     {
         var account = await accountRepository.FindByUserIdAsync(userId, cancellationToken);
         if (account is null)
@@ -41,7 +41,7 @@ public class AccountService(IUserRepository userRepository,
             : LoginByIdResult.InvalidPassword;
     }
 
-    public async Task<int?> SignUpAsync(string email, string password, PersonalInfo personalInfo,
+    public async Task<long?> SignUpAsync(string email, string password, PersonalInfo personalInfo,
         CancellationToken cancellationToken = default)
     {
         if (!Email.TryCreate(email, out var accountEmail) ||
@@ -52,7 +52,7 @@ public class AccountService(IUserRepository userRepository,
 
         var passwordHash = new PasswordHash(passwordHasher.Hash(password));
 
-        return await unitOfWork.ExecuteAsync(async () =>
+        return await unitOfWork.ExecuteAsync(async Task<long?> () =>
         {
             var userId = await userRepository.CreateAsync(User.Create(personalInfo), cancellationToken);
             if (userId is null)

@@ -1,3 +1,3 @@
 namespace PeopleHub.Application.Models;
 
-public sealed record UserLite(int Id, string Name, int Age, string City);
+public sealed record UserLite(long Id, string Name, int Age, string City);

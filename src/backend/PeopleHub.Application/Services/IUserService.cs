@@ -13,7 +13,7 @@ public interface IUserService
 
     Task<PersonalInfo?> GetAsync(long id, CancellationToken cancellationToken = default);
 
-    Task<int?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default);
+    Task<long?> CreateAsync(PersonalInfo personalInfo, CancellationToken cancellationToken = default);
 
     Task<PersonalInfo> GetProfileAsync(long userId, CancellationToken cancellationToken = default);
 

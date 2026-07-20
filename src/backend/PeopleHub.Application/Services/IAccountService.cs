@@ -5,9 +5,9 @@ namespace PeopleHub.Application.Services;
 
 public interface IAccountService
 {
-    Task<int?> CanLoginAsync(string email, string password, CancellationToken cancellationToken = default);
+    Task<long?> CanLoginAsync(string email, string password, CancellationToken cancellationToken = default);
 
-    Task<LoginByIdResult> LoginByUserIdAsync(int userId, string password, CancellationToken cancellationToken = default);
+    Task<LoginByIdResult> LoginByUserIdAsync(long userId, string password, CancellationToken cancellationToken = default);
 
-    Task<int?> SignUpAsync(string email, string password, PersonalInfo personalInfo, CancellationToken cancellationToken = default);
+    Task<long?> SignUpAsync(string email, string password, PersonalInfo personalInfo, CancellationToken cancellationToken = default);
 }
