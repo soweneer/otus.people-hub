@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - pg-master-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d people_hub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:8.0-alpine
@@ -18,6 +23,11 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   prometheus:
     image: prom/prometheus:v3.5.0
@@ -27,8 +37,6 @@ services:
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:11.6.0
@@ -45,6 +53,23 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: people-hub-app
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__PostgreSql: "Host=pg-master:5432;Database=people_hub;Username=postgres;Password=postgres;"
+      ConnectionStrings__Redis: "redis:6379"
+      FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
+    depends_on:
+      pg-master:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   pg-master-data:

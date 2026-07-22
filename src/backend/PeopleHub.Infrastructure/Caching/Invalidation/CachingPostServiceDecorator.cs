@@ -3,9 +3,9 @@ using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
 using PeopleHub.Domain.Entities;
 
-namespace PeopleHub.Infrastructure.Caching;
+namespace PeopleHub.Infrastructure.Caching.Invalidation;
 
-public sealed class FeedCacheCorrectingPostServiceDecorator(IPostService underlyingService, FeedCacheCorrectionQueue queue,
+public sealed class CachingPostServiceDecorator(IPostService underlyingService, FeedEventsQueue queue,
     IOptionsMonitor<FeatureFlagsOptions> featureFlags) : IPostService
 {
     private bool CacheEnabled => featureFlags.CurrentValue.UseCacheForFeed;
@@ -16,7 +16,7 @@ public sealed class FeedCacheCorrectingPostServiceDecorator(IPostService underly
         if (CacheEnabled && postId is not null)
         {
             await queue.PublishAsync(
-                new FeedChangeEvent(FeedChangeType.Created, new FeedPost(postId.Value, text, userId)),
+                new FeedEvent(FeedChangeType.Created, new FeedPost(postId.Value, text, userId)),
                 cancellationToken);
         }
 
@@ -32,7 +32,7 @@ public sealed class FeedCacheCorrectingPostServiceDecorator(IPostService underly
         if (CacheEnabled && updated)
         {
             await queue.PublishAsync(
-                new FeedChangeEvent(FeedChangeType.Updated, new FeedPost(postId, text, userId)),
+                new FeedEvent(FeedChangeType.Updated, new FeedPost(postId, text, userId)),
                 cancellationToken);
         }
 
@@ -45,7 +45,7 @@ public sealed class FeedCacheCorrectingPostServiceDecorator(IPostService underly
         if (CacheEnabled && deleted)
         {
             await queue.PublishAsync(
-                new FeedChangeEvent(FeedChangeType.Deleted, new FeedPost(postId, null, userId)),
+                new FeedEvent(FeedChangeType.Deleted, new FeedPost(postId, null, userId)),
                 cancellationToken);
         }
 

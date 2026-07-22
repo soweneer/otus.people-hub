@@ -28,13 +28,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * rate(feed_cache_hits_total[1m]) / (rate(feed_cache_hits_total[1m]) + rate(feed_cache_misses_total[1m]))",
+          "expr": "100 * rate(feed_cache_hits_total[1m]) / (rate(feed_cache_hits_total[1m]) + rate(feed_cache_miss_total[1m]))",
           "legendFormat": "cache hit %",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * rate(feed_cache_misses_total[1m]) / (rate(feed_cache_hits_total[1m]) + rate(feed_cache_misses_total[1m]))",
+          "expr": "100 * rate(feed_cache_miss_total[1m]) / (rate(feed_cache_hits_total[1m]) + rate(feed_cache_miss_total[1m]))",
           "legendFormat": "cache miss %",
           "refId": "B"
         }
@@ -67,13 +67,13 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * feed_cache_hits_total / (feed_cache_hits_total + feed_cache_misses_total)",
+          "expr": "100 * feed_cache_hits_total / (feed_cache_hits_total + feed_cache_miss_total)",
           "legendFormat": "cache hit % (накопительно)",
           "refId": "A"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "100 * feed_cache_misses_total / (feed_cache_hits_total + feed_cache_misses_total)",
+          "expr": "100 * feed_cache_miss_total / (feed_cache_hits_total + feed_cache_miss_total)",
           "legendFormat": "cache miss % (накопительно)",
           "refId": "B"
         }

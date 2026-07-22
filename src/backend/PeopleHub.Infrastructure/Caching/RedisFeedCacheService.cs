@@ -8,7 +8,7 @@ namespace PeopleHub.Infrastructure.Caching;
 public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheService
 {
     private const string KeyPrefix = "feed";
-    private static string RedisKeyFor(long userId) => $"{KeyPrefix}:{userId}";
+    private static string FeedKeyFor(long userId) => $"{KeyPrefix}:{userId}";
     private static RedisValue Serialize(FeedPost post) => new(JsonSerializer.Serialize(post));
     private static FeedPost Deserialize(RedisValue value) => JsonSerializer.Deserialize<FeedPost>(value.ToString());
 
@@ -19,7 +19,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
         var redisValues = feedPosts
             .Select(Serialize)
             .ToArray();
-        var redisKey = RedisKeyFor(userId);
+        var redisKey = FeedKeyFor(userId);
 
         var tran = _db.CreateTransaction();
         _ = tran.KeyDeleteAsync(redisKey);
@@ -30,7 +30,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
 
     public async Task<IReadOnlyCollection<FeedPost>> GetFeedAsync(long userId)
     {
-        var cachedFeed = await _db.ListRangeAsync(RedisKeyFor(userId));
+        var cachedFeed = await _db.ListRangeAsync(FeedKeyFor(userId));
 
         return cachedFeed
             .Select(Deserialize)
@@ -39,7 +39,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
 
     public async Task AddPostAsync(long userId, FeedPost post)
     {
-        var redisKey = RedisKeyFor(userId);
+        var redisKey = FeedKeyFor(userId);
         var length = await _db.ListLeftPushAsync(redisKey, Serialize(post), When.Exists);
         if (length > IFeedService.FeedCapacity)
         {
@@ -49,7 +49,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
 
     public async Task UpdatePostAsync(long userId, FeedPost post)
     {
-        var redisKey = RedisKeyFor(userId);
+        var redisKey = FeedKeyFor(userId);
         var values = await _db.ListRangeAsync(redisKey);
         for (var i = 0; i < values.Length; i++)
         {
@@ -63,7 +63,7 @@ public class RedisFeedCacheService(IConnectionMultiplexer redis) : IFeedCacheSer
 
     public async Task RemovePostAsync(long userId, long postId)
     {
-        var redisKey = RedisKeyFor(userId);
+        var redisKey = FeedKeyFor(userId);
         var values = await _db.ListRangeAsync(redisKey);
         foreach (var value in values)
         {

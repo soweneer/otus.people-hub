@@ -17,11 +17,11 @@ public sealed class CachingFeedServiceDecorator(IFeedService underlyingService, 
         var feed = await cacheService.GetFeedAsync(userId);
         if (feed is { Count: > 0 })
         {
-            FeedCacheMetrics.Hits.Inc();
+            FeedCacheMetrics.HitsCounter.Inc();
             return feed;
         }
 
-        FeedCacheMetrics.Misses.Inc();
+        FeedCacheMetrics.MissCounter.Inc();
         feed = await underlyingService.GetFeedAsync(userId, cancellationToken);
         if (feed is { Count: > 0 })
         {

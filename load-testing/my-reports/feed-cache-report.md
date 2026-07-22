@@ -6,7 +6,7 @@
 - Нагрузка: 100 одновременных VU (constant-vus), 2 минуты, think time 100 мс
 - Пользователи: 10 аккаунтов с лентами 30–39 постов (см. [seed-feed-users.sql](../seed-feed-users.sql)), JWT генерируется в скрипте
 - Проверки: HTTP 200 и размер ленты 30–40 постов
-- Метрики кэша: счётчики Prometheus `feed_cache_hits_total` / `feed_cache_misses_total`, дашборд Grafana «Feed Cache» (http://localhost:3000/d/feed-cache)
+- Метрики кэша: счётчики Prometheus `feed_cache_hits_total` / `feed_cache_miss_total`, дашборд Grafana «Feed Cache» (http://localhost:3000/d/feed-cache)
 
 Перед каждым прогоном Redis очищался (`flushall`). Фичафлаг переключался в `appsettings.Development.json` без рестарта приложения (горячая перезагрузка конфига через IOptionsMonitor).
 
