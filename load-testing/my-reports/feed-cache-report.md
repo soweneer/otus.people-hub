@@ -4,7 +4,7 @@
 
 - Скрипт: [feed.js](../feed.js), k6 v2.1.0
 - Нагрузка: 100 одновременных VU (constant-vus), 2 минуты, think time 100 мс
-- Пользователи: 10 аккаунтов с лентами 30–39 постов (см. [seed-feed-users.sql](../seed-feed-users.sql)), JWT генерируется в скрипте
+- Пользователи: 10 аккаунтов с лентами 30–39 постов (сид в [DbMigrator.cs](../../src/backend/PeopleHub.Infrastructure/Db/DbMigrator.cs)), JWT генерируется в скрипте
 - Проверки: HTTP 200 и размер ленты 30–40 постов
 - Метрики кэша: счётчики Prometheus `feed_cache_hits_total` / `feed_cache_miss_total`, дашборд Grafana «Feed Cache» (http://localhost:3000/d/feed-cache)
 

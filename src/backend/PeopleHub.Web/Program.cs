@@ -1,6 +1,7 @@
 using PeopleHub.Application;
 using PeopleHub.Extensions;
 using PeopleHub.Infrastructure;
+using PeopleHub.Infrastructure.Db;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,13 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddSwagger();
 
 var app = builder.Build();
+
+if (app.Configuration.GetValue<bool>("RunMigrationsOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<IDbMigrator>().MigrateAsync();
+}
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();

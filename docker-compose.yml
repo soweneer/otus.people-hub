@@ -65,11 +65,16 @@ services:
       ConnectionStrings__PostgreSql: "Host=pg-master:5432;Database=people_hub;Username=postgres;Password=postgres;"
       ConnectionStrings__Redis: "redis:6379"
       FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
+      RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
     depends_on:
       pg-master:
         condition: service_healthy
       redis:
         condition: service_healthy
+      prometheus:
+        condition: service_started
+      grafana:
+        condition: service_started
 
 volumes:
   pg-master-data:

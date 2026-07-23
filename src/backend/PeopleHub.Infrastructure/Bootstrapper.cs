@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -52,7 +51,9 @@ public static class Bootstrapper
         {
             services.Decorate<IFeedService, CachingFeedServiceDecorator>();
             services.Decorate<IPostService, CachingPostServiceDecorator>();
-            services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+            var redisOptions = ConfigurationOptions.Parse(configuration.GetConnectionString("Redis")!);
+            redisOptions.AbortOnConnectFail = false;
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
             services.AddScoped<IFeedCacheService, RedisFeedCacheService>();
             services.AddSingleton<FeedEventsQueue>();
             services.AddHostedService<FeedEventsQueueWorker>();
