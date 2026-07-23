@@ -24,31 +24,25 @@ internal sealed class DbMigrator(DbClient dbClient, IOptions<CitusOptions> citus
     {
         var citus = citusOptions.Value;
 
-        if (citus.Enabled)
+        await dbClient.ExecuteNonQueryAsync("create extension if not exists citus;", cancellationToken: cancellationToken);
+
+        await dbClient.ExecuteNonQueryAsync(
+            $"select citus_set_coordinator_host('{citus.CoordinatorHost}', {citus.CoordinatorPort});",
+            cancellationToken: cancellationToken);
+
+        foreach (var worker in citus.Workers)
         {
-            await dbClient.ExecuteNonQueryAsync("create extension if not exists citus;", cancellationToken: cancellationToken);
-
             await dbClient.ExecuteNonQueryAsync(
-                $"select citus_set_coordinator_host('{citus.CoordinatorHost}', {citus.CoordinatorPort});",
+                $"select citus_add_node('{worker.Host}', {worker.Port}) " +
+                $"where not exists (select 1 from pg_dist_node where nodename = '{worker.Host}' and nodeport = {worker.Port});",
                 cancellationToken: cancellationToken);
-
-            foreach (var worker in citus.Workers)
-            {
-                await dbClient.ExecuteNonQueryAsync(
-                    $"select citus_add_node('{worker.Host}', {worker.Port}) " +
-                    $"where not exists (select 1 from pg_dist_node where nodename = '{worker.Host}' and nodeport = {worker.Port});",
-                    cancellationToken: cancellationToken);
-            }
         }
 
         await dbClient.ExecuteNonQueryAsync(CreateTableSql, cancellationToken: cancellationToken);
 
-        if (citus.Enabled)
-        {
-            await dbClient.ExecuteNonQueryAsync(
-                $"select create_distributed_table('{DbClient.DialogsTable}', 'chat_key', shard_count => {citus.ShardCount}) " +
-                $"where not exists (select 1 from pg_dist_partition where logicalrelid = '{DbClient.DialogsTable}'::regclass);",
-                cancellationToken: cancellationToken);
-        }
+        await dbClient.ExecuteNonQueryAsync(
+            $"select create_distributed_table('{DbClient.DialogsTable}', 'chat_key', shard_count => {citus.ShardCount}) " +
+            $"where not exists (select 1 from pg_dist_partition where logicalrelid = '{DbClient.DialogsTable}'::regclass);",
+            cancellationToken: cancellationToken);
     }
 }
