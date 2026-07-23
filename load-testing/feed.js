@@ -54,7 +54,7 @@ const tokens = feedUsers.map(makeToken);
 export default function () {
   const token = tokens[(__VU - 1) % tokens.length];
 
-  const res = http.get(`${BASE_URL}/api/post/feed`, {
+  const res = http.get(`${BASE_URL}/post/feed`, {
     headers: { Authorization: `Bearer ${token}` },
     tags: { name: 'post/feed' },
     timeout: '10s',

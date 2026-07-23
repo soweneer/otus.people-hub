@@ -13,7 +13,7 @@ public sealed class PostController : ControllerBase
 {
     private long UserId => User.GetUserId();
 
-    [HttpPost("/api/post/create")]
+    [HttpPost("/post/create")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
@@ -38,7 +38,7 @@ public sealed class PostController : ControllerBase
             : Results.Json(postId.Value.ToString());
     }
 
-    [HttpPut("/api/post/update")]
+    [HttpPut("/post/update")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -70,7 +70,7 @@ public sealed class PostController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("/api/post/delete/{id}")]
+    [HttpPut("/post/delete/{id}")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -93,7 +93,7 @@ public sealed class PostController : ControllerBase
             : Results.BadRequest($"Пост [{id}] не найден или принадлежит другому пользователю");
     }
 
-    [HttpGet("/api/post/get/{id}")]
+    [HttpGet("/post/get/{id}")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
@@ -114,7 +114,7 @@ public sealed class PostController : ControllerBase
             : Results.Json(new PostResponse(post.Id.ToString(), post.Text, post.AuthorUserId.ToString()));
     }
 
-    [HttpGet("/api/post/feed")]
+    [HttpGet("/post/feed")]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
     [ProducesResponseType(typeof(PostResponse[]), StatusCodes.Status200OK)]

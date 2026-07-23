@@ -81,7 +81,7 @@ public static class ServiceCollectionExtension
                     Type = Microsoft.OpenApi.SecuritySchemeType.Http,
                     Scheme = "bearer",
                     BearerFormat = "JWT",
-                    Description = "JWT-токен из POST /api/login (без префикса 'Bearer ')"
+                    Description = "JWT-токен из POST /login (без префикса 'Bearer ')"
                 });
                 options.AddSecurityRequirement(document => new Microsoft.OpenApi.OpenApiSecurityRequirement
                 {

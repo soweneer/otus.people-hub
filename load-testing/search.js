@@ -47,7 +47,7 @@ export default function () {
       skip = 0;
     }
 
-    const url = `${BASE_URL}/api/user/search` +
+    const url = `${BASE_URL}/user/search` +
       `?first_name=${encodeURIComponent(firstName)}` +
       `&last_name=${encodeURIComponent(lastName)}` +
       `&skip=${skip}` +
@@ -68,7 +68,7 @@ export default function () {
 
   for (let i = 0; i < idsPerIteration && ids.length > 0; i++) {
     const id = ids[Math.floor(Math.random() * ids.length)];
-    const res = http.get(`${BASE_URL}/api/user/${id}`, { tags: { name: 'user/{id}' } });
+    const res = http.get(`${BASE_URL}/user/${id}`, { tags: { name: 'user/{id}' } });
     check(res, { 'get by id ok': (r) => r.status === 200 });
     sleep(thinkDelay);
   }

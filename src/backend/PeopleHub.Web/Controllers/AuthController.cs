@@ -74,7 +74,7 @@ public sealed class AuthController(IAccountService accountService, JwtTokenIssue
     }
 
     // auth for swagger, postman and k6
-    [HttpPost("/api/login")]
+    [HttpPost("/login")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]

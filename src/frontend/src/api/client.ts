@@ -123,7 +123,7 @@ export const dialogApi = {
 
 export const feedApi = {
   get: async (): Promise<FeedPost[]> => {
-    const posts = await request<PostFeedItemResponse[]>('/api/post/feed', {}, { notifyUnauthorized: false });
+    const posts = await request<PostFeedItemResponse[]>('/post/feed', {}, { notifyUnauthorized: false });
     return posts.map((p) => ({
       id: Number(p.id),
       text: p.text,

@@ -28,7 +28,7 @@ export default function () {
     gender: 0,
   });
 
-  const res = http.post(`${BASE_URL}/api/user/register`, payload, {
+  const res = http.post(`${BASE_URL}/user/register`, payload, {
     headers: { 'Content-Type': 'application/json' },
     tags: { name: 'user/register' },
     timeout: '10s',

@@ -43,7 +43,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
             : Ok(user);
     }
 
-    [HttpGet("/api/user/search")]
+    [HttpGet("/user/search")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
@@ -69,7 +69,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
             .ToArray());
     }
 
-    [HttpPost("/api/user/register")]
+    [HttpPost("/user/register")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
@@ -97,7 +97,7 @@ public sealed class UsersController(IUserService userService) : ControllerBase
             : Results.Json(new RegisterUserResponse(userId.Value.ToString()));
     }
 
-    [HttpGet("/api/user/{id:long}")]
+    [HttpGet("/user/{id:long}")]
     [AllowAnonymous]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]

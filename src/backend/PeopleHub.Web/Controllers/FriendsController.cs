@@ -56,7 +56,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
         return NoContent();
     }
 
-    [HttpPut("/api/friend/set/{user_id}")]
+    [HttpPut("/friend/set/{user_id}")]
     [Authorize(AuthenticationSchemes = AnySchemes)]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
@@ -80,7 +80,7 @@ public sealed class FriendsController(IFriendRequestService friendRequestService
             : Results.BadRequest($"Пользователь [{userId}] не найден или является текущим пользователем");
     }
 
-    [HttpPut("/api/friend/delete/{user_id}")]
+    [HttpPut("/friend/delete/{user_id}")]
     [Authorize(AuthenticationSchemes = AnySchemes)]
     [ApiExplorerSettings(IgnoreApi = false)]
     [Produces("application/json")]
