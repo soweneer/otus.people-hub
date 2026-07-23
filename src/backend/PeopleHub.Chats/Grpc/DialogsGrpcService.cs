@@ -9,7 +9,7 @@ internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs
     {
         var messageId = await dialogService.SendAsync(request.FromUserId, request.ToUserId, request.Text, context.CancellationToken);
 
-        return new SendResponse { MessageId = messageId ?? 0 };
+        return new SendResponse { MessageId = messageId.ToString() };
     }
 
     public override async Task<ListResponse> List(ListRequest request, ServerCallContext context)

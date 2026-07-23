@@ -5,8 +5,13 @@ namespace PeopleHub.Chats.Services;
 
 internal sealed class DialogService(IDialogRepository dialogRepository) : IDialogService
 {
-    public Task<long?> SendAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default) =>
-        dialogRepository.AddAsync(DialogMessage.Create(fromUserId, toUserId, text), cancellationToken);
+    public async Task<Guid> SendAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default)
+    {
+        var message = DialogMessage.Create(fromUserId, toUserId, text);
+        await dialogRepository.AddAsync(message, cancellationToken);
+
+        return message.Id;
+    }
 
     public Task<IReadOnlyCollection<DialogMessage>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default) =>
         dialogRepository.GetDialogAsync(userId1, userId2, cancellationToken);

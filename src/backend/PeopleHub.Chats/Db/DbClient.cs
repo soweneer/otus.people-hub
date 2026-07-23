@@ -31,11 +31,12 @@ internal sealed class DbClient(NpgsqlDataSource dataSource)
         return dataTable;
     }
 
-    public async Task ExecuteNonQueryAsync(string query, CancellationToken cancellationToken = default)
+    public async Task ExecuteNonQueryAsync(string query, IEnumerable<(string, object)> parameters = null,
+        CancellationToken cancellationToken = default)
     {
         await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
         await using var cmd = connection.CreateCommand();
-        cmd.CommandText = query;
+        FillCommand(cmd, query, parameters);
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
     }

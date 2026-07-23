@@ -7,13 +7,13 @@ namespace PeopleHub.Dialogs;
 
 internal sealed class ChatsDialogGateway(ChatsDialogs.DialogsClient client, IUserRepository userRepository) : IDialogGateway
 {
-    public async Task<long?> SendAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default)
+    public async Task<bool> SendAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default)
     {
         var response = await client.SendAsync(
             new SendRequest { FromUserId = fromUserId, ToUserId = toUserId, Text = text },
             cancellationToken: cancellationToken);
 
-        return response.MessageId == 0 ? null : response.MessageId;
+        return !string.IsNullOrEmpty(response.MessageId);
     }
 
     public async Task<IReadOnlyCollection<DialogMessageResponse>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default)

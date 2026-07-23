@@ -34,11 +34,11 @@ public sealed class DialogController : ControllerBase
             return Results.BadRequest("Параметр text обязателен");
         }
 
-        var messageId = await dialogGateway.SendAsync(UserId, toUserId, request.Text.Trim(), HttpContext.RequestAborted);
+        var sent = await dialogGateway.SendAsync(UserId, toUserId, request.Text.Trim(), HttpContext.RequestAborted);
 
-        return messageId is null
-            ? Results.Problem("Не удалось отправить сообщение")
-            : Results.Ok("Сообщение отправлено");
+        return sent
+            ? Results.Ok("Сообщение отправлено")
+            : Results.Problem("Не удалось отправить сообщение");
     }
 
     [HttpGet("/dialog/{user_id}/list")]

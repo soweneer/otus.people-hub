@@ -15,6 +15,8 @@ public static class Bootstrapper
             throw new MissingMemberException("Connection string is absent");
         }
 
+        services.Configure<CitusOptions>(configuration.GetSection("Citus"));
+
         services.AddSingleton(new NpgsqlDataSourceBuilder(connectionString).Build());
         services.AddScoped<DbClient>();
         services.AddScoped<IDialogRepository, DialogRepository>();
