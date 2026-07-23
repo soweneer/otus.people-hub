@@ -1,4 +1,6 @@
 import type {
+  DialogMessage,
+  DialogPartner,
   FeedPost,
   FriendInfo,
   FriendsInfo,
@@ -107,6 +109,16 @@ export const friendsApi = {
     request<void>(`/api/friends/requests/${requestId}/approve`, { method: 'POST' }),
   reject: (requestId: number) =>
     request<void>(`/api/friends/requests/${requestId}/reject`, { method: 'POST' }),
+};
+
+export const dialogApi = {
+  partners: () => request<DialogPartner[]>('/api/dialog/partners'),
+  list: (userId: number) => request<DialogMessage[]>(`/dialog/${userId}/list`),
+  send: (userId: number, text: string) =>
+    request<void>(`/dialog/${userId}/send`, {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
 };
 
 export const feedApi = {

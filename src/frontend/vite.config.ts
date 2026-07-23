@@ -12,6 +12,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': 'http://localhost:5084',
+      '/dialog': 'http://localhost:5084',
       '/swagger': 'http://localhost:5084',
     },
   },

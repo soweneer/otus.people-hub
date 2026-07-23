@@ -12,6 +12,7 @@ public static class Bootstrapper
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<IFeedService, FeedService>();
+        services.AddScoped<IDialogService, DialogService>();
 
         return services;
     }

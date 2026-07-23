@@ -88,6 +88,11 @@ export function Layout() {
                         <i className="fa fa-user-friends"></i> Мои друзья
                       </NavLink>
                     </li>
+                    <li className="nav-item">
+                      <NavLink to="/dialogs" className="nav-link text-dark">
+                        <i className="fa fa-comments"></i> Диалоги
+                      </NavLink>
+                    </li>
                   </>
                 )}
               </ul>

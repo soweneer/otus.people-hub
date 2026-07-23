@@ -31,9 +31,11 @@ public static class Bootstrapper
             services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<IDialogRepository, DialogRepository>();
 
             services.AddScoped<IUserQueries, UserQueries>();
             services.AddScoped<IFriendQueries, FriendQueries>();
+            services.AddScoped<IDialogQueries, DialogQueries>();
             services.AddScoped<IFeedRepository, FeedRepository>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();

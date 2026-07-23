@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { Layout } from './components/Layout';
+import { DialogsPage } from './pages/DialogsPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { PeoplePage } from './pages/PeoplePage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -79,6 +80,14 @@ export function App() {
           element={
             <RequireAuth>
               <FriendsPage />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/dialogs"
+          element={
+            <RequireAuth>
+              <DialogsPage />
             </RequireAuth>
           }
         />

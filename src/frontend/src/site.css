@@ -41,3 +41,33 @@ body {
   justify-content: center;
   z-index: 1050;
 }
+
+.dialog-messages {
+  height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-bubble {
+  max-width: 75%;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dialog-bubble-mine {
+  align-self: flex-end;
+  background-color: #0d6efd;
+  color: #fff;
+  border-bottom-right-radius: 0.25rem;
+}
+
+.dialog-bubble-theirs {
+  align-self: flex-start;
+  background-color: #e9ecef;
+  color: #212529;
+  border-bottom-left-radius: 0.25rem;
+}

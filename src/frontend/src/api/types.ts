@@ -76,6 +76,17 @@ export interface PostFeedItemResponse {
   author_user_id: string;
 }
 
+export interface DialogPartner {
+  id: number;
+  name: string;
+}
+
+export interface DialogMessage {
+  from: string;
+  to: string;
+  text: string;
+}
+
 export interface SignUpData {
   name: string;
   surname: string;
