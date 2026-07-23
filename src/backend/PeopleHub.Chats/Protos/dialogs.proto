@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option csharp_namespace = "PeopleHub.Chats.Grpc";
+
+package dialogs;
+
+service Dialogs {
+  rpc Send (SendRequest) returns (SendResponse);
+  rpc List (ListRequest) returns (ListResponse);
+  rpc GetPartners (PartnersRequest) returns (PartnersResponse);
+}
+
+message SendRequest {
+  int64 from_user_id = 1;
+  int64 to_user_id = 2;
+  string text = 3;
+}
+
+message SendResponse {
+  int64 message_id = 1;
+}
+
+message ListRequest {
+  int64 user_id_1 = 1;
+  int64 user_id_2 = 2;
+}
+
+message DialogMessage {
+  int64 from_user_id = 1;
+  int64 to_user_id = 2;
+  string text = 3;
+}
+
+message ListResponse {
+  repeated DialogMessage messages = 1;
+}
+
+message PartnersRequest {
+  int64 user_id = 1;
+}
+
+message PartnersResponse {
+  repeated int64 partner_ids = 1;
+}

@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Application.Models;
-using PeopleHub.Application.Services;
+using PeopleHub.Dialogs;
 using PeopleHub.Extensions;
 using PeopleHub.Model;
 
@@ -23,7 +22,7 @@ public sealed class DialogController : ControllerBase
     public async Task<IResult> Send(
         [FromRoute(Name = "user_id")] string userId,
         [FromBody] SendMessageRequest request,
-        [FromServices] IDialogService dialogService)
+        [FromServices] IDialogGateway dialogGateway)
     {
         if (!long.TryParse(userId, out var toUserId))
         {
@@ -35,7 +34,7 @@ public sealed class DialogController : ControllerBase
             return Results.BadRequest("Параметр text обязателен");
         }
 
-        var messageId = await dialogService.SendAsync(UserId, toUserId, request.Text.Trim(), HttpContext.RequestAborted);
+        var messageId = await dialogGateway.SendAsync(UserId, toUserId, request.Text.Trim(), HttpContext.RequestAborted);
 
         return messageId is null
             ? Results.Problem("Не удалось отправить сообщение")
@@ -50,26 +49,21 @@ public sealed class DialogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> List(
         [FromRoute(Name = "user_id")] string userId,
-        [FromServices] IDialogService dialogService)
+        [FromServices] IDialogGateway dialogGateway)
     {
         if (!long.TryParse(userId, out var otherUserId))
         {
             return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
         }
 
-        var messages = await dialogService.GetDialogAsync(UserId, otherUserId, HttpContext.RequestAborted);
+        var messages = await dialogGateway.GetDialogAsync(UserId, otherUserId, HttpContext.RequestAborted);
 
-        return Results.Json(messages
-            .Select(m => new DialogMessageResponse(
-                m.FromUserId.ToString(),
-                m.ToUserId.ToString(),
-                m.Text))
-            .ToArray());
+        return Results.Json(messages);
     }
 
     [HttpGet("/api/dialog/partners")]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public async Task<ActionResult<IReadOnlyCollection<DialogPartner>>> Partners(
-        [FromServices] IDialogService dialogService) =>
-        Ok(await dialogService.GetPartnersAsync(UserId, HttpContext.RequestAborted));
+    public async Task<ActionResult<IReadOnlyCollection<DialogPartnerResponse>>> Partners(
+        [FromServices] IDialogGateway dialogGateway) =>
+        Ok(await dialogGateway.GetPartnersAsync(UserId, HttpContext.RequestAborted));
 }

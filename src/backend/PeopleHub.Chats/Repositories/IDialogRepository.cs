@@ -1,10 +1,12 @@
-using PeopleHub.Domain.Entities;
+using PeopleHub.Chats.Domain;
 
-namespace PeopleHub.Domain.Repositories;
+namespace PeopleHub.Chats.Repositories;
 
 public interface IDialogRepository
 {
     Task<long?> AddAsync(DialogMessage message, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<DialogMessage>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<long>> GetPartnerIdsAsync(long userId, CancellationToken cancellationToken = default);
 }

@@ -1,7 +1,6 @@
-using PeopleHub.Application.Models;
-using PeopleHub.Domain.Entities;
+using PeopleHub.Chats.Domain;
 
-namespace PeopleHub.Application.Services;
+namespace PeopleHub.Chats.Services;
 
 public interface IDialogService
 {
@@ -9,5 +8,5 @@ public interface IDialogService
 
     Task<IReadOnlyCollection<DialogMessage>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<DialogPartner>> GetPartnersAsync(long userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<long>> GetPartnerIdsAsync(long userId, CancellationToken cancellationToken = default);
 }

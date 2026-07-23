@@ -10,7 +10,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
     public const string FriendsRequestsTable = "friend_requests";
     public const string AccountsTable = "accounts";
     public const string PostsTable = "posts";
-    public const string DialogsTable = "dialogs";
 
     #region SQL для генерации тестовых данных
 
@@ -183,7 +182,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         const string query =
             #region SQL для создания базовых таблиц
             $$"""
-                drop table if exists {{DialogsTable}};
+                drop table if exists dialogs;
                 drop table if exists {{PostsTable}};
                 drop table if exists {{FriendsRequestsTable}};
                 drop table if exists {{AccountsTable}};
@@ -234,19 +233,6 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 
             create extension if not exists pg_trgm;
             create index if not exists ix_{{UsersTable}}_surname_name on {{UsersTable}} using gin (surname gin_trgm_ops, name gin_trgm_ops);
-
-            create table if not exists {{DialogsTable}} (
-                id bigint generated always as identity primary key,
-                from_user_id integer not null,
-                to_user_id integer not null,
-                text text not null,
-                created_at timestamptz not null default now(),
-                constraint dialogs_from_fk foreign key (from_user_id) references {{UsersTable}} (id) on delete cascade,
-                constraint dialogs_to_fk foreign key (to_user_id) references {{UsersTable}} (id) on delete cascade
-            );
-
-            create index if not exists ix_{{DialogsTable}}_from_to on {{DialogsTable}} (from_user_id, to_user_id, id);
-            create index if not exists ix_{{DialogsTable}}_to_from on {{DialogsTable}} (to_user_id, from_user_id, id);
             """;
         #endregion
 

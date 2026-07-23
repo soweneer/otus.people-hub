@@ -1,6 +1,4 @@
-using PeopleHub.Domain.Exceptions;
-
-namespace PeopleHub.Domain.Entities;
+namespace PeopleHub.Chats.Domain;
 
 public sealed class DialogMessage(long id, long fromUserId, long toUserId, string text)
 {

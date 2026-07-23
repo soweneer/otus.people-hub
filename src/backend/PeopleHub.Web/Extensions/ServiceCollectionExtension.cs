@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PeopleHub.Auth;
+using PeopleHub.Dialogs;
+using ChatsDialogs = PeopleHub.Chats.Grpc.Dialogs;
 
 namespace PeopleHub.Extensions;
 
@@ -10,6 +12,17 @@ public static class ServiceCollectionExtension
 {
     extension(IServiceCollection services)
     {
+        public IServiceCollection AddChatsClient(IConfiguration configuration)
+        {
+            var address = configuration["ChatsService:Address"]
+                          ?? throw new MissingMemberException("ChatsService:Address configuration is absent");
+
+            services.AddGrpcClient<ChatsDialogs.DialogsClient>(options => options.Address = new Uri(address));
+            services.AddScoped<IDialogGateway, ChatsDialogGateway>();
+
+            return services;
+        }
+
         public IServiceCollection AddAuth(IConfiguration configuration)
         {
             services.Configure<JwtOptions>(configuration.GetSection("Jwt"));

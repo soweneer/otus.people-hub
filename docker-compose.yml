@@ -16,6 +16,39 @@ services:
       timeout: 3s
       retries: 10
 
+  pg-chats:
+    image: postgres:18.4
+    container_name: pg-chats
+    environment:
+      POSTGRES_DB: people_hub_chats
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg-chats-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d people_hub_chats"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  chats:
+    build:
+      context: .
+      dockerfile: src/backend/PeopleHub.Chats/Dockerfile
+    container_name: people-hub-chats
+    ports:
+      - "8081:8081"
+    environment:
+      ASPNETCORE_URLS: "http://+:8081"
+      Kestrel__EndpointDefaults__Protocols: "Http2"
+      ConnectionStrings__PostgreSql: "Host=pg-chats:5432;Database=people_hub_chats;Username=postgres;Password=postgres;"
+      RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
+    depends_on:
+      pg-chats:
+        condition: service_healthy
+
   redis:
     image: redis:8.0-alpine
     container_name: redis
@@ -64,6 +97,7 @@ services:
     environment:
       ConnectionStrings__PostgreSql: "Host=pg-master:5432;Database=people_hub;Username=postgres;Password=postgres;"
       ConnectionStrings__Redis: "redis:6379"
+      ChatsService__Address: "http://chats:8081"
       FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
       RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
     depends_on:
@@ -71,6 +105,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      chats:
+        condition: service_started
       prometheus:
         condition: service_started
       grafana:
@@ -78,6 +114,7 @@ services:
 
 volumes:
   pg-master-data:
+  pg-chats-data:
   redis-data:
   prometheus-data:
   grafana-data:

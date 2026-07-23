@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <LangVersion>14</LangVersion>
+        <RootNamespace>PeopleHub.Chats</RootNamespace>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+        <PackageReference Include="Npgsql" Version="10.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Protos\dialogs.proto" GrpcServices="Server" />
+    </ItemGroup>
+
+</Project>
