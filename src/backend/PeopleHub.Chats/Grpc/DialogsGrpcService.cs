@@ -9,7 +9,7 @@ internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs
     {
         var messageId = await dialogService.SendAsync(request.FromUserId, request.ToUserId, request.Text, context.CancellationToken);
 
-        return new SendResponse { MessageId = messageId.ToString() };
+        return new SendResponse { MessageId = messageId };
     }
 
     public override async Task<ListResponse> List(ListRequest request, ServerCallContext context)
@@ -22,7 +22,7 @@ internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs
             response.Messages.Add(new DialogMessage
             {
                 FromUserId = message.FromUserId,
-                ToUserId = message.ToUserId,
+                ToUserId = message.FromUserId == request.UserId1 ? request.UserId2 : request.UserId1,
                 Text = message.Text
             });
         }

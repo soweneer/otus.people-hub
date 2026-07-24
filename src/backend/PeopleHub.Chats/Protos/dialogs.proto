@@ -17,7 +17,7 @@ message SendRequest {
 }
 
 message SendResponse {
-  string message_id = 1;
+  int64 message_id = 1;
 }
 
 message ListRequest {

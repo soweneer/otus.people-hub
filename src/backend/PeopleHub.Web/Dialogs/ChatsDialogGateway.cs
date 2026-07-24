@@ -5,15 +5,15 @@ using ChatsDialogs = PeopleHub.Chats.Grpc.Dialogs;
 
 namespace PeopleHub.Dialogs;
 
-internal sealed class ChatsDialogGateway(ChatsDialogs.DialogsClient client, IUserRepository userRepository) : IDialogGateway
+internal sealed class DialogService(ChatsDialogs.DialogsClient client, IUserRepository userRepository) : IDialogService
 {
-    public async Task<bool> SendAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default)
+    public async Task<bool> SendMessageAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default)
     {
         var response = await client.SendAsync(
             new SendRequest { FromUserId = fromUserId, ToUserId = toUserId, Text = text },
             cancellationToken: cancellationToken);
 
-        return !string.IsNullOrEmpty(response.MessageId);
+        return response.MessageId != 0;
     }
 
     public async Task<IReadOnlyCollection<DialogMessageResponse>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default)

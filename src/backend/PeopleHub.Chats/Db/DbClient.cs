@@ -6,6 +6,7 @@ namespace PeopleHub.Chats.Db;
 internal sealed class DbClient(NpgsqlDataSource dataSource)
 {
     public const string DialogsTable = "dialogs";
+    public const string MessagesTable = "messages";
 
     public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters = null,
         CancellationToken cancellationToken = default)

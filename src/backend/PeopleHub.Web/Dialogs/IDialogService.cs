@@ -2,9 +2,9 @@ using PeopleHub.Model;
 
 namespace PeopleHub.Dialogs;
 
-public interface IDialogGateway
+public interface IDialogService
 {
-    Task<bool> SendAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default);
+    Task<bool> SendMessageAsync(long fromUserId, long toUserId, string text, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<DialogMessageResponse>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default);
 

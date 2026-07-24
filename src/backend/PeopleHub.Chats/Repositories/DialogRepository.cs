@@ -6,32 +6,65 @@ namespace PeopleHub.Chats.Repositories;
 
 internal sealed class DialogRepository(DbClient dbClient) : IDialogRepository
 {
-    public Task AddAsync(DialogMessage message, CancellationToken cancellationToken = default)
+    public async Task<long> GetOrCreateDialogIdAsync(long userId1, long userId2, CancellationToken cancellationToken = default)
+    {
+        var (first, second) = Normalize(userId1, userId2);
+
+        const string query =
+            $"""
+             insert into {DbClient.DialogsTable} (user_id1, user_id2)
+             values (@userId1, @userId2)
+             on conflict (user_id1, user_id2) do update set user_id1 = {DbClient.DialogsTable}.user_id1
+             returning id
+             """;
+
+        var id = await dbClient.ExecuteScalarAsync(query,
+            [("userId1", first), ("userId2", second)],
+            cancellationToken);
+
+        return Convert.ToInt64(id);
+    }
+
+    public async Task<long?> GetDialogIdAsync(long userId1, long userId2, CancellationToken cancellationToken = default)
+    {
+        var (first, second) = Normalize(userId1, userId2);
+
+        const string query =
+            $"select id from {DbClient.DialogsTable} where user_id1 = @userId1 and user_id2 = @userId2";
+
+        var id = await dbClient.ExecuteScalarAsync(query,
+            [("userId1", first), ("userId2", second)],
+            cancellationToken);
+
+        return id is null or DBNull ? null : Convert.ToInt64(id);
+    }
+
+    public async Task<long> AddMessageAsync(DialogMessage message, CancellationToken cancellationToken = default)
     {
         const string query =
-            $"insert into {DbClient.DialogsTable} (chat_key, id, from_user_id, to_user_id, text) " +
-            "values (@chatKey, @id, @fromUserId, @toUserId, @text)";
+            $"insert into {DbClient.MessagesTable} (dialog_id, from_user_id, text) " +
+            "values (@dialogId, @fromUserId, @text) returning id";
 
-        return dbClient.ExecuteNonQueryAsync(query,
+        var id = await dbClient.ExecuteScalarAsync(query,
             [
-                ("chatKey", ChatKey(message.FromUserId, message.ToUserId)),
-                ("id", message.Id),
+                ("dialogId", message.DialogId),
                 ("fromUserId", message.FromUserId),
-                ("toUserId", message.ToUserId),
                 ("text", message.Text)
             ],
             cancellationToken);
+
+        return Convert.ToInt64(id);
     }
 
-    public async Task<IReadOnlyCollection<DialogMessage>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<DialogMessage>> GetMessagesAsync(long dialogId, CancellationToken cancellationToken = default)
     {
         const string query =
-            $"select id, from_user_id, to_user_id, text from {DbClient.DialogsTable} " +
-            "where chat_key = @chatKey " +
+            $"select id, dialog_id, from_user_id, text from {DbClient.MessagesTable} " +
+            "where dialog_id = @dialogId " +
             "order by id";
 
         var dataTable = await dbClient.ExecuteDataTableAsync(query,
-            [("chatKey", ChatKey(userId1, userId2))],
+            [("dialogId", dialogId)],
             cancellationToken);
 
         return dataTable is null
@@ -43,12 +76,10 @@ internal sealed class DialogRepository(DbClient dbClient) : IDialogRepository
     {
         const string query =
             $"""
-             select case when from_user_id = @userId then to_user_id else from_user_id end as partner_id,
-                    max(created_at) as last_at
+             select case when user_id1 = @userId then user_id2 else user_id1 end as partner_id
              from {DbClient.DialogsTable}
-             where from_user_id = @userId or to_user_id = @userId
-             group by 1
-             order by last_at desc
+             where user_id1 = @userId or user_id2 = @userId
+             order by partner_id
              """;
 
         var dataTable = await dbClient.ExecuteDataTableAsync(query,
@@ -60,13 +91,13 @@ internal sealed class DialogRepository(DbClient dbClient) : IDialogRepository
             : dataTable.Rows.Cast<DataRow>().Select(row => Convert.ToInt64(row["partner_id"])).ToArray();
     }
 
-    private static string ChatKey(long userId1, long userId2) =>
-        userId1 <= userId2 ? $"{userId1}:{userId2}" : $"{userId2}:{userId1}";
+    private static (long, long) Normalize(long userId1, long userId2) =>
+        userId1 <= userId2 ? (userId1, userId2) : (userId2, userId1);
 
     private static DialogMessage ExtractMessage(DataRow row) =>
         DialogMessage.Restore(
-            (Guid)row["id"],
+            Convert.ToInt64(row["id"]),
+            Convert.ToInt64(row["dialog_id"]),
             Convert.ToInt64(row["from_user_id"]),
-            Convert.ToInt64(row["to_user_id"]),
             row["text"].ToString());
 }

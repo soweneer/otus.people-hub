@@ -18,7 +18,7 @@ public static class ServiceCollectionExtension
                           ?? throw new MissingMemberException("ChatsService:Address configuration is absent");
 
             services.AddGrpcClient<ChatsDialogs.DialogsClient>(options => options.Address = new Uri(address));
-            services.AddScoped<IDialogGateway, ChatsDialogGateway>();
+            services.AddScoped<IDialogService, DialogService>();
 
             return services;
         }

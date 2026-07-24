@@ -22,7 +22,7 @@ public sealed class DialogController : ControllerBase
     public async Task<IResult> Send(
         [FromRoute(Name = "user_id")] string userId,
         [FromBody] SendMessageRequest request,
-        [FromServices] IDialogGateway dialogGateway)
+        [FromServices] IDialogService dialogService)
     {
         if (!long.TryParse(userId, out var toUserId))
         {
@@ -34,7 +34,7 @@ public sealed class DialogController : ControllerBase
             return Results.BadRequest("Параметр text обязателен");
         }
 
-        var sent = await dialogGateway.SendAsync(UserId, toUserId, request.Text.Trim(), HttpContext.RequestAborted);
+        var sent = await dialogService.SendMessageAsync(UserId, toUserId, request.Text.Trim(), HttpContext.RequestAborted);
 
         return sent
             ? Results.Ok("Сообщение отправлено")
@@ -49,14 +49,14 @@ public sealed class DialogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IResult> List(
         [FromRoute(Name = "user_id")] string userId,
-        [FromServices] IDialogGateway dialogGateway)
+        [FromServices] IDialogService dialogService)
     {
         if (!long.TryParse(userId, out var otherUserId))
         {
             return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
         }
 
-        var messages = await dialogGateway.GetDialogAsync(UserId, otherUserId, HttpContext.RequestAborted);
+        var messages = await dialogService.GetDialogAsync(UserId, otherUserId, HttpContext.RequestAborted);
 
         return Results.Json(messages);
     }
@@ -64,6 +64,6 @@ public sealed class DialogController : ControllerBase
     [HttpGet("/api/dialog/partners")]
     [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<ActionResult<IReadOnlyCollection<DialogPartnerResponse>>> Partners(
-        [FromServices] IDialogGateway dialogGateway) =>
-        Ok(await dialogGateway.GetPartnersAsync(UserId, HttpContext.RequestAborted));
+        [FromServices] IDialogService dialogService) =>
+        Ok(await dialogService.GetPartnersAsync(UserId, HttpContext.RequestAborted));
 }

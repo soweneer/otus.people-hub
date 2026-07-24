@@ -4,20 +4,25 @@ namespace PeopleHub.Chats.Db;
 
 internal sealed class DbMigrator(DbClient dbClient, IOptions<CitusOptions> citusOptions) : IDbMigrator
 {
-    private const string CreateTableSql =
+    private const string CreateTablesSql =
         $"""
          create table if not exists {DbClient.DialogsTable} (
-             chat_key text not null,
-             id uuid not null,
-             from_user_id integer not null,
-             to_user_id integer not null,
-             text text not null,
-             created_at timestamptz not null default now(),
-             primary key (chat_key, id)
+             id bigint generated always as identity primary key,
+             user_id1 bigint not null,
+             user_id2 bigint not null,
+             unique (user_id1, user_id2)
          );
 
-         create index if not exists ix_{DbClient.DialogsTable}_from on {DbClient.DialogsTable} (from_user_id, id);
-         create index if not exists ix_{DbClient.DialogsTable}_to on {DbClient.DialogsTable} (to_user_id, id);
+         create table if not exists {DbClient.MessagesTable} (
+             id bigint generated always as identity,
+             dialog_id bigint not null,
+             from_user_id bigint not null,
+             text text not null,
+             created_at timestamptz not null default now(),
+             primary key (dialog_id, id)
+         );
+
+         create index if not exists ix_{DbClient.MessagesTable}_dialog on {DbClient.MessagesTable} (dialog_id, id);
          """;
 
     public async Task MigrateAsync(CancellationToken cancellationToken = default)
@@ -38,11 +43,16 @@ internal sealed class DbMigrator(DbClient dbClient, IOptions<CitusOptions> citus
                 cancellationToken: cancellationToken);
         }
 
-        await dbClient.ExecuteNonQueryAsync(CreateTableSql, cancellationToken: cancellationToken);
+        await dbClient.ExecuteNonQueryAsync(CreateTablesSql, cancellationToken: cancellationToken);
 
         await dbClient.ExecuteNonQueryAsync(
-            $"select create_distributed_table('{DbClient.DialogsTable}', 'chat_key', shard_count => {citus.ShardCount}) " +
+            $"select create_reference_table('{DbClient.DialogsTable}') " +
             $"where not exists (select 1 from pg_dist_partition where logicalrelid = '{DbClient.DialogsTable}'::regclass);",
+            cancellationToken: cancellationToken);
+
+        await dbClient.ExecuteNonQueryAsync(
+            $"select create_distributed_table('{DbClient.MessagesTable}', 'dialog_id', shard_count => {citus.ShardCount}) " +
+            $"where not exists (select 1 from pg_dist_partition where logicalrelid = '{DbClient.MessagesTable}'::regclass);",
             cancellationToken: cancellationToken);
     }
 }
