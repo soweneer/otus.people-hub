@@ -20,7 +20,7 @@ public static class Bootstrapper
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddInfrastructure(IConfiguration configuration)
+        public IServiceCollection AddInfrastructure(IConfiguration configuration, string clientName = "people-hub")
         {
             var dbConnectionString = configuration.GetConnectionString("PostgreSql");
             if (string.IsNullOrEmpty(dbConnectionString))
@@ -44,8 +44,7 @@ public static class Bootstrapper
             FeedCacheMetrics.Publish();
             services.Configure<FeatureFlagsOptions>(configuration.GetSection("FeatureFlags"));
             services.AddCaching(configuration);
-            services.AddMessaging(configuration);
-            services.AddHostedService<FeedMaterializerWorker>();
+            services.AddMessaging(configuration, clientName);
 
             return services;
         }
@@ -63,6 +62,7 @@ public static class Bootstrapper
             });
             services.AddSingleton<RabbitMqConnection>();
             services.AddSingleton<IFeedEventPublisher, RabbitFeedEventPublisher>();
+            services.AddSingleton<IFeedNotificationPublisher, RabbitFeedNotificationPublisher>();
 
             return services;
         }

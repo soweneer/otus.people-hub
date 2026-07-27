@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PeopleHub.Application.Models;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Caching;
 using PeopleHub.Infrastructure.Caching.Invalidation;
@@ -12,6 +13,7 @@ namespace PeopleHub.Infrastructure.Messaging;
 public sealed class FeedMaterializerWorker(
     RabbitMqConnection connection,
     RabbitMqOptions options,
+    IFeedNotificationPublisher notificationPublisher,
     IServiceScopeFactory scopeFactory,
     ILogger<FeedMaterializerWorker> logger) : BackgroundService
 {
@@ -110,6 +112,18 @@ public sealed class FeedMaterializerWorker(
                 FeedChangeType.Deleted => cacheService.RemovePostAsync(friendId, feedEvent.Post.Id),
                 _ => Task.CompletedTask
             });
+
+            if (feedEvent.Type == FeedChangeType.Created)
+            {
+                await notificationPublisher.PublishAsync(friendId, ToNotification(feedEvent.Post), cancellationToken);
+            }
         }
+
+        logger.LogInformation(
+            "Событие {ChangeType} по посту {PostId} разослано {FriendCount} подписчикам",
+            feedEvent.Type, feedEvent.Post.Id, friendIds.Count);
     }
+
+    private static FeedPostedNotification ToNotification(FeedPost post) =>
+        new(post.Id.ToString(), post.Text, post.AuthorUserId.ToString());
 }

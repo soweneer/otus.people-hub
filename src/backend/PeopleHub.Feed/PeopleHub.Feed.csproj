@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <LangVersion>14</LangVersion>
+        <RootNamespace>PeopleHub.Feed</RootNamespace>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PeopleHub.Application\PeopleHub.Application.csproj" />
+        <ProjectReference Include="..\PeopleHub.Domain\PeopleHub.Domain.csproj" />
+        <ProjectReference Include="..\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>
