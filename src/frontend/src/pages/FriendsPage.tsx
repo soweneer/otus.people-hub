@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { feedApi, friendsApi } from '../api/client';
+import { useFeedSocket } from '../api/feedSocket';
 import type { FeedPost, FriendInfoLite, FriendsInfo } from '../api/types';
+
+const FEED_CAPACITY = 1000;
 
 type TabKey = 'friends' | 'feed' | 'incoming' | 'outgoing';
 
@@ -39,6 +42,14 @@ export function FriendsPage() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  const onPosted = useCallback((post: FeedPost) => {
+    setFeed((current) =>
+      current.some((p) => p.id === post.id) ? current : [post, ...current].slice(0, FEED_CAPACITY),
+    );
+  }, []);
+
+  const live = useFeedSocket(onPosted);
 
   const act = async (action: () => Promise<void>) => {
     try {
@@ -141,6 +152,11 @@ export function FriendsPage() {
         )}
         {effectiveTab === 'feed' && (
           <div>
+            <div className="mt-3">
+              <span className={`badge ${live ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                {live ? 'Обновляется в реальном времени' : 'Нет подключения к обновлениям'}
+              </span>
+            </div>
             {feedError && <div className="alert alert-warning mt-3">{feedError}</div>}
             {feed.length > 0 ? (
               feed.map((post) => (

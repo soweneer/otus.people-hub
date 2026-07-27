@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      '/post/feed/posted': { target: 'http://localhost:8082', ws: true },
       '/api': 'http://localhost:5084',
       '/post': 'http://localhost:5084',
       '/dialog': 'http://localhost:5084',
