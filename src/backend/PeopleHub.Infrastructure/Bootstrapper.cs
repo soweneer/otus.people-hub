@@ -9,6 +9,7 @@ using PeopleHub.Infrastructure.Caching;
 using PeopleHub.Infrastructure.Caching.Invalidation;
 using PeopleHub.Infrastructure.Db;
 using PeopleHub.Infrastructure.Helpers;
+using PeopleHub.Infrastructure.Messaging;
 using PeopleHub.Infrastructure.Queries;
 using PeopleHub.Infrastructure.Repositories;
 using StackExchange.Redis;
@@ -43,6 +44,25 @@ public static class Bootstrapper
             FeedCacheMetrics.Publish();
             services.Configure<FeatureFlagsOptions>(configuration.GetSection("FeatureFlags"));
             services.AddCaching(configuration);
+            services.AddMessaging(configuration);
+            services.AddHostedService<FeedMaterializerWorker>();
+
+            return services;
+        }
+
+        public IServiceCollection AddMessaging(IConfiguration configuration, string clientName = "people-hub")
+        {
+            var rabbitConnectionString = configuration.GetConnectionString("RabbitMq");
+            if (string.IsNullOrEmpty(rabbitConnectionString))
+                throw new MissingMemberException("RabbitMq connection string is absent");
+
+            services.AddSingleton(new RabbitMqOptions
+            {
+                ConnectionString = rabbitConnectionString,
+                ClientName = $"{clientName}-{Environment.MachineName}"
+            });
+            services.AddSingleton<RabbitMqConnection>();
+            services.AddSingleton<IFeedEventPublisher, RabbitFeedEventPublisher>();
 
             return services;
         }
@@ -55,8 +75,6 @@ public static class Bootstrapper
             redisOptions.AbortOnConnectFail = false;
             services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
             services.AddScoped<IFeedCacheService, RedisFeedCacheService>();
-            services.AddSingleton<FeedEventsQueue>();
-            services.AddHostedService<FeedEventsQueueWorker>();
         }
     }
 }

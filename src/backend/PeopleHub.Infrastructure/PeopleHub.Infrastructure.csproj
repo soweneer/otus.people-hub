@@ -13,6 +13,7 @@
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
       <PackageReference Include="Npgsql" Version="10.0.2" />
       <PackageReference Include="prometheus-net" Version="8.2.1" />
+      <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
       <PackageReference Include="Scrutor.AspNetCore" Version="3.3.0" />
     </ItemGroup>
 
