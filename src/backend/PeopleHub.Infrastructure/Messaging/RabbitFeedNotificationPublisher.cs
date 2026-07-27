@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using RabbitMQ.Client;
 
@@ -6,6 +7,11 @@ namespace PeopleHub.Infrastructure.Messaging;
 public sealed class RabbitFeedNotificationPublisher(RabbitMqConnection connection)
     : IFeedNotificationPublisher, IAsyncDisposable
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private readonly SemaphoreSlim _gate = new(1, 1);
     private IChannel _channel;
 
@@ -21,7 +27,7 @@ public sealed class RabbitFeedNotificationPublisher(RabbitMqConnection connectio
                 FeedTopology.UserRoutingKey(userId),
                 mandatory: false,
                 new BasicProperties { ContentType = "application/json" },
-                JsonSerializer.SerializeToUtf8Bytes(notification),
+                JsonSerializer.SerializeToUtf8Bytes(notification, SerializerOptions),
                 cancellationToken);
         }
         finally
