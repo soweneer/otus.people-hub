@@ -1,8 +1,6 @@
-using Microsoft.Extensions.Options;
-
 namespace PeopleHub.Chats.Db;
 
-internal sealed class DbMigrator(DbClient dbClient, IOptions<CitusOptions> citusOptions) : IDbMigrator
+internal sealed class DbMigrator(DbClient dbClient) : IDbMigrator
 {
     private const string CreateTablesSql =
         $"""
@@ -27,32 +25,6 @@ internal sealed class DbMigrator(DbClient dbClient, IOptions<CitusOptions> citus
 
     public async Task MigrateAsync(CancellationToken cancellationToken = default)
     {
-        var citus = citusOptions.Value;
-
-        await dbClient.ExecuteNonQueryAsync("create extension if not exists citus;", cancellationToken: cancellationToken);
-
-        await dbClient.ExecuteNonQueryAsync(
-            $"select citus_set_coordinator_host('{citus.CoordinatorHost}', {citus.CoordinatorPort});",
-            cancellationToken: cancellationToken);
-
-        foreach (var worker in citus.Workers)
-        {
-            await dbClient.ExecuteNonQueryAsync(
-                $"select citus_add_node('{worker.Host}', {worker.Port}) " +
-                $"where not exists (select 1 from pg_dist_node where nodename = '{worker.Host}' and nodeport = {worker.Port});",
-                cancellationToken: cancellationToken);
-        }
-
         await dbClient.ExecuteNonQueryAsync(CreateTablesSql, cancellationToken: cancellationToken);
-
-        await dbClient.ExecuteNonQueryAsync(
-            $"select create_reference_table('{DbClient.DialogsTable}') " +
-            $"where not exists (select 1 from pg_dist_partition where logicalrelid = '{DbClient.DialogsTable}'::regclass);",
-            cancellationToken: cancellationToken);
-
-        await dbClient.ExecuteNonQueryAsync(
-            $"select create_distributed_table('{DbClient.MessagesTable}', 'dialog_id', shard_count => {citus.ShardCount}) " +
-            $"where not exists (select 1 from pg_dist_partition where logicalrelid = '{DbClient.MessagesTable}'::regclass);",
-            cancellationToken: cancellationToken);
     }
 }
