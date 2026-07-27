@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -43,8 +44,20 @@ public static class Bootstrapper
         
             FeedCacheMetrics.Publish();
             services.Configure<FeatureFlagsOptions>(configuration.GetSection("FeatureFlags"));
-            services.AddCaching(configuration);
+            var redis = ConnectRedis(configuration);
+            services.AddSingleton(redis);
+            services.AddCaching();
             services.AddMessaging(configuration, clientName);
+            services.AddSharedDataProtection(redis);
+
+            return services;
+        }
+
+        public IServiceCollection AddSharedDataProtection(IConnectionMultiplexer redis)
+        {
+            services.AddDataProtection()
+                .SetApplicationName("PeopleHub")
+                .PersistKeysToStackExchangeRedis(redis, "people-hub:data-protection-keys");
 
             return services;
         }
@@ -67,13 +80,18 @@ public static class Bootstrapper
             return services;
         }
 
-        private void AddCaching(IConfiguration configuration)
+        private static IConnectionMultiplexer ConnectRedis(IConfiguration configuration)
+        {
+            var redisOptions = ConfigurationOptions.Parse(configuration.GetConnectionString("Redis")!);
+            redisOptions.AbortOnConnectFail = false;
+
+            return ConnectionMultiplexer.Connect(redisOptions);
+        }
+
+        private void AddCaching()
         {
             services.Decorate<IFeedService, CachingFeedServiceDecorator>();
             services.Decorate<IPostService, CachingPostServiceDecorator>();
-            var redisOptions = ConfigurationOptions.Parse(configuration.GetConnectionString("Redis")!);
-            redisOptions.AbortOnConnectFail = false;
-            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisOptions));
             services.AddScoped<IFeedCacheService, RedisFeedCacheService>();
         }
     }
