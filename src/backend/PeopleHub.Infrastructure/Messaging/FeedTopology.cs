@@ -7,8 +7,7 @@ public static class FeedTopology
     public const string MaterializeQueue = "feed.materialize";
     public const string ChangedBindingKey = "post.#";
 
-    public static string ChangedRoutingKey(FeedChangeType changeType) =>
-        $"post.{changeType.ToString().ToLowerInvariant()}";
+    public static string ChangedRoutingKey(FeedChangeType changeType) => $"post.{changeType.ToString().ToLowerInvariant()}";
 
     public static string UserRoutingKey(long userId) => $"user.{userId}";
 
