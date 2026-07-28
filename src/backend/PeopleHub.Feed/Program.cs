@@ -16,7 +16,11 @@ builder.Services.AddSingleton<FeedSubscriber>();
 
 var app = builder.Build();
 
-app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(30) });
+app.UseWebSockets(new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30),
+    KeepAliveTimeout = TimeSpan.FromSeconds(15)
+});
 app.UseAuthentication();
 app.UseAuthorization();
 
