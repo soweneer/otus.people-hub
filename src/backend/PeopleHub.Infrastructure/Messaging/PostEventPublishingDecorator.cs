@@ -1,11 +1,10 @@
 using PeopleHub.Application.Models;
 using PeopleHub.Application.Services;
 using PeopleHub.Domain.Entities;
-using PeopleHub.Infrastructure.Messaging;
 
-namespace PeopleHub.Infrastructure.Caching.Invalidation;
+namespace PeopleHub.Infrastructure.Messaging;
 
-public sealed class CachingPostServiceDecorator(IPostService underlyingService, IFeedEventPublisher publisher) : IPostService
+public sealed class PostEventPublishingDecorator(IPostService underlyingService, IFeedEventPublisher publisher) : IPostService
 {
     public async Task<long?> CreateAsync(long userId, string text, CancellationToken cancellationToken = default)
     {

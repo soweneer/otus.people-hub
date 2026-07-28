@@ -21,7 +21,7 @@ flowchart TD
 Поток события:
 
 1. `PeopleHub.Web` при создании поста публикует `FeedEvent` в `feed.changed`
-   (`CachingPostServiceDecorator` → `RabbitFeedEventPublisher`). Сообщения persistent,
+   (`PostEventPublishingDecorator` → `RabbitFeedEventPublisher`). Сообщения persistent,
    публикация идёт с publisher confirms.
 2. Реплики `PeopleHub.Feed` разбирают очередь `feed.materialize` как competing consumers:
    получают список друзей автора, обновляют ленты в Redis (отложенная материализация)

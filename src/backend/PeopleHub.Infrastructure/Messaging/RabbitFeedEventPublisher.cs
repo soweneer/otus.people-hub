@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using PeopleHub.Infrastructure.Caching.Invalidation;
 using RabbitMQ.Client;
 
 namespace PeopleHub.Infrastructure.Messaging;

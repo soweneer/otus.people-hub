@@ -1,5 +1,3 @@
-using PeopleHub.Infrastructure.Caching.Invalidation;
-
 namespace PeopleHub.Infrastructure.Messaging;
 
 public static class FeedTopology

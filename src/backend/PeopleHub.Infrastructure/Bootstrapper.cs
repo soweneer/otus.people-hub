@@ -7,7 +7,6 @@ using PeopleHub.Application.Services;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Domain.Services;
 using PeopleHub.Infrastructure.Caching;
-using PeopleHub.Infrastructure.Caching.Invalidation;
 using PeopleHub.Infrastructure.Db;
 using PeopleHub.Infrastructure.Helpers;
 using PeopleHub.Infrastructure.Messaging;
@@ -90,7 +89,7 @@ public static class Bootstrapper
         private void AddCaching()
         {
             services.Decorate<IFeedService, CachingFeedServiceDecorator>();
-            services.Decorate<IPostService, CachingPostServiceDecorator>();
+            services.Decorate<IPostService, PostEventPublishingDecorator>();
             services.AddScoped<IFeedCacheService, RedisFeedCacheService>();
         }
     }

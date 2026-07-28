@@ -1,4 +1,4 @@
-﻿namespace PeopleHub.Infrastructure.Caching.Invalidation;
+namespace PeopleHub.Infrastructure.Messaging;
 
 public enum FeedChangeType
 {

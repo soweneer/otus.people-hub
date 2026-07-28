@@ -1,7 +1,6 @@
 using PeopleHub.Application.Models;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Caching;
-using PeopleHub.Infrastructure.Caching.Invalidation;
 using PeopleHub.Infrastructure.Messaging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
