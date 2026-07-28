@@ -10,8 +10,9 @@ public sealed class FeedSubscriber(
     IHostApplicationLifetime lifetime,
     ILogger<FeedSubscriber> logger) : IAsyncDisposable
 {
+    private const string QueueName = "ws.feed";
+
     private readonly SemaphoreSlim _gate = new(1, 1);
-    private readonly string _queueName = $"ws.{Environment.MachineName}.{Guid.NewGuid():N}";
     private IChannel _channel;
 
     public async Task SubscribeAsync(long userId, FeedConnection feedConnection, CancellationToken cancellationToken)
@@ -23,12 +24,12 @@ public sealed class FeedSubscriber(
             if (registry.Add(userId, feedConnection))
             {
                 await channel.QueueBindAsync(
-                    _queueName,
+                    QueueName,
                     FeedTopology.PostedExchange,
                     FeedTopology.UserRoutingKey(userId),
                     cancellationToken: cancellationToken);
 
-                logger.LogInformation("Очередь {Queue} подписана на события пользователя {UserId}", _queueName, userId);
+                logger.LogInformation("Очередь {Queue} подписана на события пользователя {UserId}", QueueName, userId);
             }
         }
         finally
@@ -48,12 +49,12 @@ public sealed class FeedSubscriber(
             }
 
             await _channel.QueueUnbindAsync(
-                _queueName,
+                QueueName,
                 FeedTopology.PostedExchange,
                 FeedTopology.UserRoutingKey(userId),
                 cancellationToken: cancellationToken);
 
-            logger.LogInformation("Очередь {Queue} отписана от событий пользователя {UserId}", _queueName, userId);
+            logger.LogInformation("Очередь {Queue} отписана от событий пользователя {UserId}", QueueName, userId);
         }
         finally
         {
@@ -79,7 +80,7 @@ public sealed class FeedSubscriber(
             cancellationToken: cancellationToken);
 
         await _channel.QueueDeclareAsync(
-            _queueName,
+            QueueName,
             durable: false,
             exclusive: true,
             autoDelete: true,
@@ -94,13 +95,13 @@ public sealed class FeedSubscriber(
             }
         };
 
-        await _channel.BasicConsumeAsync(_queueName, autoAck: true, consumer, cancellationToken: cancellationToken);
-        logger.LogInformation("Инстанс слушает очередь {Queue}", _queueName);
+        await _channel.BasicConsumeAsync(QueueName, autoAck: true, consumer, cancellationToken: cancellationToken);
+        logger.LogInformation("Сервис слушает очередь {Queue}", QueueName);
 
         foreach (var userId in registry.SubscribedUserIds)
         {
             await _channel.QueueBindAsync(
-                _queueName,
+                QueueName,
                 FeedTopology.PostedExchange,
                 FeedTopology.UserRoutingKey(userId),
                 cancellationToken: cancellationToken);

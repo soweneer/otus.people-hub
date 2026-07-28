@@ -53,6 +53,7 @@ services:
     build:
       context: .
       dockerfile: src/backend/PeopleHub.Feed/Dockerfile
+    container_name: people-hub-feed
     expose:
       - "8082"
     environment:
