@@ -1,0 +1,29 @@
+groups:
+  group-001:
+    replicasets:
+      replicaset-001:
+        instances:
+          instance-001: {}
+
+iproto:
+  listen:
+    - uri: '0.0.0.0:3301'
+
+memtx:
+  memory: 536870912
+
+process:
+  work_dir: /var/lib/tarantool
+
+snapshot:
+  dir: /var/lib/tarantool
+
+wal:
+  dir: /var/lib/tarantool
+  mode: write
+
+vinyl:
+  dir: /var/lib/tarantool
+
+app:
+  file: /opt/tarantool/init.lua

@@ -33,6 +33,21 @@ services:
       timeout: 3s
       retries: 10
 
+  tarantool:
+    image: tarantool/tarantool:3.4.0
+    container_name: tarantool
+    entrypoint: ["tarantool", "--config", "/opt/tarantool/config.yaml"]
+    ports:
+      - "3301:3301"
+    volumes:
+      - ./docker/tarantool:/opt/tarantool:ro
+      - tarantool-data:/var/lib/tarantool
+    healthcheck:
+      test: ["CMD-SHELL", "tarantool -e \"os.exit(require('net.box').connect('127.0.0.1:3301'):ping() and 0 or 1)\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   chats:
     build:
       context: .
@@ -44,9 +59,13 @@ services:
       ASPNETCORE_URLS: "http://+:8081"
       Kestrel__EndpointDefaults__Protocols: "Http2"
       ConnectionStrings__PostgreSql: "Host=pg-chats:5432;Database=people_hub_chats;Username=postgres;Password=postgres;"
+      ConnectionStrings__Tarantool: "tarantool:3301"
+      Dialogs__Storage: "${DIALOGS_STORAGE:-Postgres}"
       RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
     depends_on:
       pg-chats:
+        condition: service_healthy
+      tarantool:
         condition: service_healthy
 
   feed:
@@ -168,6 +187,7 @@ services:
 volumes:
   pg-master-data:
   pg-chats-data:
+  tarantool-data:
   redis-data:
   rabbitmq-data:
   prometheus-data:
