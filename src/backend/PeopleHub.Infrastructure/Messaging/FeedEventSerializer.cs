@@ -11,9 +11,7 @@ public static class FeedEventSerializer
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public static byte[] Serialize(FeedEvent feedEvent) =>
-        JsonSerializer.SerializeToUtf8Bytes(feedEvent, Options);
+    public static byte[] Serialize(FeedEvent feedEvent) => JsonSerializer.SerializeToUtf8Bytes(feedEvent, Options);
 
-    public static FeedEvent Deserialize(ReadOnlySpan<byte> body) =>
-        JsonSerializer.Deserialize<FeedEvent>(body, Options);
+    public static FeedEvent Deserialize(ReadOnlySpan<byte> body) => JsonSerializer.Deserialize<FeedEvent>(body, Options);
 }

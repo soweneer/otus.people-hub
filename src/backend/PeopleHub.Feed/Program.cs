@@ -1,8 +1,8 @@
 using PeopleHub.Application;
 using PeopleHub.Feed.Auth;
+using PeopleHub.Feed.Services;
 using PeopleHub.Feed.WebSockets;
 using PeopleHub.Infrastructure;
-using PeopleHub.Infrastructure.Messaging;
 
 var builder = WebApplication.CreateBuilder(args);
 

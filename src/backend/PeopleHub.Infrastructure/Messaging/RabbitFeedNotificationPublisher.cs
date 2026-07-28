@@ -4,8 +4,7 @@ using RabbitMQ.Client;
 
 namespace PeopleHub.Infrastructure.Messaging;
 
-public sealed class RabbitFeedNotificationPublisher(RabbitMqConnection connection)
-    : IFeedNotificationPublisher, IAsyncDisposable
+public sealed class RabbitFeedNotificationPublisher(RabbitMqConnection connection) : IFeedNotificationPublisher, IAsyncDisposable
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {
@@ -15,8 +14,7 @@ public sealed class RabbitFeedNotificationPublisher(RabbitMqConnection connectio
     private readonly SemaphoreSlim _gate = new(1, 1);
     private IChannel _channel;
 
-    public async Task PublishAsync(long userId, FeedPostedNotification notification,
-        CancellationToken cancellationToken = default)
+    public async Task PublishAsync(long userId, FeedPostedNotification notification, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
         try

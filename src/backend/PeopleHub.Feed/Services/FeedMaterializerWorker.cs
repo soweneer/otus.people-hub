@@ -1,14 +1,12 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using PeopleHub.Application.Models;
 using PeopleHub.Domain.Repositories;
 using PeopleHub.Infrastructure.Caching;
 using PeopleHub.Infrastructure.Caching.Invalidation;
+using PeopleHub.Infrastructure.Messaging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace PeopleHub.Infrastructure.Messaging;
+namespace PeopleHub.Feed.Services;
 
 public sealed class FeedMaterializerWorker(
     RabbitMqConnection connection,
@@ -124,6 +122,5 @@ public sealed class FeedMaterializerWorker(
             feedEvent.Type, feedEvent.Post.Id, friendIds.Count);
     }
 
-    private static FeedPostedNotification ToNotification(FeedPost post) =>
-        new(post.Id.ToString(), post.Text, post.AuthorUserId.ToString());
+    private static FeedPostedNotification ToNotification(FeedPost post) => new(post.Id.ToString(), post.Text, post.AuthorUserId.ToString());
 }

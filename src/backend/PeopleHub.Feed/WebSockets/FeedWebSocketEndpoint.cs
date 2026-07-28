@@ -4,7 +4,7 @@ namespace PeopleHub.Feed.WebSockets;
 
 public static class FeedWebSocketEndpoint
 {
-    public const string Path = "/post/feed/posted";
+    private const string Path = "/post/feed/posted";
 
     public static WebApplication MapFeedWebSocket(this WebApplication app)
     {

@@ -5,8 +5,7 @@ using PeopleHub.Infrastructure.Messaging;
 
 namespace PeopleHub.Infrastructure.Caching.Invalidation;
 
-public sealed class CachingPostServiceDecorator(IPostService underlyingService, IFeedEventPublisher publisher)
-    : IPostService
+public sealed class CachingPostServiceDecorator(IPostService underlyingService, IFeedEventPublisher publisher) : IPostService
 {
     public async Task<long?> CreateAsync(long userId, string text, CancellationToken cancellationToken = default)
     {
