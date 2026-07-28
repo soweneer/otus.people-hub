@@ -32,6 +32,32 @@ flowchart TD
 4. Сообщение из очереди уходит в сокеты пользователя в формате AsyncAPI-спецификации:
    `{"postId": "...", "postText": "...", "author_user_id": "..."}`.
 
+## Где что лежит
+
+| Шаг | Код |
+|---|---|
+| Публикация `FeedEvent` при создании, правке и удалении поста | `PeopleHub.Infrastructure/Messaging/PostEventPublishingDecorator.cs` → `RabbitFeedEventPublisher.cs` |
+| Имена обменников, очередей и routing key | `PeopleHub.Infrastructure/Messaging/FeedTopology.cs` |
+| Материализация ленты в Redis и рассылка персональных событий | `PeopleHub.Feed/Services/FeedMaterializerWorker.cs` |
+| Публикация события в `feed.posted` с ключом `user.<id>` | `PeopleHub.Feed/Services/FeedNotificationPublisher.cs` |
+| Очередь реплики, связывания `user.<id>`, приём сообщений | `PeopleHub.Feed/WebSockets/FeedSubscriber.cs` |
+| Реестр открытых сокетов по пользователям | `PeopleHub.Feed/WebSockets/FeedConnectionRegistry.cs` |
+| Запись байтов в сокет | `PeopleHub.Feed/WebSockets/FeedConnection.cs` |
+| HTTP-эндпоинт и апгрейд до WebSocket | `PeopleHub.Feed/WebSockets/FeedWebSocketEndpoint.cs` |
+| Клиентское подключение и переподключение | `frontend/src/api/feedSocket.ts` |
+
+Пути к бэкенду указаны относительно `src/backend`, к фронтенду — относительно `src`.
+
+В `PeopleHub.Infrastructure` остаётся только то, что нужно обоим сервисам: подключение к
+брокеру, топология и контракт `FeedEvent`. Всё, что относится к доставке в сокеты, лежит
+в `PeopleHub.Feed`.
+
+Прямого вызова между публикатором и сокетом в коде нет: `FeedNotificationPublisher`
+кладёт сообщение в обменник, а `FeedSubscriber` читает его из своей очереди. Связывает
+их единственная строка — routing key `user.<id>`, которую обе стороны получают из
+`FeedTopology.UserRoutingKey`. Байты из RabbitMQ уходят в сокет без пересериализации,
+поэтому формат сообщения задан один раз, на стороне публикатора.
+
 ## Почему сервис вебсокетов масштабируется линейно
 
 - Fan-out по друзьям выполняется **один раз** в материализаторе, а не на каждой WS-реплике.
