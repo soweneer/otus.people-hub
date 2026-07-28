@@ -1,10 +1,11 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using PeopleHub.Infrastructure.Messaging;
 using RabbitMQ.Client;
 
-namespace PeopleHub.Infrastructure.Messaging;
+namespace PeopleHub.Feed.Services;
 
-public sealed class RabbitFeedNotificationPublisher(RabbitMqConnection connection) : IFeedNotificationPublisher, IAsyncDisposable
+public sealed class FeedNotificationPublisher(RabbitMqConnection connection) : IAsyncDisposable
 {
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {

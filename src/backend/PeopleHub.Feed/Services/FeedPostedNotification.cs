@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace PeopleHub.Infrastructure.Messaging;
+namespace PeopleHub.Feed.Services;
 
 public sealed record FeedPostedNotification(
     [property: JsonPropertyName("postId")] string PostId,

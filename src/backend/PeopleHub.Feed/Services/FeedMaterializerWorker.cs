@@ -11,7 +11,7 @@ namespace PeopleHub.Feed.Services;
 public sealed class FeedMaterializerWorker(
     RabbitMqConnection connection,
     RabbitMqOptions options,
-    IFeedNotificationPublisher notificationPublisher,
+    FeedNotificationPublisher notificationPublisher,
     IServiceScopeFactory scopeFactory,
     ILogger<FeedMaterializerWorker> logger) : BackgroundService
 {

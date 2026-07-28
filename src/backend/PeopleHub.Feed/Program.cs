@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration, "people-hub-feed");
 builder.Services.AddFeedAuth(builder.Configuration);
+builder.Services.AddSingleton<FeedNotificationPublisher>();
 builder.Services.AddHostedService<FeedMaterializerWorker>();
 builder.Services.AddSingleton<FeedConnectionRegistry>();
 builder.Services.AddSingleton<FeedSubscriber>();

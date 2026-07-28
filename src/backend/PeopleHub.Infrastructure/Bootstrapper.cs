@@ -75,7 +75,6 @@ public static class Bootstrapper
             });
             services.AddSingleton<RabbitMqConnection>();
             services.AddSingleton<IFeedEventPublisher, RabbitFeedEventPublisher>();
-            services.AddSingleton<IFeedNotificationPublisher, RabbitFeedNotificationPublisher>();
 
             return services;
         }
