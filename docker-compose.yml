@@ -60,7 +60,7 @@ services:
       Kestrel__EndpointDefaults__Protocols: "Http2"
       ConnectionStrings__PostgreSql: "Host=pg-chats:5432;Database=people_hub_chats;Username=postgres;Password=postgres;"
       ConnectionStrings__Tarantool: "tarantool:3301"
-      Dialogs__Storage: "${DIALOGS_STORAGE:-Postgres}"
+      Dialogs__Storage: "${DIALOGS_STORAGE:-Tarantool}"
       RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
     depends_on:
       pg-chats:
