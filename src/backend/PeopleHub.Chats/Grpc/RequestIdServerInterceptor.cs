@@ -22,7 +22,7 @@ public sealed class RequestIdServerInterceptor(ILogger<RequestIdServerIntercepto
         context.UserState[HeaderName] = requestId;
         context.ResponseTrailers.Add(HeaderName, requestId);
 
-        using var scope = logger.BeginScope(new Dictionary<string, object> { ["RequestId"] = requestId });
+        using var scope = logger.BeginScope("x-request-id:{XRequestId}", requestId);
 
         var stopwatch = Stopwatch.StartNew();
         try

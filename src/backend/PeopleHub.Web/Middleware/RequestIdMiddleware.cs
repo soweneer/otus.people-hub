@@ -15,7 +15,7 @@ public sealed class RequestIdMiddleware(RequestDelegate next, ILogger<RequestIdM
         context.SetRequestId(requestId);
         context.Response.Headers[RequestId.HeaderName] = requestId;
 
-        using var scope = logger.BeginScope(new Dictionary<string, object> { ["RequestId"] = requestId });
+        using var scope = logger.BeginScope("x-request-id:{XRequestId}", requestId);
 
         var stopwatch = Stopwatch.StartNew();
         try

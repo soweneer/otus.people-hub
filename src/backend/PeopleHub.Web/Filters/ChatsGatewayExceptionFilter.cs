@@ -18,7 +18,7 @@ public sealed class ChatsGatewayExceptionFilter(ILogger<ChatsGatewayExceptionFil
             exception.Message,
             exception.StatusCode);
 
-        context.Result = new ObjectResult(exception.Message) { StatusCode = exception.StatusCode };
+        context.Result = new JsonResult(exception.Message) { StatusCode = exception.StatusCode };
         context.ExceptionHandled = true;
     }
 }
