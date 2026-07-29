@@ -9,6 +9,7 @@ namespace PeopleHub.Chats;
 public static class Bootstrapper
 {
     private const int DefaultTarantoolPoolSize = 32;
+    private const int DefaultTarantoolReadBufferSize = 262144;
 
     public static IServiceCollection AddChats(this IServiceCollection services, IConfiguration configuration)
     {
@@ -43,8 +44,9 @@ public static class Bootstrapper
         }
 
         var poolSize = configuration.GetValue<int?>("Dialogs:Tarantool:PoolSize") ?? DefaultTarantoolPoolSize;
+        var readBufferSize = configuration.GetValue<int?>("Dialogs:Tarantool:ReadBufferSize") ?? DefaultTarantoolReadBufferSize;
 
-        services.AddSingleton(new TarantoolClient(TarantoolEndpoint.Parse(connectionString), poolSize));
+        services.AddSingleton(new TarantoolConnectionPool(connectionString, poolSize, readBufferSize));
         services.AddSingleton<IDialogService, TarantoolDialogService>();
         services.AddSingleton<IDbMigrator, TarantoolSchemaProbe>();
 

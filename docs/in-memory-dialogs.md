@@ -55,19 +55,32 @@ docker exec tarantool tarantool -e "local nb = require('net.box').connect('127.0
 |---|---|
 | Спейсы, sequences, UDF, гранты | `docker/tarantool/init.lua` |
 | Конфигурация инстанса (iproto, memtx, WAL) | `docker/tarantool/config.yaml` |
-| Вызов UDF и разбор msgpack-ответов | `PeopleHub.Chats/Services/TarantoolDialogService.cs` |
-| iproto-клиент: greeting, кадрирование, `IPROTO_CALL`, ошибки | `PeopleHub.Chats/Tarantool/TarantoolConnection.cs` |
-| Пул соединений | `PeopleHub.Chats/Tarantool/TarantoolClient.cs` |
+| Вызов UDF и разбор ответов | `PeopleHub.Chats/Services/TarantoolDialogService.cs` |
+| Пул соединений | `PeopleHub.Chats/Tarantool/TarantoolConnectionPool.cs` |
 | Проверка доступности UDF на старте | `PeopleHub.Chats/Tarantool/TarantoolSchemaProbe.cs` |
 | Выбор хранилища | `PeopleHub.Chats/Bootstrapper.cs` |
 | Прежняя реализация на SQL (осталась для сравнения) | `PeopleHub.Chats/Services/DialogService.cs`, `Repositories/DialogRepository.cs` |
 
-Готового живого клиента Tarantool под .NET нет (`progaudi.tarantool` заброшен), поэтому
-клиент написан руками: 5-байтный префикс длины, msgpack-заголовок и тело, разбор
-`IPROTO_DATA` / `IPROTO_ERROR_24`. Из msgpack используется только низкоуровневый
-`MessagePackReader`/`MessagePackWriter`. Пул соединений — `SemaphoreSlim` на число
-слотов плюс очередь простаивающих соединений; на ошибке протокола соединение
-закрывается, на ошибке от Tarantool (например, пустой текст) — возвращается в пул.
+### Клиент
+
+Используется пакет [`nf.Tarantool`](https://github.com/RelaxSpirit/nanoFramework.Tarantool)
+1.0.49 — единственный клиент Tarantool под .NET, который обновлялся в 2026 году
+(`progaudi.tarantool` — 2023, остальные мертвы с 2017). Основная его цель — .NET
+nanoFramework, но пакет собирается и под `net8.0`/`net9.0`.
+
+Два свойства библиотеки, которые пришлось обойти:
+
+* **API полностью синхронный** — ни одного метода, возвращающего `Task`. Вызов блокирует
+  поток, поэтому `TarantoolConnectionPool` ограничивает число одновременно блокируемых
+  потоков размером пула (`Dialogs:Tarantool:PoolSize`, по умолчанию 32). `CancellationToken`
+  библиотека не принимает: у неё свой внутренний таймаут в 30 секунд.
+* **Буфер чтения ограничен** — наследие микроконтроллеров. `dialog_list` отдаёт до
+  нескольких десятков килобайт, поэтому `ReadStreamBufferSize` поднят до 256 КБ
+  (`Dialogs:Tarantool:ReadBufferSize`).
+
+Ответы приходят нетипизированными: вложенные `ArrayList`, числа боксированы в
+минимальный подходящий тип (id `4` приезжает как `Byte`, `555308` — как `UInt32`),
+отсюда `Convert.ToInt64` при разборе в `TarantoolDialogService`.
 
 ## Запуск
 
@@ -115,26 +128,50 @@ RUN=2 REPORT=dialogs-before k6 run dialogs.js
   HTTP → nginx-less :8080 → gRPC → chats, менялось только хранилище.
 
 Сырые сводки: [dialogs-before-summary.json](../load-testing/my-reports/dialogs-before-summary.json),
-[dialogs-after-summary.json](../load-testing/my-reports/dialogs-after-summary.json).
+[dialogs-after-nf-summary.json](../load-testing/my-reports/dialogs-after-nf-summary.json).
 
 ## Результат: сквозной прогон через API
 
 | Метрика | ДО (PostgreSQL) | ПОСЛЕ (Tarantool) | Δ |
 |---|---|---|---|
-| RPS суммарно | 650.2 | 695.0 | +6.9% |
-| Ошибки | 0 | 0 | — |
-| `send` RPS | 131.5 | 173.3 | +31.8% |
-| `send` avg | 24.81 ms | 6.45 ms | −74% |
-| `send` p95 | 83.45 ms | 11.41 ms | −86% |
-| `send` p99 | 137.03 ms | 15.22 ms | −89% |
-| `send` max | 219.79 ms | 34.33 ms | −84% |
-| `list` RPS | 518.3 | 521.4 | +0.6% |
-| `list` avg | 6.55 ms | 6.25 ms | −4.6% |
-| `list` p95 | 11.25 ms | 11.02 ms | −2% |
-| `list` p99 | 14.92 ms | 14.76 ms | −1% |
-| `iteration_duration` p95 | 76.08 ms | 63.28 ms | −17% |
+| RPS суммарно | 650.2 | 679.4 | +4.5% |
+| `send` RPS | 131.5 | 169.1 | +28.6% |
+| `send` p95 | 83.45 ms | 14.78 ms | −82% |
+| `send` p99 | 137.03 ms | 22.36 ms | −84% |
+| `list` RPS | 518.3 | 509.9 | −1.6% |
+| `list` p95 | 11.25 ms | 13.50 ms | +20% |
+| `list` p99 | 14.92 ms | 21.20 ms | +42% |
+| Ошибки | 0 | 1 из 81 898 | — |
 
-Запись ускорилась в разы, чтение практически не изменилось.
+Запись ускорилась в разы, чтение не выиграло ничего и даже слегка просело.
+
+Единственная ошибка за прогон — внутренний 30-секундный таймаут `nf.Tarantool`
+(`LogicalConnection.SendRequestImpl`), из-за которого один запрос завис; k6 отвалился
+по своему таймауту в 10 секунд, отсюда `list max = 9994 ms` в сводке.
+
+### Цена выбора клиента
+
+Ранее тот же сценарий прогонялся на самописном асинхронном iproto-клиенте
+([dialogs-after-summary.json](../load-testing/my-reports/dialogs-after-summary.json)).
+Сравнение двух клиентов на одинаковой нагрузке:
+
+| Метрика | самописный async | `nf.Tarantool` |
+|---|---|---|
+| RPS суммарно | 695.0 | 679.4 |
+| `list` p95 | 11.02 ms | 13.50 ms |
+| `list` p99 | 14.76 ms | 21.20 ms |
+| `list` max | 34 ms | 9994 ms |
+| `send` p95 | 11.41 ms | 14.78 ms |
+| Ошибки | 0 из 83 571 | 1 из 81 898 |
+
+Изолированный замер пропускной способности (40 конкурентных вызовов `dialog_list`
+с хоста): самописный клиент — 6188 оп/с, `nf.Tarantool` — 2474 оп/с с отдельным
+подключением на воркер и 1809 оп/с с общим. Разрыв в 2.5 раза объясняется
+синхронным API и боксингом при разборе ответов.
+
+На нашем профиле (~700 rps) обе реализации работают с запасом, поэтому разница в
+сквозных перцентилях невелика. Выбор в пользу библиотеки — меньше своего кода
+в сопровождении.
 
 ## Результат: только слой хранения
 
@@ -191,3 +228,6 @@ docker exec -e BENCH_MODE=read -e BENCH_CONCURRENCY=8 -e BENCH_DURATION=20 taran
   но для внешнего контура нужен отдельный пользователь с паролем и `chap-sha1`.
 * Данные из PostgreSQL в Tarantool не переносились: переключение хранилища начинает
   историю диалогов заново. Скрипт миграции в объём задания не входил.
+* Синхронный API `nf.Tarantool` блокирует поток на время вызова и игнорирует
+  `CancellationToken`: отмена запроса клиентом не освобождает поток, ждать придётся
+  внутренний таймаут библиотеки. При заметном росте нагрузки это первое, во что упрёмся.

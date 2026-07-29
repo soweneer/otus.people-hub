@@ -1,11 +1,12 @@
+using nanoFramework.Tarantool.Model;
 using PeopleHub.Chats.Db;
 
 namespace PeopleHub.Chats.Tarantool;
 
-internal sealed class TarantoolSchemaProbe(TarantoolClient client) : IDbMigrator
+internal sealed class TarantoolSchemaProbe(TarantoolConnectionPool connectionPool) : IDbMigrator
 {
     public async Task MigrateAsync(CancellationToken cancellationToken = default)
     {
-        await client.CallAsync("dialog_stats", [], _ => true, cancellationToken);
+        await connectionPool.CallAsync("dialog_stats", TarantoolTuple.Create(), _ => true, cancellationToken);
     }
 }
