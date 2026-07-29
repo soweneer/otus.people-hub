@@ -1,12 +1,13 @@
 using PeopleHub.Application;
 using PeopleHub.Extensions;
+using PeopleHub.Filters;
 using PeopleHub.Infrastructure;
 using PeopleHub.Infrastructure.Db;
 using PeopleHub.Middleware;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<ChatsGatewayExceptionFilter>());
 builder.Services.AddProblemDetails();
 
 builder.Services.AddAuth(builder.Configuration);
