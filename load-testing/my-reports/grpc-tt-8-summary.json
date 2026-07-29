@@ -1,0 +1,192 @@
+{
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [],
+    "checks": [
+        {
+          "id": "6510c1b97d1c3323e81ffdb5e5a8cad2",
+          "passes": 66217,
+          "fails": 0,
+          "name": "list ok",
+          "path": "::list ok"
+        },
+        {
+          "path": "::list is not empty",
+          "id": "d2885685b38d99ad339b140f8ebf3129",
+          "passes": 66217,
+          "fails": 0,
+          "name": "list is not empty"
+        },
+        {
+          "fails": 0,
+          "name": "send ok",
+          "path": "::send ok",
+          "id": "db661126d040ef156ba9ca0e32862a06",
+          "passes": 22165
+        }
+      ]
+  },
+  "options": {
+    "summaryTrendStats": [
+      "min",
+      "avg",
+      "med",
+      "p(90)",
+      "p(95)",
+      "p(99)",
+      "max"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdErrTTY": false,
+    "testRunDurationMs": 120057.0855,
+    "isStdOutTTY": false
+  },
+  "metrics": {
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 154599,
+        "fails": 0,
+        "rate": 1
+      }
+    },
+    "data_received": {
+      "values": {
+        "rate": 1133481.3720761195,
+        "count": 136082470
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 88382,
+        "rate": 736.1664630780996
+      }
+    },
+    "grpc_req_duration{name:Dialogs/Send}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(90)": 5.617820000000002,
+        "p(95)": 7.08034,
+        "p(99)": 11.39616000000001,
+        "max": 66.4711,
+        "min": 0.506,
+        "avg": 3.5853141258741386,
+        "med": 3.0734
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      }
+    },
+    "data_sent": {
+      "values": {
+        "count": 7790773,
+        "rate": 64892.23828442845
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 40,
+        "min": 40,
+        "max": 40
+      }
+    },
+    "checks{name:Dialogs/List}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 132434,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "checks{name:Dialogs/Send}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 22165,
+        "fails": 0,
+        "rate": 1
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "grpc_req_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "max": 66.4711,
+        "min": 0.505,
+        "avg": 3.5220572774999637,
+        "med": 3.0027,
+        "p(90)": 5.644670000000003,
+        "p(95)": 7.0942,
+        "p(99)": 11.279615000000021
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(95)": 58.315965,
+        "p(99)": 62.916895000000004,
+        "max": 116.8119,
+        "min": 50.5577,
+        "avg": 54.312111930030426,
+        "med": 53.7414,
+        "p(90)": 56.73548000000001
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 40,
+        "min": 40,
+        "max": 40
+      }
+    },
+    "grpc_req_duration{name:Dialogs/List}": {
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      },
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "min": 0.505,
+        "avg": 3.5008831372608045,
+        "med": 2.9757,
+        "p(90)": 5.6543,
+        "p(95)": 7.094779999999998,
+        "p(99)": 11.21957199999998,
+        "max": 29.0076
+      }
+    }
+  }
+}

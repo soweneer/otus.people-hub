@@ -1,0 +1,192 @@
+{
+  "root_group": {
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": [],
+    "checks": [
+        {
+          "path": "::send ok",
+          "id": "db661126d040ef156ba9ca0e32862a06",
+          "passes": 16866,
+          "fails": 0,
+          "name": "send ok"
+        },
+        {
+          "name": "list ok",
+          "path": "::list ok",
+          "id": "6510c1b97d1c3323e81ffdb5e5a8cad2",
+          "passes": 65178,
+          "fails": 0
+        },
+        {
+          "name": "list is not empty",
+          "path": "::list is not empty",
+          "id": "d2885685b38d99ad339b140f8ebf3129",
+          "passes": 65178,
+          "fails": 0
+        }
+      ],
+    "name": ""
+  },
+  "options": {
+    "summaryTrendStats": [
+      "min",
+      "avg",
+      "med",
+      "p(90)",
+      "p(95)",
+      "p(99)",
+      "max"
+    ],
+    "summaryTimeUnit": "",
+    "noColor": false
+  },
+  "state": {
+    "isStdOutTTY": false,
+    "isStdErrTTY": false,
+    "testRunDurationMs": 120055.1954
+  },
+  "metrics": {
+    "grpc_req_duration{name:Dialogs/Send}": {
+      "contains": "time",
+      "values": {
+        "p(90)": 50.0722,
+        "p(95)": 70.5845,
+        "p(99)": 79.85874499999994,
+        "max": 283.4591,
+        "min": 4.5266,
+        "avg": 20.513708537886938,
+        "med": 12.2419
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      },
+      "type": "trend"
+    },
+    "checks{name:Dialogs/List}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "passes": 130356,
+        "fails": 0,
+        "rate": 1
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "iterations": {
+      "type": "counter",
+      "contains": "default",
+      "values": {
+        "count": 82044,
+        "rate": 683.3856687888077
+      }
+    },
+    "vus_max": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 40,
+        "min": 40,
+        "max": 40
+      }
+    },
+    "grpc_req_duration": {
+      "values": {
+        "p(90)": 12.879,
+        "p(95)": 19.372644999999988,
+        "p(99)": 71.185,
+        "max": 283.4591,
+        "min": 0.5054,
+        "avg": 7.621871710301831,
+        "med": 4.1212
+      },
+      "type": "trend",
+      "contains": "time"
+    },
+    "data_sent": {
+      "values": {
+        "count": 7087059,
+        "rate": 59031.672693441804
+      },
+      "type": "counter",
+      "contains": "data"
+    },
+    "data_received": {
+      "type": "counter",
+      "contains": "data",
+      "values": {
+        "count": 133625250,
+        "rate": 1113031.7980391209
+      }
+    },
+    "iteration_duration": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "p(99)": 121.8684,
+        "max": 383.9451,
+        "min": 51.1574,
+        "avg": 58.50483574179668,
+        "med": 55.0798,
+        "p(90)": 63.739909999999995,
+        "p(95)": 70.3336
+      }
+    },
+    "vus": {
+      "type": "gauge",
+      "contains": "default",
+      "values": {
+        "value": 40,
+        "min": 40,
+        "max": 40
+      }
+    },
+    "checks{name:Dialogs/Send}": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 16866,
+        "fails": 0
+      },
+      "thresholds": {
+        "rate>0.99": {
+          "ok": true
+        }
+      }
+    },
+    "grpc_req_duration{name:Dialogs/List}": {
+      "type": "trend",
+      "contains": "time",
+      "values": {
+        "med": 3.6008,
+        "p(90)": 6.4387300000000005,
+        "p(95)": 7.733089999999996,
+        "p(99)": 11.738618999999977,
+        "max": 283.4591,
+        "min": 0.5054,
+        "avg": 4.285873061462443
+      },
+      "thresholds": {
+        "p(95)<10000": {
+          "ok": true
+        }
+      }
+    },
+    "checks": {
+      "type": "rate",
+      "contains": "default",
+      "values": {
+        "rate": 1,
+        "passes": 147222,
+        "fails": 0
+      }
+    }
+  }
+}
