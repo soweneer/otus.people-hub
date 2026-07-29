@@ -11,10 +11,10 @@
 ```mermaid
 flowchart LR
     A["PeopleHub.Web<br/>DialogController"] -->|gRPC| B["PeopleHub.Chats<br/>DialogsGrpcService"]
-    B --> C{"Dialogs__Storage"}
-    C -->|Postgres| D["DialogService<br/>+ DialogRepository"]
+    B --> C{"FeatureFlags__<br/>UseTarantoolStorage"}
+    C -->|false| D["DialogService<br/>+ DialogRepository"]
     D -->|SQL| E[("pg-chats")]
-    C -->|Tarantool| F["TarantoolDialogService"]
+    C -->|true| F["TarantoolDialogService"]
     F -->|"iproto CALL"| G["dialog_send<br/>dialog_list<br/>dialog_partners"]
     G --> H[("tarantool<br/>spaces dialogs, messages")]
 ```
@@ -79,13 +79,13 @@ docker compose up -d --build
 baseline «ДО»):
 
 ```bash
-DIALOGS_STORAGE=Postgres docker compose up -d --build chats
+USE_TARANTOOL_STORAGE=false docker compose up -d --build chats
 ```
 
 И обратно:
 
 ```bash
-DIALOGS_STORAGE=Tarantool docker compose up -d --build chats
+USE_TARANTOOL_STORAGE=true docker compose up -d --build chats
 ```
 
 Tarantool слушает `localhost:3301`, данные — в volume `tarantool-data`

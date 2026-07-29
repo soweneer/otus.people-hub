@@ -8,14 +8,11 @@ namespace PeopleHub.Chats;
 
 public static class Bootstrapper
 {
-    private const string TarantoolStorage = "Tarantool";
     private const int DefaultTarantoolPoolSize = 32;
 
     public static IServiceCollection AddChats(this IServiceCollection services, IConfiguration configuration)
     {
-        var storage = configuration["Dialogs:Storage"];
-
-        return string.Equals(storage, TarantoolStorage, StringComparison.OrdinalIgnoreCase)
+        return configuration.GetValue<bool>("FeatureFlags:UseTarantoolStorage")
             ? AddTarantoolDialogs(services, configuration)
             : AddPostgresDialogs(services, configuration);
     }
