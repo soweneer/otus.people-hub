@@ -36,6 +36,13 @@ async function extractError(res: Response): Promise<string> {
   return `Ошибка запроса (${res.status})`;
 }
 
+function newRequestId(): string {
+  return (
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`
+  );
+}
+
 async function request<T>(
   url: string,
   options: RequestInit = {},
@@ -46,6 +53,7 @@ async function request<T>(
     ...options,
     headers: {
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      'x-request-id': newRequestId(),
       ...options.headers,
     },
   });
