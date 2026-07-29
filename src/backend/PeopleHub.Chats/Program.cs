@@ -4,7 +4,7 @@ using PeopleHub.Chats.Grpc;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGrpc();
+builder.Services.AddGrpc(options => options.Interceptors.Add<RequestIdServerInterceptor>());
 builder.Services.AddChats(builder.Configuration);
 
 var app = builder.Build();
