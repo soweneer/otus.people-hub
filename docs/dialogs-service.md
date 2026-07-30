@@ -16,19 +16,6 @@ flowchart LR
     D --> F[("Tarantool")]
 ```
 
-| Что | Где живёт |
-|---|---|
-| Таблицы `dialogs`, `messages`, миграции | `PeopleHub.Chats/Db` |
-| Доменная модель и валидация сообщения | `PeopleHub.Chats/Domain/DialogMessage.cs` |
-| Хранилище на PostgreSQL | `PeopleHub.Chats/Repositories/DialogRepository.cs` |
-| Хранилище на Tarantool (lua UDF) | `PeopleHub.Chats/Services/TarantoolDialogService.cs`, `docker/tarantool/init.lua` |
-| Выбор хранилища | `FeatureFlags:UseTarantoolStorage` → `PeopleHub.Chats/Bootstrapper.cs` |
-| Контракт | `PeopleHub.Chats/Protos/dialogs.proto` |
-| Точка входа gRPC | `PeopleHub.Chats/Grpc/DialogsGrpcService.cs` |
-| Клиент в монолите | `PeopleHub.Web/Dialogs/ChatsDialogGateway.cs` |
-
-Пути указаны относительно `src/backend`.
-
 ## Контракт
 
 Взаимодействие — gRPC, `dialogs.proto` подключён обеими сторонами: сервером в
@@ -61,8 +48,6 @@ flowchart LR
 используется только монолитом и нагрузочными сценариями.
 
 ## Сквозное логирование (x-request-id)
-
-Идентификатор запроса живёт от края до края и не теряется на границе сервисов.
 
 1. Клиент присылает `x-request-id`. Браузерный клиент генерирует его сам
    (`frontend/src/api/client.ts`).
@@ -114,40 +99,6 @@ info: PeopleHub.Middleware.RequestIdMiddleware[0]
 info: PeopleHub.Chats.Grpc.RequestIdServerInterceptor[0]
       => ... RequestPath:/dialogs.Dialogs/Send ... => x-request-id:demo-trace-42
       /dialogs.Dialogs/Send завершён со статусом OK за 53 мс
-```
-
-## Ошибки на границе сервисов
-
-Падение или отказ сервиса диалогов не должен превращаться в `500` у старого клиента.
-`ErrorHandlingInterceptor` в сервисе чатов переводит доменные ошибки в статусы gRPC,
-а шлюз монолита переводит их обратно в HTTP.
-
-| Ситуация | gRPC | HTTP у клиента |
-|---|---|---|
-| Пустой текст сообщения (`DomainException`) | `InvalidArgument` | `400` с текстом ошибки |
-| Сервис чатов недоступен, таймаут | `Unavailable`, `DeadlineExceeded` | `503` «Сервис диалогов временно недоступен» |
-| Ошибка обращения к Tarantool | `Unavailable` | `503` |
-| Прочее | — | `502` |
-
-Проверка отказа:
-
-```bash
-docker stop people-hub-chats
-```
-
-```
-HTTP/1.1 503 Service Unavailable
-x-request-id: demo-down-2
-
-"Сервис диалогов временно недоступен"
-```
-
-При этом в логе монолита остаётся строка с тем же идентификатором:
-
-```
-warn: PeopleHub.Filters.ChatsGatewayExceptionFilter[0]
-      => ... => x-request-id:demo-down-2
-      Вызов сервиса диалогов завершился ошибкой: Сервис диалогов временно недоступен (503)
 ```
 
 ## Запуск
