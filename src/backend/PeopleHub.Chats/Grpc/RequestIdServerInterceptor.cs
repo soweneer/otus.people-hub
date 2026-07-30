@@ -6,7 +6,7 @@ namespace PeopleHub.Chats.Grpc;
 
 public sealed class RequestIdServerInterceptor(ILogger<RequestIdServerInterceptor> logger) : Interceptor
 {
-    public const string HeaderName = "x-request-id";
+    private const string HeaderName = "x-request-id";
 
     public override async Task<TResponse> UnaryServerHandler<TRequest, TResponse>(
         TRequest request,
@@ -19,10 +19,7 @@ public sealed class RequestIdServerInterceptor(ILogger<RequestIdServerIntercepto
             requestId = Guid.NewGuid().ToString("N");
         }
 
-        context.UserState[HeaderName] = requestId;
-        context.ResponseTrailers.Add(HeaderName, requestId);
-
-        using var scope = logger.BeginScope("x-request-id:{XRequestId}", requestId);
+        using var scope = logger.BeginScope(HeaderName + ":{XRequestId}", requestId);
 
         var stopwatch = Stopwatch.StartNew();
         try
