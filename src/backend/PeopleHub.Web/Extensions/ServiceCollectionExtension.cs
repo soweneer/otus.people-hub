@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PeopleHub.Auth;
 using PeopleHub.Dialogs;
+using PeopleHub.Grpc;
 using ChatsDialogs = PeopleHub.Chats.Grpc.Dialogs;
 
 namespace PeopleHub.Extensions;
@@ -17,7 +18,11 @@ public static class ServiceCollectionExtension
             var address = configuration["ChatsService:Address"]
                           ?? throw new MissingMemberException("ChatsService:Address configuration is absent");
 
-            services.AddGrpcClient<ChatsDialogs.DialogsClient>(options => options.Address = new Uri(address));
+            services.AddHttpContextAccessor();
+            services.AddSingleton<RequestIdClientInterceptor>();
+            services
+                .AddGrpcClient<ChatsDialogs.DialogsClient>(options => options.Address = new Uri(address))
+                .AddInterceptor<RequestIdClientInterceptor>();
             services.AddScoped<IDialogService, DialogService>();
 
             return services;

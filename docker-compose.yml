@@ -62,6 +62,12 @@ services:
       ConnectionStrings__Tarantool: "tarantool:3301"
       FeatureFlags__UseTarantoolStorage: "${USE_TARANTOOL_STORAGE:-true}"
       RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8081'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
     depends_on:
       pg-chats:
         condition: service_healthy
@@ -178,7 +184,7 @@ services:
       rabbitmq:
         condition: service_healthy
       chats:
-        condition: service_started
+        condition: service_healthy
       prometheus:
         condition: service_started
       grafana:
