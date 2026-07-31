@@ -5,7 +5,7 @@ x-app: &app
   expose:
     - "8080"
   environment: &app-env
-    ConnectionStrings__PostgreSql: "Host=pg-master:5432,haproxy:5001;Database=people_hub;Username=postgres;Password=postgres;"
+    ConnectionStrings__PostgreSql: "Host=pg-master:5432,haproxy:5001;Database=people_hub;Username=postgres;Password=postgres;Maximum Pool Size=30;"
     ConnectionStrings__Redis: "redis:6379"
     ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
     ChatsService__Address: "http://chats:8081"
