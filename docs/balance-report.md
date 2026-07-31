@@ -30,8 +30,8 @@
 
 ## Прогон 1: 120 VU — нагрузка с запасом
 
-Сырые данные: [balance-final.html](../load-testing/my-reports/balance-final.html),
-[balance-final-summary.json](../load-testing/my-reports/balance-final-summary.json).
+Сырые данные: [balance-120vu.html](../load-testing/my-reports/balance-120vu.html),
+[balance-120vu-summary.json](../load-testing/my-reports/balance-120vu-summary.json).
 
 **86 992 запроса, 0 ошибок у клиента**, медиана 63 мс, p95 489 мс, p99 828 мс, 260 rps.
 
@@ -88,8 +88,8 @@
 
 ## Прогон 2: 300 VU — потолок стенда
 
-Сырые данные: [balance-ceiling-300vu.html](../load-testing/my-reports/balance-ceiling-300vu.html),
-[balance-ceiling-300vu-summary.json](../load-testing/my-reports/balance-ceiling-300vu-summary.json).
+Сырые данные: [balance-300vu.html](../load-testing/my-reports/balance-300vu.html),
+[balance-300vu-summary.json](../load-testing/my-reports/balance-300vu-summary.json).
 
 125 104 запроса, **32.1 % ошибок**, медиана 273 мс, p95 1461 мс, p99 3421 мс, 375 rps.
 
@@ -116,8 +116,8 @@
 ## Что пришлось починить по дороге
 
 Первые прогоны показали, что балансировка работает, а вот приложение к отказам не готово.
-Черновые прогоны лежат в [load-testing/my-reports](../load-testing/my-reports)
-файлами `balance-run1..5`.
+Это диагностические итерации, их сырые выгрузки в репозитории не хранятся — только результат
+и найденная причина.
 
 | Прогон | Условия | Ошибки | Что нашли |
 |---|---|---|---|
