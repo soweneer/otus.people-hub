@@ -66,4 +66,31 @@ public sealed class DialogController : ControllerBase
     public async Task<ActionResult<IReadOnlyCollection<DialogPartnerResponse>>> Partners(
         [FromServices] IDialogService dialogService) =>
         Ok(await dialogService.GetPartnersAsync(UserId, HttpContext.RequestAborted));
+
+    [HttpPost("/dialog/{user_id}/read")]
+    [ApiExplorerSettings(IgnoreApi = false)]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(MarkDialogReadResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IResult> Read(
+        [FromRoute(Name = "user_id")] string userId,
+        [FromBody] MarkDialogReadRequest request,
+        [FromServices] IDialogService dialogService)
+    {
+        if (!long.TryParse(userId, out var partnerId))
+        {
+            return Results.BadRequest("Параметр user_id обязателен и должен быть числом");
+        }
+
+        var upToMessageId = 0L;
+        if (!string.IsNullOrWhiteSpace(request?.UpToMessageId) && !long.TryParse(request.UpToMessageId, out upToMessageId))
+        {
+            return Results.BadRequest("Параметр upToMessageId должен быть числом");
+        }
+
+        var lastReadMessageId = await dialogService.MarkReadAsync(UserId, partnerId, upToMessageId, HttpContext.RequestAborted);
+
+        return Results.Json(new MarkDialogReadResponse(lastReadMessageId.ToString()));
+    }
 }

@@ -4,6 +4,7 @@ public static class FeedTopology
 {
     public const string ChangedExchange = "feed.changed";
     public const string PostedExchange = "feed.posted";
+    public const string CountersPushedExchange = "counters.pushed";
     public const string MaterializeQueue = "feed.materialize";
     public const string ChangedBindingKey = "post.#";
 

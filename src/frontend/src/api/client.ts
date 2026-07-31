@@ -9,6 +9,7 @@ import type {
   PostFeedItemResponse,
   ProfileData,
   SignUpData,
+  UnreadCounters,
   UserInfo,
 } from './types';
 
@@ -127,6 +128,15 @@ export const dialogApi = {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
+  markRead: (userId: number, upToMessageId: string) =>
+    request<{ lastReadMessageId: string }>(`/dialog/${userId}/read`, {
+      method: 'POST',
+      body: JSON.stringify({ upToMessageId }),
+    }),
+};
+
+export const countersApi = {
+  unread: () => request<UnreadCounters>('/api/counters/unread', {}, { notifyUnauthorized: false }),
 };
 
 export const feedApi = {

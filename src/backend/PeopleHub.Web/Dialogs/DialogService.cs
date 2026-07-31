@@ -27,8 +27,18 @@ internal sealed class DialogService(ChatsDialogs.DialogsClient client, IUserRepo
             .Select(message => new DialogMessageResponse(
                 message.FromUserId.ToString(),
                 message.ToUserId.ToString(),
-                message.Text))
+                message.Text,
+                message.Id.ToString()))
             .ToArray();
+    }
+
+    public async Task<long> MarkReadAsync(long userId, long partnerId, long upToMessageId, CancellationToken cancellationToken = default)
+    {
+        var response = await CallAsync(() => client.MarkReadAsync(
+            new MarkReadRequest { UserId = userId, PartnerId = partnerId, UpToMessageId = upToMessageId },
+            cancellationToken: cancellationToken));
+
+        return response.LastReadMessageId;
     }
 
     public async Task<IReadOnlyCollection<DialogPartnerResponse>> GetPartnersAsync(long userId, CancellationToken cancellationToken = default)

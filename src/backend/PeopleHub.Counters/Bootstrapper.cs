@@ -33,6 +33,7 @@ public static class Bootstrapper
             ClientName = $"people-hub-counters-{Environment.MachineName}"
         });
         services.AddSingleton<RabbitMqConnection>();
+        services.AddSingleton<CounterNotificationPublisher>();
         services.AddHostedService<CounterApplyWorker>();
 
         return services;

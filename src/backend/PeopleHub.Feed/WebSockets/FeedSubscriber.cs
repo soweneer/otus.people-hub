@@ -12,6 +12,9 @@ public sealed class FeedSubscriber(
 {
     private const string QueueName = "ws.feed";
 
+    private static readonly string[] SourceExchanges =
+        [FeedTopology.PostedExchange, FeedTopology.CountersPushedExchange];
+
     private readonly SemaphoreSlim _gate = new(1, 1);
     private IChannel _channel;
 
@@ -23,11 +26,7 @@ public sealed class FeedSubscriber(
             var channel = await EnsureChannelAsync(cancellationToken);
             if (registry.Add(userId, feedConnection))
             {
-                await channel.QueueBindAsync(
-                    QueueName,
-                    FeedTopology.PostedExchange,
-                    FeedTopology.UserRoutingKey(userId),
-                    cancellationToken: cancellationToken);
+                await BindUserAsync(channel, userId, cancellationToken);
 
                 logger.LogInformation("Очередь {Queue} подписана на события пользователя {UserId}", QueueName, userId);
             }
@@ -48,11 +47,14 @@ public sealed class FeedSubscriber(
                 return;
             }
 
-            await _channel.QueueUnbindAsync(
-                QueueName,
-                FeedTopology.PostedExchange,
-                FeedTopology.UserRoutingKey(userId),
-                cancellationToken: cancellationToken);
+            foreach (var exchange in SourceExchanges)
+            {
+                await _channel.QueueUnbindAsync(
+                    QueueName,
+                    exchange,
+                    FeedTopology.UserRoutingKey(userId),
+                    cancellationToken: cancellationToken);
+            }
 
             logger.LogInformation("Очередь {Queue} отписана от событий пользователя {UserId}", QueueName, userId);
         }
@@ -72,12 +74,15 @@ public sealed class FeedSubscriber(
         var rabbitConnection = await connection.GetAsync(cancellationToken);
         _channel = await rabbitConnection.CreateChannelAsync(cancellationToken: cancellationToken);
 
-        await _channel.ExchangeDeclareAsync(
-            FeedTopology.PostedExchange,
-            ExchangeType.Direct,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
+        foreach (var exchange in SourceExchanges)
+        {
+            await _channel.ExchangeDeclareAsync(
+                exchange,
+                ExchangeType.Direct,
+                durable: true,
+                autoDelete: false,
+                cancellationToken: cancellationToken);
+        }
 
         await _channel.QueueDeclareAsync(
             QueueName,
@@ -100,14 +105,22 @@ public sealed class FeedSubscriber(
 
         foreach (var userId in registry.SubscribedUserIds)
         {
-            await _channel.QueueBindAsync(
-                QueueName,
-                FeedTopology.PostedExchange,
-                FeedTopology.UserRoutingKey(userId),
-                cancellationToken: cancellationToken);
+            await BindUserAsync(_channel, userId, cancellationToken);
         }
 
         return _channel;
+    }
+
+    private static async Task BindUserAsync(IChannel channel, long userId, CancellationToken cancellationToken)
+    {
+        foreach (var exchange in SourceExchanges)
+        {
+            await channel.QueueBindAsync(
+                QueueName,
+                exchange,
+                FeedTopology.UserRoutingKey(userId),
+                cancellationToken: cancellationToken);
+        }
     }
 
     public async ValueTask DisposeAsync()

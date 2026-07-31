@@ -11,17 +11,17 @@ internal sealed class RedisCounterStore(IConnectionMultiplexer redis) : ICounter
         local watermark = tonumber(redis.call('HGET', KEYS[2], ARGV[1]) or '0')
         local messageId = tonumber(ARGV[2])
 
-        if messageId <= watermark then
-          return tonumber(redis.call('HGET', KEYS[1], 'total') or '0')
+        if messageId <= watermark or redis.call('ZADD', KEYS[3], messageId, messageId) == 0 then
+          return {
+            tonumber(redis.call('HGET', KEYS[1], ARGV[1]) or '0'),
+            tonumber(redis.call('HGET', KEYS[1], 'total') or '0')
+          }
         end
 
-        if redis.call('ZADD', KEYS[3], messageId, messageId) == 0 then
-          return tonumber(redis.call('HGET', KEYS[1], 'total') or '0')
-        end
+        local count = redis.call('ZCARD', KEYS[3])
+        redis.call('HSET', KEYS[1], ARGV[1], count)
 
-        redis.call('HSET', KEYS[1], ARGV[1], redis.call('ZCARD', KEYS[3]))
-
-        return redis.call('HINCRBY', KEYS[1], 'total', 1)
+        return { count, redis.call('HINCRBY', KEYS[1], 'total', 1) }
         """;
 
     private const string ApplyReadScript =
@@ -35,7 +35,10 @@ internal sealed class RedisCounterStore(IConnectionMultiplexer redis) : ICounter
 
         local removed = redis.call('ZREMRANGEBYSCORE', KEYS[3], '-inf', upTo)
         if removed == 0 then
-          return tonumber(redis.call('HGET', KEYS[1], 'total') or '0')
+          return {
+            tonumber(redis.call('HGET', KEYS[1], ARGV[1]) or '0'),
+            tonumber(redis.call('HGET', KEYS[1], 'total') or '0')
+          }
         end
 
         local left = redis.call('ZCARD', KEYS[3])
@@ -45,29 +48,29 @@ internal sealed class RedisCounterStore(IConnectionMultiplexer redis) : ICounter
           redis.call('HSET', KEYS[1], ARGV[1], left)
         end
 
-        return redis.call('HINCRBY', KEYS[1], 'total', -removed)
+        return { left, redis.call('HINCRBY', KEYS[1], 'total', -removed) }
         """;
 
     private readonly IDatabase _database = redis.GetDatabase();
 
-    public async Task<long> ApplyMessageAsync(long userId, long partnerId, long messageId,
+    public async Task<CounterState> ApplyMessageAsync(long userId, long partnerId, long messageId,
         CancellationToken cancellationToken = default)
     {
         var result = await _database.ScriptEvaluateAsync(ApplyMessageScript,
             [CountsKey(userId), ReadsKey(userId), PendingKey(userId, partnerId)],
             [partnerId, messageId]);
 
-        return (long)result;
+        return ToState(result);
     }
 
-    public async Task<long> ApplyReadAsync(long userId, long partnerId, long upToMessageId,
+    public async Task<CounterState> ApplyReadAsync(long userId, long partnerId, long upToMessageId,
         CancellationToken cancellationToken = default)
     {
         var result = await _database.ScriptEvaluateAsync(ApplyReadScript,
             [CountsKey(userId), ReadsKey(userId), PendingKey(userId, partnerId)],
             [partnerId, upToMessageId]);
 
-        return (long)result;
+        return ToState(result);
     }
 
     public async Task<CounterSnapshot> GetAsync(long userId, CancellationToken cancellationToken = default)
@@ -96,6 +99,15 @@ internal sealed class RedisCounterStore(IConnectionMultiplexer redis) : ICounter
         var total = await _database.HashGetAsync(CountsKey(userId), TotalField);
 
         return total.IsNull ? 0L : (long)total;
+    }
+
+    private static CounterState ToState(RedisResult result)
+    {
+        var values = (RedisValue[])result;
+
+        return values is { Length: 2 }
+            ? new CounterState((long)values[0], (long)values[1])
+            : new CounterState(0, 0);
     }
 
     private static string Tag(long userId) => "unread:{" + userId + "}";

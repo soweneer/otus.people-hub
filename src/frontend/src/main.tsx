@@ -7,12 +7,15 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import './site.css';
 import { App } from './App';
 import { AuthProvider } from './auth/AuthContext';
+import { UnreadProvider } from './counters/UnreadContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <UnreadProvider>
+          <App />
+        </UnreadProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

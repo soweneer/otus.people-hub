@@ -11,6 +11,7 @@ internal sealed class CounterApplyWorker(
     RabbitMqConnection connection,
     RabbitMqOptions options,
     ICounterStore store,
+    CounterNotificationPublisher notificationPublisher,
     ILogger<CounterApplyWorker> logger) : BackgroundService
 {
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(5);
@@ -136,13 +137,18 @@ internal sealed class CounterApplyWorker(
                     return;
                 }
 
-                var total = await store.ApplyMessageAsync(
+                var state = await store.ApplyMessageAsync(
                     payload.ToUserId, payload.FromUserId, payload.MessageId, cancellationToken);
 
                 CounterMetrics.Applied.WithLabels(CountersTopology.MessageSentKey).Inc();
+                await notificationPublisher.PublishAsync(
+                    payload.ToUserId,
+                    CounterNotification.Unread(payload.FromUserId, state.Count, state.Total),
+                    cancellationToken);
+
                 logger.LogDebug(
                     "Сообщение {MessageId} учтено пользователю {UserId}, всего непрочитанных {Total}",
-                    payload.MessageId, payload.ToUserId, total);
+                    payload.MessageId, payload.ToUserId, state.Total);
 
                 return;
             }
@@ -151,13 +157,18 @@ internal sealed class CounterApplyWorker(
             {
                 var payload = JsonSerializer.Deserialize<DialogReadEvent>(args.Body.Span, JsonSerializerOptions.Web);
 
-                var total = await store.ApplyReadAsync(
+                var state = await store.ApplyReadAsync(
                     payload.UserId, payload.PartnerId, payload.LastReadMessageId, cancellationToken);
 
                 CounterMetrics.Applied.WithLabels(CountersTopology.DialogReadKey).Inc();
+                await notificationPublisher.PublishAsync(
+                    payload.UserId,
+                    CounterNotification.Unread(payload.PartnerId, state.Count, state.Total),
+                    cancellationToken);
+
                 logger.LogDebug(
                     "Диалог с {PartnerId} прочитан пользователем {UserId} до {MessageId}, всего непрочитанных {Total}",
-                    payload.PartnerId, payload.UserId, payload.LastReadMessageId, total);
+                    payload.PartnerId, payload.UserId, payload.LastReadMessageId, state.Total);
 
                 return;
             }
