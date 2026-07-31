@@ -1,0 +1,19 @@
+listen:
+  port: 4040
+  metrics_endpoint: /metrics
+
+consul:
+  enable: false
+
+namespaces:
+  - name: nginx
+    format: "$remote_addr - - [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" $request_time \"$upstream_status\""
+    source:
+      files:
+        - /var/log/nginx/metrics.log
+    histogram_buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
+    labels:
+      service: people-hub
+    relabel_configs:
+      - target_label: upstream_status
+        from: upstream_status
