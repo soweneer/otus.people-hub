@@ -47,8 +47,13 @@ internal sealed class OutboxPublisherWorker(
 
         if (published > 0)
         {
+            OutboxMetrics.Published.Inc(published);
             logger.LogInformation("Опубликовано событий аутбокса: {Count}", published);
         }
+
+        var (pending, lagSeconds) = await dispatcher.GetPendingStatsAsync(stoppingToken);
+        OutboxMetrics.Pending.Set(pending);
+        OutboxMetrics.LagSeconds.Set(lagSeconds);
 
         return published;
     }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using PeopleHub.Counters.Messaging;
 using PeopleHub.Counters.Storage;
+using Prometheus;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -55,6 +56,7 @@ internal sealed class CounterApplyWorker(
             }
             catch (Exception exception)
             {
+                CounterMetrics.Failed.Inc();
                 logger.LogError(exception, "Не удалось применить событие {RoutingKey}", args.RoutingKey);
                 await channel.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false, stoppingToken);
             }
@@ -122,6 +124,8 @@ internal sealed class CounterApplyWorker(
 
     private async Task ApplyAsync(BasicDeliverEventArgs args, CancellationToken cancellationToken)
     {
+        using var timer = CounterMetrics.ApplyDuration.NewTimer();
+
         switch (args.RoutingKey)
         {
             case CountersTopology.MessageSentKey:
@@ -135,6 +139,7 @@ internal sealed class CounterApplyWorker(
                 var total = await store.ApplyMessageAsync(
                     payload.ToUserId, payload.FromUserId, payload.MessageId, cancellationToken);
 
+                CounterMetrics.Applied.WithLabels(CountersTopology.MessageSentKey).Inc();
                 logger.LogDebug(
                     "Сообщение {MessageId} учтено пользователю {UserId}, всего непрочитанных {Total}",
                     payload.MessageId, payload.ToUserId, total);
@@ -149,6 +154,7 @@ internal sealed class CounterApplyWorker(
                 var total = await store.ApplyReadAsync(
                     payload.UserId, payload.PartnerId, payload.LastReadMessageId, cancellationToken);
 
+                CounterMetrics.Applied.WithLabels(CountersTopology.DialogReadKey).Inc();
                 logger.LogDebug(
                     "Диалог с {PartnerId} прочитан пользователем {UserId} до {MessageId}, всего непрочитанных {Total}",
                     payload.PartnerId, payload.UserId, payload.LastReadMessageId, total);

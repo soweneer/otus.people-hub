@@ -18,6 +18,27 @@ internal sealed class OutboxDispatcher(DbClient dbClient)
     private const string MarkPublishedSql =
         $"update {DbClient.OutboxTable} set published_at = now() where id = any(@ids)";
 
+    private const string PendingStatsSql =
+        $"""
+         select count(*) as pending,
+                coalesce(extract(epoch from now() - min(created_at)), 0) as lag_seconds
+         from {DbClient.OutboxTable}
+         where published_at is null
+         """;
+
+    public async Task<(long Pending, double LagSeconds)> GetPendingStatsAsync(CancellationToken cancellationToken = default)
+    {
+        var stats = await dbClient.ExecuteDataTableAsync(PendingStatsSql, cancellationToken: cancellationToken);
+        if (stats is null || stats.Rows.Count == 0)
+        {
+            return (0, 0);
+        }
+
+        var row = stats.Rows[0];
+
+        return (Convert.ToInt64(row["pending"]), Convert.ToDouble(row["lag_seconds"]));
+    }
+
     public Task<int> DrainAsync(Func<OutboxRecord, CancellationToken, Task> publish, int batchSize,
         CancellationToken cancellationToken = default) =>
         dbClient.InTransactionAsync(async scope =>

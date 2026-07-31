@@ -1,5 +1,7 @@
 using Grpc.Core;
+using PeopleHub.Counters.Services;
 using PeopleHub.Counters.Storage;
+using Prometheus;
 
 namespace PeopleHub.Counters.Grpc;
 
@@ -7,6 +9,8 @@ internal sealed class CountersGrpcService(ICounterStore store) : Counters.Counte
 {
     public override async Task<CountersResponse> GetCounters(CountersRequest request, ServerCallContext context)
     {
+        using var timer = CounterMetrics.ReadDuration.WithLabels("GetCounters").NewTimer();
+
         var snapshot = await store.GetAsync(request.UserId, context.CancellationToken);
 
         var response = new CountersResponse { Total = snapshot.Total };
@@ -20,6 +24,8 @@ internal sealed class CountersGrpcService(ICounterStore store) : Counters.Counte
 
     public override async Task<TotalResponse> GetTotal(CountersRequest request, ServerCallContext context)
     {
+        using var timer = CounterMetrics.ReadDuration.WithLabels("GetTotal").NewTimer();
+
         var total = await store.GetTotalAsync(request.UserId, context.CancellationToken);
 
         return new TotalResponse { Total = total };

@@ -144,9 +144,8 @@ services:
     container_name: people-hub-chats
     ports:
       - "8081:8081"
+      - "8091:8091"
     environment:
-      ASPNETCORE_URLS: "http://+:8081"
-      Kestrel__EndpointDefaults__Protocols: "Http2"
       ConnectionStrings__PostgreSql: "Host=pg-chats:5432;Database=people_hub_chats;Username=postgres;Password=postgres;"
       ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
       RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
@@ -169,9 +168,8 @@ services:
     container_name: people-hub-counters
     ports:
       - "8083:8083"
+      - "8093:8093"
     environment:
-      ASPNETCORE_URLS: "http://+:8083"
-      Kestrel__EndpointDefaults__Protocols: "Http2"
       ConnectionStrings__Redis: "redis:6379"
       ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
     healthcheck:
