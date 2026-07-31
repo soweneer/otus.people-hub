@@ -7,8 +7,8 @@ public sealed class DialogMessage(long id, long dialogId, long fromUserId, strin
     public long FromUserId { get; } = fromUserId;
     public string Text { get; } = text;
 
-    public static DialogMessage Create(long dialogId, long fromUserId, string text) =>
-        new(0, dialogId, fromUserId, ValidateText(text));
+    public static DialogMessage Create(long fromUserId, string text) =>
+        new(0, 0, fromUserId, ValidateText(text));
 
     public static DialogMessage Restore(long id, long dialogId, long fromUserId, string text) =>
         new(id, dialogId, fromUserId, text);
