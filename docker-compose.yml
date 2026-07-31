@@ -1,3 +1,32 @@
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  expose:
+    - "8080"
+  environment: &app-env
+    ConnectionStrings__PostgreSql: "Host=pg-master:5432,haproxy:5001;Database=people_hub;Username=postgres;Password=postgres;"
+    ConnectionStrings__Redis: "redis:6379"
+    ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
+    ChatsService__Address: "http://chats:8081"
+    FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
+    RunMigrationsOnStartup: "false"
+  depends_on:
+    pg-master:
+      condition: service_healthy
+    haproxy:
+      condition: service_started
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    chats:
+      condition: service_healthy
+    prometheus:
+      condition: service_started
+    grafana:
+      condition: service_started
+
 services:
   pg-master:
     image: postgres:18.4
@@ -232,40 +261,29 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      app:
+      app-1:
+        condition: service_started
+      app-2:
+        condition: service_started
+      app-3:
         condition: service_started
       feed:
         condition: service_started
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: people-hub-app
-    ports:
-      - "8080:8080"
+  app-1:
+    <<: *app
+    container_name: people-hub-app-1
     environment:
-      ConnectionStrings__PostgreSql: "Host=pg-master:5432,haproxy:5001;Database=people_hub;Username=postgres;Password=postgres;"
-      ConnectionStrings__Redis: "redis:6379"
-      ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
-      ChatsService__Address: "http://chats:8081"
-      FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
-      RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
-    depends_on:
-      pg-master:
-        condition: service_healthy
-      haproxy:
-        condition: service_started
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      chats:
-        condition: service_healthy
-      prometheus:
-        condition: service_started
-      grafana:
-        condition: service_started
+      <<: *app-env
+      RunMigrationsOnStartup: "${APP_RUN_MIGRATIONS:-false}"
+
+  app-2:
+    <<: *app
+    container_name: people-hub-app-2
+
+  app-3:
+    <<: *app
+    container_name: people-hub-app-3
 
 volumes:
   pg-master-data:
