@@ -94,6 +94,20 @@ services:
       timeout: 3s
       retries: 10
 
+  haproxy:
+    image: haproxy:3.2-alpine
+    container_name: haproxy
+    ports:
+      - "5001:5001"
+      - "8404:8404"
+    volumes:
+      - ./docker/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      pg-replica-1:
+        condition: service_healthy
+      pg-replica-2:
+        condition: service_healthy
+
   tarantool:
     image: tarantool/tarantool:3.4.0
     container_name: tarantool
@@ -231,7 +245,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ConnectionStrings__PostgreSql: "Host=pg-master:5432;Database=people_hub;Username=postgres;Password=postgres;"
+      ConnectionStrings__PostgreSql: "Host=pg-master:5432,haproxy:5001;Database=people_hub;Username=postgres;Password=postgres;"
       ConnectionStrings__Redis: "redis:6379"
       ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
       ChatsService__Address: "http://chats:8081"
@@ -240,6 +254,8 @@ services:
     depends_on:
       pg-master:
         condition: service_healthy
+      haproxy:
+        condition: service_started
       redis:
         condition: service_healthy
       rabbitmq:
