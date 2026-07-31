@@ -13,7 +13,7 @@ flowchart TD
     end
 
     subgraph hap["haproxy"]
-        HR[":5001<br/>backend pg_read<br/>roundrobin + pgsql-check"]
+        HR[":5001<br/>backend pg_read<br/>leastconn + pgsql-check"]
     end
 
     M[("pg-master :5432<br/>primary")]

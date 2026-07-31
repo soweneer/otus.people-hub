@@ -175,7 +175,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 
         await using var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
         var dataTable = new DataTable();
-        dataTable.Load(dataReader);
+        await FillDataTableAsync(dataTable, dataReader, cancellationToken);
 
         return dataTable;
     }
@@ -261,10 +261,28 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         await ExecuteCmdAsync(query, async cmd =>
         {
             await using var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
-            dataTable.Load(dataReader);
+            await FillDataTableAsync(dataTable, dataReader, cancellationToken);
         }, parameters, readOnly: true);
 
         return dataTable;
+    }
+
+    private static async Task FillDataTableAsync(DataTable dataTable, NpgsqlDataReader dataReader,
+        CancellationToken cancellationToken)
+    {
+        dataTable.Clear();
+        dataTable.Columns.Clear();
+        for (var i = 0; i < dataReader.FieldCount; i++)
+        {
+            dataTable.Columns.Add(dataReader.GetName(i), dataReader.GetFieldType(i));
+        }
+
+        var values = new object[dataReader.FieldCount];
+        while (await dataReader.ReadAsync(cancellationToken))
+        {
+            dataReader.GetValues(values);
+            dataTable.Rows.Add(values);
+        }
     }
 
     public async Task ExecuteCmdAsync(string parametrizedQuery, Func<NpgsqlCommand, Task> cmdAction,
