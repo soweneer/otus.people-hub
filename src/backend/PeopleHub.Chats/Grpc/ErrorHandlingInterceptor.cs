@@ -1,7 +1,7 @@
 using Grpc.Core;
 using Grpc.Core.Interceptors;
+using Npgsql;
 using PeopleHub.Chats.Domain;
-using PeopleHub.Chats.Tarantool;
 
 namespace PeopleHub.Chats.Grpc;
 
@@ -24,7 +24,7 @@ public sealed class ErrorHandlingInterceptor : Interceptor
         {
             throw new RpcException(new Status(StatusCode.Cancelled, "Запрос отменён"));
         }
-        catch (TarantoolException exception)
+        catch (NpgsqlException exception) when (exception.IsTransient)
         {
             throw new RpcException(new Status(StatusCode.Unavailable, exception.Message));
         }

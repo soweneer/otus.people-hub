@@ -3,7 +3,7 @@
 ## Границы домена
 
 Диалоги вынесены из монолита в отдельный сервис `PeopleHub.Chats` со своим процессом,
-своим хранилищем (`pg-chats`, либо Tarantool под фиче-флагом) и своим контрактом.
+своим хранилищем (`pg-chats`) и своим контрактом.
 В монолите не осталось ни таблиц диалогов, ни доменной логики: `PeopleHub.Web` знает
 только gRPC-контракт соседа.
 
@@ -13,7 +13,6 @@ flowchart LR
     B -->|"HTTP + x-request-id"| C["PeopleHub.Web<br/>/dialog/*"]
     C -->|"gRPC + metadata x-request-id"| D["PeopleHub.Chats<br/>dialogs.Dialogs"]
     D --> E[("pg-chats")]
-    D --> F[("Tarantool")]
 ```
 
 ## Контракт
