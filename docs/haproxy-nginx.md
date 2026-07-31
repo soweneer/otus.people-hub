@@ -32,7 +32,7 @@ flowchart TD
     HR --> R2
 
     M -. "потоковая репликация, слоты<br/>ANY 1 (replica_1, replica_2)" .-> R1
-    M -. .-> R2
+    M -.-> R2
 ```
 
 Строка подключения приложения: `Host=pg-master:5432,haproxy:5001`.

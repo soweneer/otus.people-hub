@@ -147,7 +147,7 @@ services:
       - ./docker/tarantool:/opt/tarantool:ro
       - tarantool-data:/var/lib/tarantool
     healthcheck:
-      test: ["CMD-SHELL", "tarantool -e \"os.exit(require('net.box').connect('127.0.0.1:3301'):ping() and 0 or 1)\""]
+      test: ["CMD-SHELL", "tarantool -e \"local c = require('net.box').connect('127.0.0.1:3301'); os.exit(pcall(function() return c:call('dialog_stats') end) and 0 or 1)\""]
       interval: 5s
       timeout: 3s
       retries: 10
