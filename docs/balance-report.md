@@ -3,20 +3,20 @@
 ## Стенд
 
 - PostgreSQL 18.4: `pg-master` + `pg-replica-1` + `pg-replica-2`, потоковая репликация со слотами,
-  кворумная синхронная репликация `ANY 1 (replica_1, replica_2)` — всё в [docker-compose.yml](../../docker-compose.yml)
+  кворумная синхронная репликация `ANY 1 (replica_1, replica_2)` — всё в [docker-compose.yml](../docker-compose.yml)
 - haproxy 3.2, слушает 5001, бэкенд `pg_read` = обе реплики, `balance leastconn`,
   `option pgsql-check user postgres`, `on-marked-down shutdown-sessions`, статистика на :8404 —
-  [docker/haproxy/haproxy.cfg](../../docker/haproxy/haproxy.cfg)
+  [docker/haproxy/haproxy.cfg](../docker/haproxy/haproxy.cfg)
 - Три инстанса приложения `app-1..3`, наружу торчит только nginx :8090,
   `upstream app_backend` c `least_conn`, `max_fails=2 fail_timeout=5s`, `proxy_next_upstream` —
-  [docker/nginx/nginx.conf](../../docker/nginx/nginx.conf)
+  [docker/nginx/nginx.conf](../docker/nginx/nginx.conf)
 - Строка подключения одна на все инстансы: `Host=pg-master:5432,haproxy:5001;...;Maximum Pool Size=30`.
-  Хост выбирает Npgsql по `TargetSessionAttributes` в [DbClient.cs](../../src/backend/PeopleHub.Infrastructure/Db/DbClient.cs):
+  Хост выбирает Npgsql по `TargetSessionAttributes` в [DbClient.cs](../src/backend/PeopleHub.Infrastructure/Db/DbClient.cs):
   `Primary` для записи → мастер напрямую, `PreferStandby` для чтения → haproxy
 - Данные: 1 млн пользователей, GIN-индекс `gin_trgm_ops` по surname/name
-- Нагрузка: [balance.js](../balance.js), k6 v2.1.0, 120 VU (30 с разгон + 300 с плато),
+- Нагрузка: [balance.js](../load-testing/balance.js), k6 v2.1.0, 120 VU (30 с разгон + 300 с плато),
   сценарий чтения — `GET /user/search` с прокруткой по страницам + точечные `GET /user/{id}`
-- Схема взаимодействия — [docs/haproxy-nginx.md](../../docs/haproxy-nginx.md)
+- Схема взаимодействия — [docs/haproxy-nginx.md](haproxy-nginx.md)
 
 ## Сценарий отказов
 
@@ -27,7 +27,7 @@
 
 ## Результат финального прогона (120 VU)
 
-Сырые данные: [balance-run5-final.html](balance-run5-final.html), [balance-run5-final-summary.json](balance-run5-final-summary.json).
+Сырые данные: [balance-run5-final.html](../load-testing/my-reports/balance-run5-final.html), [balance-run5-final-summary.json](../load-testing/my-reports/balance-run5-final-summary.json).
 
 | Фаза | Окно | Успешно | Ошибки |
 |---|---|---|---|
@@ -78,7 +78,8 @@ haproxy перевёл всё чтение на живую реплику. Ма�
 ## Что пришлось починить по дороге
 
 Первые прогоны показали, что балансировка работает, а вот приложение к отказам не готово.
-Все четыре черновых прогона лежат рядом (`balance-run1..4`).
+Все четыре черновых прогона лежат в [load-testing/my-reports](../load-testing/my-reports)
+файлами `balance-run1..4`.
 
 | Прогон | Условия | Ошибки | Что нашли |
 |---|---|---|---|
