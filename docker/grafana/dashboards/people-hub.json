@@ -131,7 +131,7 @@
       "options": {
         "legend": {
           "displayMode": "table",
-          "placement": "right",
+          "placement": "bottom",
           "calcs": [
             "max",
             "sum"
