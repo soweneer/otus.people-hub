@@ -5,6 +5,8 @@ namespace PeopleHub.Chats.Grpc;
 
 internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs.DialogsBase
 {
+    private const int DefaultUnreadLimit = 1000;
+
     public override async Task<SendResponse> Send(SendRequest request, ServerCallContext context)
     {
         var messageId = await dialogService.SendAsync(request.FromUserId, request.ToUserId, request.Text, context.CancellationToken);
@@ -47,6 +49,26 @@ internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs
             request.UserId, request.PartnerId, request.UpToMessageId, context.CancellationToken);
 
         return new MarkReadResponse { LastReadMessageId = lastReadMessageId };
+    }
+
+    public override async Task<UnreadStateResponse> GetUnreadState(UnreadStateRequest request, ServerCallContext context)
+    {
+        var limit = request.LimitPerPartner > 0 ? request.LimitPerPartner : DefaultUnreadLimit;
+        var partners = await dialogService.GetUnreadStateAsync(request.UserId, limit, context.CancellationToken);
+
+        var response = new UnreadStateResponse();
+        foreach (var partner in partners)
+        {
+            var state = new UnreadPartnerState
+            {
+                PartnerId = partner.PartnerId,
+                LastReadMessageId = partner.LastReadMessageId
+            };
+            state.UnreadMessageIds.AddRange(partner.UnreadMessageIds);
+            response.Partners.Add(state);
+        }
+
+        return response;
     }
 
     public override async Task<UnreadCountsResponse> GetUnreadCounts(UnreadCountsRequest request, ServerCallContext context)

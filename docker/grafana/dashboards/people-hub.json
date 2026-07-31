@@ -573,6 +573,24 @@
           "expr": "sum(rate(counters_events_failed_total[1m]))",
           "legendFormat": "dead-letter",
           "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(counters_drift_total[1m]))",
+          "legendFormat": "расхождения",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(counters_cold_rebuild_total[1m]))",
+          "legendFormat": "холодная пересборка",
+          "refId": "D"
         }
       ]
     },

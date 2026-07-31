@@ -30,4 +30,8 @@ internal sealed class DialogService(IDialogRepository dialogRepository) : IDialo
 
     public Task<IReadOnlyCollection<UnreadCount>> GetUnreadCountsAsync(long userId, CancellationToken cancellationToken = default) =>
         dialogRepository.GetUnreadCountsAsync(userId, cancellationToken);
+
+    public Task<IReadOnlyCollection<UnreadPartnerState>> GetUnreadStateAsync(long userId, int limitPerPartner,
+        CancellationToken cancellationToken = default) =>
+        dialogRepository.GetUnreadStateAsync(userId, limitPerPartner, cancellationToken);
 }

@@ -2,6 +2,7 @@ using PeopleHub.Counters.Messaging;
 using PeopleHub.Counters.Services;
 using PeopleHub.Counters.Storage;
 using StackExchange.Redis;
+using ChatsDialogs = PeopleHub.Chats.Grpc.Dialogs;
 
 namespace PeopleHub.Counters;
 
@@ -35,6 +36,22 @@ public static class Bootstrapper
         services.AddSingleton<RabbitMqConnection>();
         services.AddSingleton<CounterNotificationPublisher>();
         services.AddHostedService<CounterApplyWorker>();
+
+        services.AddReconciler(configuration);
+
+        return services;
+    }
+
+    private static IServiceCollection AddReconciler(this IServiceCollection services, IConfiguration configuration)
+    {
+        var address = configuration["ChatsService:Address"]
+                      ?? throw new MissingMemberException("ChatsService:Address configuration is absent");
+
+        services.AddSingleton(configuration.GetSection("Reconciler").Get<ReconcilerOptions>() ?? new ReconcilerOptions());
+        services.AddGrpcClient<ChatsDialogs.DialogsClient>(options => options.Address = new Uri(address));
+        services.AddSingleton<IDialogTruthSource, ChatsTruthSource>();
+        services.AddSingleton<CounterReconciler>();
+        services.AddHostedService<ReconcilerWorker>();
 
         return services;
     }

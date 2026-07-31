@@ -18,6 +18,18 @@ internal static class CounterMetrics
         "Время применения одного события к Redis",
         new HistogramConfiguration { Buckets = Histogram.ExponentialBuckets(0.0005, 2, 12) });
 
+    public static readonly Counter Reconciled = Metrics.CreateCounter(
+        "counters_reconciled_total",
+        "Сколько раз счётчики пользователя пересобирались из базы диалогов");
+
+    public static readonly Counter Drifts = Metrics.CreateCounter(
+        "counters_drift_total",
+        "Сколько раз сверка нашла расхождение между Redis и базой диалогов");
+
+    public static readonly Counter ColdRebuilds = Metrics.CreateCounter(
+        "counters_cold_rebuild_total",
+        "Сколько раз счётчики собирались на лету из-за отсутствия данных в Redis");
+
     public static readonly Histogram ReadDuration = Metrics.CreateHistogram(
         "counters_read_duration_seconds",
         "Время чтения счётчиков из Redis",

@@ -5,13 +5,13 @@ using Prometheus;
 
 namespace PeopleHub.Counters.Grpc;
 
-internal sealed class CountersGrpcService(ICounterStore store) : Counters.CountersBase
+internal sealed class CountersGrpcService(ICounterStore store, CounterReconciler reconciler) : Counters.CountersBase
 {
     public override async Task<CountersResponse> GetCounters(CountersRequest request, ServerCallContext context)
     {
         using var timer = CounterMetrics.ReadDuration.WithLabels("GetCounters").NewTimer();
 
-        var snapshot = await store.GetAsync(request.UserId, context.CancellationToken);
+        var snapshot = await reconciler.ReadAsync(request.UserId, context.CancellationToken);
 
         var response = new CountersResponse { Total = snapshot.Total };
         foreach (var counter in snapshot.Counters)

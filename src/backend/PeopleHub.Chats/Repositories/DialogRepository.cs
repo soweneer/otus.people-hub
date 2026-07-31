@@ -169,6 +169,48 @@ internal sealed class DialogRepository(DbClient dbClient) : IDialogRepository
                 .ToArray();
     }
 
+    public async Task<IReadOnlyCollection<UnreadPartnerState>> GetUnreadStateAsync(long userId, int limitPerPartner,
+        CancellationToken cancellationToken = default)
+    {
+        const string query =
+            $"""
+             select partner_id, last_read, message_id
+             from (
+                 select case when d.user_id1 = @userId then d.user_id2 else d.user_id1 end as partner_id,
+                        coalesce(r.last_read_message_id, 0) as last_read,
+                        m.id as message_id,
+                        row_number() over (
+                            partition by case when d.user_id1 = @userId then d.user_id2 else d.user_id1 end
+                            order by m.id desc
+                        ) as position
+                 from {DbClient.DialogsTable} d
+                 join {DbClient.MessagesTable} m on m.dialog_id = d.id and m.from_user_id <> @userId
+                 left join {DbClient.DialogReadsTable} r on r.dialog_id = d.id and r.user_id = @userId
+                 where (d.user_id1 = @userId or d.user_id2 = @userId)
+                   and m.id > coalesce(r.last_read_message_id, 0)
+             ) ranked
+             where position <= @limit
+             order by partner_id, message_id
+             """;
+
+        var dataTable = await dbClient.ExecuteDataTableAsync(query,
+            [("userId", userId), ("limit", limitPerPartner)],
+            cancellationToken);
+
+        if (dataTable is null)
+        {
+            return [];
+        }
+
+        return dataTable.Rows.Cast<DataRow>()
+            .GroupBy(row => (Convert.ToInt64(row["partner_id"]), Convert.ToInt64(row["last_read"])))
+            .Select(group => new UnreadPartnerState(
+                group.Key.Item1,
+                group.Key.Item2,
+                group.Select(row => Convert.ToInt64(row["message_id"])).ToArray()))
+            .ToArray();
+    }
+
     private static async Task<long> GetOrCreateDialogIdAsync(DbTransactionScope scope, long userId1, long userId2,
         CancellationToken cancellationToken)
     {
