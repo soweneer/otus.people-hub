@@ -5,6 +5,7 @@ namespace PeopleHub.Counters.Services;
 internal sealed class CounterReconciler(
     ICounterStore store,
     IDialogTruthSource truthSource,
+    ReconcilerOptions options,
     ILogger<CounterReconciler> logger)
 {
     public async Task<CounterSnapshot> ReadAsync(long userId, CancellationToken cancellationToken = default)
@@ -31,7 +32,7 @@ internal sealed class CounterReconciler(
         }
 
         var truth = await truthSource.GetCountsAsync(userId, cancellationToken);
-        if (!Diverged(snapshot, truth))
+        if (!Diverged(snapshot, truth, options.LimitPerPartner))
         {
             return false;
         }
@@ -60,7 +61,7 @@ internal sealed class CounterReconciler(
             total);
     }
 
-    private static bool Diverged(CounterSnapshot snapshot, IReadOnlyCollection<PartnerCount> truth)
+    private static bool Diverged(CounterSnapshot snapshot, IReadOnlyCollection<PartnerCount> truth, int limitPerPartner)
     {
         if (snapshot.Counters.Count(counter => counter.Count > 0) != truth.Count)
         {
@@ -68,6 +69,10 @@ internal sealed class CounterReconciler(
         }
 
         return truth.Any(expected =>
-            snapshot.Counters.FirstOrDefault(counter => counter.PartnerId == expected.PartnerId)?.Count != expected.Count);
+        {
+            var cached = snapshot.Counters.FirstOrDefault(counter => counter.PartnerId == expected.PartnerId)?.Count;
+
+            return cached != expected.Count && !(expected.Count > limitPerPartner && cached >= limitPerPartner);
+        });
     }
 }

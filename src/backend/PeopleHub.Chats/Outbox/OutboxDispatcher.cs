@@ -39,7 +39,7 @@ internal sealed class OutboxDispatcher(DbClient dbClient)
         return (Convert.ToInt64(row["pending"]), Convert.ToDouble(row["lag_seconds"]));
     }
 
-    public Task<int> DrainAsync(Func<OutboxRecord, CancellationToken, Task> publish, int batchSize,
+    public Task<int> DrainAsync(Func<IReadOnlyCollection<OutboxRecord>, CancellationToken, Task> publish, int batchSize,
         CancellationToken cancellationToken = default) =>
         dbClient.InTransactionAsync(async scope =>
         {
@@ -59,10 +59,7 @@ internal sealed class OutboxDispatcher(DbClient dbClient)
                     row["payload"].ToString()))
                 .ToArray();
 
-            foreach (var record in records)
-            {
-                await publish(record, cancellationToken);
-            }
+            await publish(records, cancellationToken);
 
             await scope.ExecuteNonQueryAsync(MarkPublishedSql,
                 [("ids", records.Select(record => record.Id).ToArray())],

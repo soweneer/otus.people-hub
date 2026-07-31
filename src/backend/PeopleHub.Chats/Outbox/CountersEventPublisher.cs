@@ -9,25 +9,31 @@ internal sealed class CountersEventPublisher(RabbitMqConnection connection) : IA
     private readonly SemaphoreSlim _gate = new(1, 1);
     private IChannel _channel;
 
-    public async Task PublishAsync(OutboxRecord record, CancellationToken cancellationToken = default)
+    public async Task PublishAsync(IReadOnlyCollection<OutboxRecord> records, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken);
         try
         {
             var channel = await GetChannelAsync(cancellationToken);
+            var confirmations = new List<Task>(records.Count);
 
-            await channel.BasicPublishAsync(
-                CountersTopology.ChangedExchange,
-                record.Type,
-                mandatory: false,
-                new BasicProperties
-                {
-                    Persistent = true,
-                    ContentType = "application/json",
-                    MessageId = record.Id.ToString()
-                },
-                Encoding.UTF8.GetBytes(record.Payload),
-                cancellationToken);
+            foreach (var record in records)
+            {
+                confirmations.Add(channel.BasicPublishAsync(
+                    CountersTopology.ChangedExchange,
+                    record.Type,
+                    mandatory: false,
+                    new BasicProperties
+                    {
+                        Persistent = true,
+                        ContentType = "application/json",
+                        MessageId = record.Id.ToString()
+                    },
+                    Encoding.UTF8.GetBytes(record.Payload),
+                    cancellationToken).AsTask());
+            }
+
+            await Task.WhenAll(confirmations);
         }
         finally
         {

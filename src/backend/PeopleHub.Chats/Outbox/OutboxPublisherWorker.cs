@@ -41,7 +41,7 @@ internal sealed class OutboxPublisherWorker(
         var dispatcher = scope.ServiceProvider.GetRequiredService<OutboxDispatcher>();
 
         var published = await dispatcher.DrainAsync(
-            (record, cancellationToken) => publisher.PublishAsync(record, cancellationToken),
+            (records, cancellationToken) => publisher.PublishAsync(records, cancellationToken),
             options.BatchSize,
             stoppingToken);
 
