@@ -121,6 +121,9 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
 
     #endregion
 
+    private const int MaxReadRetries = 2;
+    private const int RetryDelayMs = 50;
+
     private NpgsqlConnection _transactionConnection;
     private NpgsqlTransaction _transaction;
 
@@ -170,7 +173,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = query;
 
-        var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
+        await using var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
         var dataTable = new DataTable();
         dataTable.Load(dataReader);
 
@@ -257,7 +260,7 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
         var dataTable = new DataTable();
         await ExecuteCmdAsync(query, async cmd =>
         {
-            var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
+            await using var dataReader = await cmd.ExecuteReaderAsync(cancellationToken);
             dataTable.Load(dataReader);
         }, parameters, readOnly: true);
 
@@ -276,12 +279,30 @@ internal sealed class DbClient(NpgsqlMultiHostDataSource dataSource)
             return;
         }
 
-        await using var connection = await GetSqlConnectionAsync(readOnly);
-        await using var cmd = connection.CreateCommand();
-        FillCommand(cmd, parametrizedQuery, parameters);
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                await using var connection = await GetSqlConnectionAsync(readOnly);
+                await using var cmd = connection.CreateCommand();
+                FillCommand(cmd, parametrizedQuery, parameters);
 
-        await cmdAction(cmd);
+                await cmdAction(cmd);
+                return;
+            }
+            catch (Exception exception) when (readOnly && attempt < MaxReadRetries && IsTransient(exception))
+            {
+                await Task.Delay(RetryDelayMs * (attempt + 1));
+            }
+        }
     }
+
+    private static bool IsTransient(Exception exception) => exception switch
+    {
+        NpgsqlException npgsqlException => npgsqlException.IsTransient,
+        ObjectDisposedException => true,
+        _ => false
+    };
 
     private static void FillCommand(NpgsqlCommand cmd, string parametrizedQuery, IEnumerable<(string, object)> parameters)
     {
