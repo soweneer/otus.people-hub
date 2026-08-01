@@ -10,7 +10,7 @@ iproto:
     - uri: '0.0.0.0:3301'
 
 memtx:
-  memory: 536870912
+  memory: 2147483648
 
 process:
   work_dir: /var/lib/tarantool

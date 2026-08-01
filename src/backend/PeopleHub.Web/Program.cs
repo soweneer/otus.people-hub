@@ -41,6 +41,8 @@ app.UseSwaggerUI(options =>
 
 app.UseRouting();
 
+app.UseHttpMetrics();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

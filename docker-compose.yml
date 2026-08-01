@@ -1,3 +1,32 @@
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  expose:
+    - "8080"
+  environment: &app-env
+    ConnectionStrings__PostgreSql: "Host=pg-master:5432,haproxy:5001;Database=people_hub;Username=postgres;Password=postgres;Maximum Pool Size=30;"
+    ConnectionStrings__Redis: "redis:6379"
+    ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
+    ChatsService__Address: "http://chats:8081"
+    FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
+    RunMigrationsOnStartup: "false"
+  depends_on:
+    pg-master:
+      condition: service_healthy
+    haproxy:
+      condition: service_started
+    redis:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    chats:
+      condition: service_healthy
+    prometheus:
+      condition: service_started
+    grafana:
+      condition: service_started
+
 services:
   pg-master:
     image: postgres:18.4
@@ -6,15 +35,76 @@ services:
       POSTGRES_DB: people_hub
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
     ports:
       - "5432:5432"
     volumes:
       - pg-master-data:/var/lib/postgresql
+      - ./docker/master-init.sh:/docker-entrypoint-initdb.d/master-init.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d people_hub"]
       interval: 5s
       timeout: 3s
       retries: 10
+
+  pg-replica-1:
+    image: postgres:18.4
+    container_name: pg-replica-1
+    user: postgres
+    environment:
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator
+      REPLICATION_SLOT: replica_1_slot
+      REPLICA_NAME: replica_1
+    entrypoint: ["bash", "/usr/local/bin/replica-init.sh"]
+    ports:
+      - "5443:5432"
+    volumes:
+      - pg-replica-1-data:/var/lib/postgresql
+      - ./docker/replica-init.sh:/usr/local/bin/replica-init.sh:ro
+    depends_on:
+      pg-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  pg-replica-2:
+    image: postgres:18.4
+    container_name: pg-replica-2
+    user: postgres
+    environment:
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: replicator
+      REPLICATION_SLOT: replica_2_slot
+      REPLICA_NAME: replica_2
+    entrypoint: ["bash", "/usr/local/bin/replica-init.sh"]
+    ports:
+      - "5444:5432"
+    volumes:
+      - pg-replica-2-data:/var/lib/postgresql
+      - ./docker/replica-init.sh:/usr/local/bin/replica-init.sh:ro
+    depends_on:
+      pg-master:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   pg-chats:
     image: postgres:18.4
@@ -33,6 +123,20 @@ services:
       timeout: 3s
       retries: 10
 
+  haproxy:
+    image: haproxy:3.2-alpine
+    container_name: haproxy
+    ports:
+      - "5001:5001"
+      - "8404:8404"
+    volumes:
+      - ./docker/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    depends_on:
+      pg-replica-1:
+        condition: service_healthy
+      pg-replica-2:
+        condition: service_healthy
+
   tarantool:
     image: tarantool/tarantool:3.4.0
     container_name: tarantool
@@ -43,7 +147,7 @@ services:
       - ./docker/tarantool:/opt/tarantool:ro
       - tarantool-data:/var/lib/tarantool
     healthcheck:
-      test: ["CMD-SHELL", "tarantool -e \"os.exit(require('net.box').connect('127.0.0.1:3301'):ping() and 0 or 1)\""]
+      test: ["CMD-SHELL", "tarantool -e \"local c = require('net.box').connect('127.0.0.1:3301'); os.exit(pcall(function() return c:call('dialog_stats') end) and 0 or 1)\""]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -124,6 +228,44 @@ services:
       timeout: 5s
       retries: 10
 
+  pg-exporter-master:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: pg-exporter-master
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@pg-master:5432/people_hub?sslmode=disable"
+    depends_on:
+      pg-master:
+        condition: service_healthy
+
+  pg-exporter-replica-1:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: pg-exporter-replica-1
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@pg-replica-1:5432/people_hub?sslmode=disable"
+    depends_on:
+      pg-replica-1:
+        condition: service_healthy
+
+  pg-exporter-replica-2:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: pg-exporter-replica-2
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:postgres@pg-replica-2:5432/people_hub?sslmode=disable"
+    depends_on:
+      pg-replica-2:
+        condition: service_healthy
+
+  nginx-log-exporter:
+    image: quay.io/martinhelmich/prometheus-nginxlog-exporter:v1.11.0
+    container_name: nginx-log-exporter
+    command: ["-config-file", "/etc/nginx-log-exporter/config.yml"]
+    volumes:
+      - ./docker/nginx-log-exporter/config.yml:/etc/nginx-log-exporter/config.yml:ro
+      - nginx-logs:/var/log/nginx:ro
+    depends_on:
+      nginx:
+        condition: service_started
+
   prometheus:
     image: prom/prometheus:v3.5.0
     container_name: prometheus
@@ -156,45 +298,40 @@ services:
       - "8090:80"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx-logs:/var/log/nginx
     depends_on:
-      app:
+      app-1:
+        condition: service_started
+      app-2:
+        condition: service_started
+      app-3:
         condition: service_started
       feed:
         condition: service_started
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: people-hub-app
-    ports:
-      - "8080:8080"
+  app-1:
+    <<: *app
+    container_name: people-hub-app-1
     environment:
-      ConnectionStrings__PostgreSql: "Host=pg-master:5432;Database=people_hub;Username=postgres;Password=postgres;"
-      ConnectionStrings__Redis: "redis:6379"
-      ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
-      ChatsService__Address: "http://chats:8081"
-      FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
-      RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
-    depends_on:
-      pg-master:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      chats:
-        condition: service_healthy
-      prometheus:
-        condition: service_started
-      grafana:
-        condition: service_started
+      <<: *app-env
+      RunMigrationsOnStartup: "${APP_RUN_MIGRATIONS:-false}"
+
+  app-2:
+    <<: *app
+    container_name: people-hub-app-2
+
+  app-3:
+    <<: *app
+    container_name: people-hub-app-3
 
 volumes:
   pg-master-data:
+  pg-replica-1-data:
+  pg-replica-2-data:
   pg-chats-data:
   tarantool-data:
   redis-data:
   rabbitmq-data:
   prometheus-data:
   grafana-data:
+  nginx-logs:
