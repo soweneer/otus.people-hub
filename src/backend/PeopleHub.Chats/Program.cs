@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using PeopleHub.Chats;
 using PeopleHub.Chats.Db;
 using PeopleHub.Chats.Grpc;
+using PeopleHub.Chats.Services;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,9 @@ builder.Services.AddGrpc(options =>
     options.Interceptors.Add<ErrorHandlingInterceptor>();
 });
 builder.Services.AddChats(builder.Configuration);
+
+ChatsMetrics.Publish(Dialogs.Descriptor);
+DialogMetrics.Publish();
 
 var app = builder.Build();
 

@@ -21,4 +21,10 @@ internal static class DialogMetrics
         "chats_unread_messages_returned",
         "Сколько непрочитанных сообщений отдано за один запрос",
         new HistogramConfiguration { Buckets = Histogram.ExponentialBuckets(1, 2, 12) });
+
+    public static void Publish()
+    {
+        MessagesSent.IncTo(0);
+        DialogsRead.IncTo(0);
+    }
 }

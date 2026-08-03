@@ -1,4 +1,6 @@
+using Grpc.Core;
 using Prometheus;
+using ServiceDescriptor = Google.Protobuf.Reflection.ServiceDescriptor;
 
 namespace PeopleHub.Chats.Grpc;
 
@@ -22,4 +24,13 @@ internal static class ChatsMetrics
         "chats_requests_in_flight",
         "Сколько запросов сервис диалогов обрабатывает прямо сейчас",
         new GaugeConfiguration { LabelNames = ["method"] });
+
+    public static void Publish(ServiceDescriptor descriptor)
+    {
+        foreach (var method in descriptor.Methods)
+        {
+            InFlight.WithLabels(method.Name).Set(0);
+            Requests.WithLabels(method.Name, StatusCode.OK.ToString()).IncTo(0);
+        }
+    }
 }
