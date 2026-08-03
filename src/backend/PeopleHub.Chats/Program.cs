@@ -17,6 +17,7 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Services.AddGrpc(options =>
 {
     options.Interceptors.Add<RequestIdServerInterceptor>();
+    options.Interceptors.Add<MetricsInterceptor>();
     options.Interceptors.Add<ErrorHandlingInterceptor>();
 });
 builder.Services.AddChats(builder.Configuration);
