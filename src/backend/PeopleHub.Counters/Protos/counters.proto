@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option csharp_namespace = "PeopleHub.Counters.Grpc";
+
+package counters;
+
+service Counters {
+  rpc GetCounters (CountersRequest) returns (CountersResponse);
+  rpc GetTotal (CountersRequest) returns (TotalResponse);
+}
+
+message CountersRequest {
+  int64 user_id = 1;
+}
+
+message PartnerCounter {
+  int64 partner_id = 1;
+  int64 count = 2;
+}
+
+message CountersResponse {
+  repeated PartnerCounter counters = 1;
+  int64 total = 2;
+}
+
+message TotalResponse {
+  int64 total = 1;
+}

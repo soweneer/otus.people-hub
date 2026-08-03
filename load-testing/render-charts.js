@@ -127,6 +127,12 @@ async function build(name, title, expr, legend, unit, opts = {}) {
   return file;
 }
 
+module.exports = { query, chart, build, OUT, START, END };
+
+if (require.main !== module) {
+  return;
+}
+
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
   console.log(`окно ${new Date(START * 1000).toLocaleTimeString()} .. ${new Date(END * 1000).toLocaleTimeString()}`);

@@ -8,6 +8,9 @@ service Dialogs {
   rpc Send (SendRequest) returns (SendResponse);
   rpc List (ListRequest) returns (ListResponse);
   rpc GetPartners (PartnersRequest) returns (PartnersResponse);
+  rpc MarkRead (MarkReadRequest) returns (MarkReadResponse);
+  rpc GetUnreadCounts (UnreadCountsRequest) returns (UnreadCountsResponse);
+  rpc GetUnreadState (UnreadStateRequest) returns (UnreadStateResponse);
 }
 
 message SendRequest {
@@ -29,6 +32,7 @@ message DialogMessage {
   int64 from_user_id = 1;
   int64 to_user_id = 2;
   string text = 3;
+  int64 id = 4;
 }
 
 message ListResponse {
@@ -41,4 +45,43 @@ message PartnersRequest {
 
 message PartnersResponse {
   repeated int64 partner_ids = 1;
+}
+
+message MarkReadRequest {
+  int64 user_id = 1;
+  int64 partner_id = 2;
+  int64 up_to_message_id = 3;
+}
+
+message MarkReadResponse {
+  int64 last_read_message_id = 1;
+}
+
+message UnreadCountsRequest {
+  int64 user_id = 1;
+}
+
+message UnreadCount {
+  int64 partner_id = 1;
+  int64 count = 2;
+}
+
+message UnreadCountsResponse {
+  repeated UnreadCount counts = 1;
+  int64 total = 2;
+}
+
+message UnreadStateRequest {
+  int64 user_id = 1;
+  int32 limit_per_partner = 2;
+}
+
+message UnreadPartnerState {
+  int64 partner_id = 1;
+  int64 last_read_message_id = 2;
+  repeated int64 unread_message_ids = 3;
+}
+
+message UnreadStateResponse {
+  repeated UnreadPartnerState partners = 1;
 }

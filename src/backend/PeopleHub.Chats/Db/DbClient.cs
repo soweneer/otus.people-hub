@@ -7,13 +7,27 @@ internal sealed class DbClient(NpgsqlDataSource dataSource)
 {
     public const string DialogsTable = "dialogs";
     public const string MessagesTable = "messages";
+    public const string DialogReadsTable = "dialog_reads";
+    public const string OutboxTable = "outbox";
+
+    public async Task<T> InTransactionAsync<T>(Func<DbTransactionScope, Task<T>> work,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+        var result = await work(new DbTransactionScope(connection, transaction));
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return result;
+    }
 
     public async Task<object> ExecuteScalarAsync(string query, IEnumerable<(string, object)> parameters = null,
         CancellationToken cancellationToken = default)
     {
         await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
-        await using var cmd = connection.CreateCommand();
-        FillCommand(cmd, query, parameters);
+        await using var cmd = connection.CreateCommand().Fill(query, parameters);
 
         return await cmd.ExecuteScalarAsync(cancellationToken);
     }
@@ -22,8 +36,7 @@ internal sealed class DbClient(NpgsqlDataSource dataSource)
         CancellationToken cancellationToken = default)
     {
         await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
-        await using var cmd = connection.CreateCommand();
-        FillCommand(cmd, query, parameters);
+        await using var cmd = connection.CreateCommand().Fill(query, parameters);
 
         var dataTable = new DataTable();
         await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
@@ -36,24 +49,8 @@ internal sealed class DbClient(NpgsqlDataSource dataSource)
         CancellationToken cancellationToken = default)
     {
         await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
-        await using var cmd = connection.CreateCommand();
-        FillCommand(cmd, query, parameters);
+        await using var cmd = connection.CreateCommand().Fill(query, parameters);
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-    private static void FillCommand(NpgsqlCommand cmd, string query, IEnumerable<(string, object)> parameters)
-    {
-        cmd.CommandText = query;
-
-        if (parameters is null)
-        {
-            return;
-        }
-
-        foreach (var (name, value) in parameters)
-        {
-            cmd.Parameters.AddWithValue(name, value);
-        }
     }
 }

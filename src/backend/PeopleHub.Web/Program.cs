@@ -14,6 +14,7 @@ builder.Services.AddAuth(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddChatsClient(builder.Configuration);
+builder.Services.AddCountersClient(builder.Configuration);
 builder.Services.AddSwagger();
 
 var app = builder.Build();

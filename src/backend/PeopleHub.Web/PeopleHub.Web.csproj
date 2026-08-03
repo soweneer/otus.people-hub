@@ -24,6 +24,7 @@
 
     <ItemGroup>
       <Protobuf Include="..\PeopleHub.Chats\Protos\dialogs.proto" GrpcServices="Client" />
+      <Protobuf Include="..\PeopleHub.Counters\Protos\counters.proto" GrpcServices="Client" />
     </ItemGroup>
 
     <ItemGroup>

@@ -9,4 +9,10 @@ public interface IDialogService
     Task<IReadOnlyCollection<DialogMessage>> GetDialogAsync(long userId1, long userId2, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<long>> GetPartnerIdsAsync(long userId, CancellationToken cancellationToken = default);
+
+    Task<long> MarkReadAsync(long userId, long partnerId, long upToMessageId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<UnreadCount>> GetUnreadCountsAsync(long userId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<UnreadPartnerState>> GetUnreadStateAsync(long userId, int limitPerPartner, CancellationToken cancellationToken = default);
 }

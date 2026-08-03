@@ -91,6 +91,24 @@ export interface DialogMessage {
   from: string;
   to: string;
   text: string;
+  id: string;
+}
+
+export interface UnreadCounter {
+  partnerId: number;
+  count: number;
+}
+
+export interface UnreadCounters {
+  counters: UnreadCounter[];
+  total: number;
+}
+
+export interface UnreadChangedEvent {
+  kind: 'unread';
+  partnerId: string;
+  count: number;
+  total: number;
 }
 
 export interface SignUpData {

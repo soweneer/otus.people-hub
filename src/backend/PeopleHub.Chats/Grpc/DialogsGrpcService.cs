@@ -5,6 +5,8 @@ namespace PeopleHub.Chats.Grpc;
 
 internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs.DialogsBase
 {
+    private const int DefaultUnreadLimit = 1000;
+
     public override async Task<SendResponse> Send(SendRequest request, ServerCallContext context)
     {
         var messageId = await dialogService.SendAsync(request.FromUserId, request.ToUserId, request.Text, context.CancellationToken);
@@ -21,6 +23,7 @@ internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs
         {
             response.Messages.Add(new DialogMessage
             {
+                Id = message.Id,
                 FromUserId = message.FromUserId,
                 ToUserId = message.FromUserId == request.UserId1 ? request.UserId2 : request.UserId1,
                 Text = message.Text
@@ -36,6 +39,48 @@ internal sealed class DialogsGrpcService(IDialogService dialogService) : Dialogs
 
         var response = new PartnersResponse();
         response.PartnerIds.AddRange(partnerIds);
+
+        return response;
+    }
+
+    public override async Task<MarkReadResponse> MarkRead(MarkReadRequest request, ServerCallContext context)
+    {
+        var lastReadMessageId = await dialogService.MarkReadAsync(
+            request.UserId, request.PartnerId, request.UpToMessageId, context.CancellationToken);
+
+        return new MarkReadResponse { LastReadMessageId = lastReadMessageId };
+    }
+
+    public override async Task<UnreadStateResponse> GetUnreadState(UnreadStateRequest request, ServerCallContext context)
+    {
+        var limit = request.LimitPerPartner > 0 ? request.LimitPerPartner : DefaultUnreadLimit;
+        var partners = await dialogService.GetUnreadStateAsync(request.UserId, limit, context.CancellationToken);
+
+        var response = new UnreadStateResponse();
+        foreach (var partner in partners)
+        {
+            var state = new UnreadPartnerState
+            {
+                PartnerId = partner.PartnerId,
+                LastReadMessageId = partner.LastReadMessageId
+            };
+            state.UnreadMessageIds.AddRange(partner.UnreadMessageIds);
+            response.Partners.Add(state);
+        }
+
+        return response;
+    }
+
+    public override async Task<UnreadCountsResponse> GetUnreadCounts(UnreadCountsRequest request, ServerCallContext context)
+    {
+        var counts = await dialogService.GetUnreadCountsAsync(request.UserId, context.CancellationToken);
+
+        var response = new UnreadCountsResponse();
+        foreach (var count in counts)
+        {
+            response.Counts.Add(new UnreadCount { PartnerId = count.PartnerId, Count = count.Count });
+            response.Total += count.Count;
+        }
 
         return response;
     }

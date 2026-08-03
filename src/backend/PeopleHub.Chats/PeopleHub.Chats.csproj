@@ -11,8 +11,9 @@
 
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
-        <PackageReference Include="nf.Tarantool" Version="1.0.49" />
         <PackageReference Include="Npgsql" Version="10.0.2" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+        <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
     </ItemGroup>
 
     <ItemGroup>

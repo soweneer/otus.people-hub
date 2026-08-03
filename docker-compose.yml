@@ -9,6 +9,7 @@ x-app: &app
     ConnectionStrings__Redis: "redis:6379"
     ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
     ChatsService__Address: "http://chats:8081"
+    CountersService__Address: "http://counters:8083"
     FeatureFlags__UseCacheForFeed: "${USE_CACHE_FOR_FEED:-true}"
     RunMigrationsOnStartup: "false"
   depends_on:
@@ -21,6 +22,8 @@ x-app: &app
     rabbitmq:
       condition: service_healthy
     chats:
+      condition: service_healthy
+    counters:
       condition: service_healthy
     prometheus:
       condition: service_started
@@ -137,21 +140,6 @@ services:
       pg-replica-2:
         condition: service_healthy
 
-  tarantool:
-    image: tarantool/tarantool:3.4.0
-    container_name: tarantool
-    entrypoint: ["tarantool", "--config", "/opt/tarantool/config.yaml"]
-    ports:
-      - "3301:3301"
-    volumes:
-      - ./docker/tarantool:/opt/tarantool:ro
-      - tarantool-data:/var/lib/tarantool
-    healthcheck:
-      test: ["CMD-SHELL", "tarantool -e \"local c = require('net.box').connect('127.0.0.1:3301'); os.exit(pcall(function() return c:call('dialog_stats') end) and 0 or 1)\""]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   chats:
     build:
       context: .
@@ -159,12 +147,10 @@ services:
     container_name: people-hub-chats
     ports:
       - "8081:8081"
+      - "8091:8091"
     environment:
-      ASPNETCORE_URLS: "http://+:8081"
-      Kestrel__EndpointDefaults__Protocols: "Http2"
       ConnectionStrings__PostgreSql: "Host=pg-chats:5432;Database=people_hub_chats;Username=postgres;Password=postgres;"
-      ConnectionStrings__Tarantool: "tarantool:3301"
-      FeatureFlags__UseTarantoolStorage: "${USE_TARANTOOL_STORAGE:-true}"
+      ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
       RunMigrationsOnStartup: "${RUN_MIGRATIONS_ON_STARTUP:-true}"
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8081'"]
@@ -175,7 +161,34 @@ services:
     depends_on:
       pg-chats:
         condition: service_healthy
-      tarantool:
+      rabbitmq:
+        condition: service_healthy
+
+  counters:
+    build:
+      context: .
+      dockerfile: src/backend/PeopleHub.Counters/Dockerfile
+    container_name: people-hub-counters
+    ports:
+      - "8083:8083"
+      - "8093:8093"
+    environment:
+      ConnectionStrings__Redis: "redis:6379"
+      ConnectionStrings__RabbitMq: "amqp://guest:guest@rabbitmq:5672/"
+      ChatsService__Address: "http://chats:8081"
+      Reconciler__IntervalSeconds: "${RECONCILER_INTERVAL_SECONDS:-60}"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8083'"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      chats:
         condition: service_healthy
 
   feed:
@@ -329,7 +342,6 @@ volumes:
   pg-replica-1-data:
   pg-replica-2-data:
   pg-chats-data:
-  tarantool-data:
   redis-data:
   rabbitmq-data:
   prometheus-data:

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <LangVersion>14</LangVersion>
+        <RootNamespace>PeopleHub.Counters</RootNamespace>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+        <PackageReference Include="RabbitMQ.Client" Version="7.1.2" />
+        <PackageReference Include="StackExchange.Redis" Version="2.9.11" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="Protos\counters.proto" GrpcServices="Server" />
+        <Protobuf Include="..\PeopleHub.Chats\Protos\dialogs.proto" GrpcServices="Client" />
+    </ItemGroup>
+
+</Project>

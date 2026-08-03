@@ -1,8 +1,10 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useUnread } from '../counters/UnreadContext';
 
 export function Layout() {
   const { authenticated, email, signOut } = useAuth();
+  const { total: unreadTotal } = useUnread();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -91,6 +93,9 @@ export function Layout() {
                     <li className="nav-item">
                       <NavLink to="/dialogs" className="nav-link text-dark">
                         <i className="fa fa-comments"></i> Диалоги
+                        {unreadTotal > 0 && (
+                          <span className="badge rounded-pill bg-danger ms-1">{unreadTotal}</span>
+                        )}
                       </NavLink>
                     </li>
                   </>

@@ -1,24 +1,15 @@
 using Npgsql;
 using PeopleHub.Chats.Db;
+using PeopleHub.Chats.Messaging;
+using PeopleHub.Chats.Outbox;
 using PeopleHub.Chats.Repositories;
 using PeopleHub.Chats.Services;
-using PeopleHub.Chats.Tarantool;
 
 namespace PeopleHub.Chats;
 
 public static class Bootstrapper
 {
-    private const int DefaultTarantoolPoolSize = 32;
-    private const int DefaultTarantoolReadBufferSize = 262144;
-
     public static IServiceCollection AddChats(this IServiceCollection services, IConfiguration configuration)
-    {
-        return configuration.GetValue<bool>("FeatureFlags:UseTarantoolStorage")
-            ? AddTarantoolDialogs(services, configuration)
-            : AddPostgresDialogs(services, configuration);
-    }
-
-    private static IServiceCollection AddPostgresDialogs(IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("PostgreSql");
         if (string.IsNullOrEmpty(connectionString))
@@ -32,23 +23,30 @@ public static class Bootstrapper
         services.AddScoped<IDialogService, DialogService>();
         services.AddScoped<IDbMigrator, DbMigrator>();
 
+        services.AddOutbox(configuration);
+
         return services;
     }
 
-    private static IServiceCollection AddTarantoolDialogs(IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddOutbox(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Tarantool");
-        if (string.IsNullOrEmpty(connectionString))
+        var rabbitConnectionString = configuration.GetConnectionString("RabbitMq");
+        if (string.IsNullOrEmpty(rabbitConnectionString))
         {
-            throw new MissingMemberException("Tarantool connection string is absent");
+            throw new MissingMemberException("RabbitMq connection string is absent");
         }
 
-        var poolSize = configuration.GetValue<int?>("Dialogs:Tarantool:PoolSize") ?? DefaultTarantoolPoolSize;
-        var readBufferSize = configuration.GetValue<int?>("Dialogs:Tarantool:ReadBufferSize") ?? DefaultTarantoolReadBufferSize;
+        services.AddSingleton(new RabbitMqOptions
+        {
+            ConnectionString = rabbitConnectionString,
+            ClientName = $"people-hub-chats-{Environment.MachineName}"
+        });
+        services.AddSingleton<RabbitMqConnection>();
+        services.AddSingleton<CountersEventPublisher>();
 
-        services.AddSingleton(new TarantoolConnectionPool(connectionString, poolSize, readBufferSize));
-        services.AddSingleton<IDialogService, TarantoolDialogService>();
-        services.AddSingleton<IDbMigrator, TarantoolSchemaProbe>();
+        services.AddSingleton(configuration.GetSection("Outbox").Get<OutboxOptions>() ?? new OutboxOptions());
+        services.AddScoped<OutboxDispatcher>();
+        services.AddHostedService<OutboxPublisherWorker>();
 
         return services;
     }

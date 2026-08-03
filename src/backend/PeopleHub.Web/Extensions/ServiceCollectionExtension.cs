@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PeopleHub.Auth;
+using PeopleHub.Counters;
 using PeopleHub.Dialogs;
 using PeopleHub.Grpc;
 using ChatsDialogs = PeopleHub.Chats.Grpc.Dialogs;
+using CountersClient = PeopleHub.Counters.Grpc.Counters;
 
 namespace PeopleHub.Extensions;
 
@@ -24,6 +26,21 @@ public static class ServiceCollectionExtension
                 .AddGrpcClient<ChatsDialogs.DialogsClient>(options => options.Address = new Uri(address))
                 .AddInterceptor<RequestIdClientInterceptor>();
             services.AddScoped<IDialogService, DialogService>();
+
+            return services;
+        }
+
+        public IServiceCollection AddCountersClient(IConfiguration configuration)
+        {
+            var address = configuration["CountersService:Address"]
+                          ?? throw new MissingMemberException("CountersService:Address configuration is absent");
+
+            services.AddHttpContextAccessor();
+            services.AddSingleton<RequestIdClientInterceptor>();
+            services
+                .AddGrpcClient<CountersClient.CountersClient>(options => options.Address = new Uri(address))
+                .AddInterceptor<RequestIdClientInterceptor>();
+            services.AddScoped<ICounterService, CounterService>();
 
             return services;
         }

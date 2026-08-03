@@ -1,23 +1,34 @@
 import { useEffect, useRef, useState } from 'react';
-import type { FeedPost, FeedPostedEvent } from './types';
+import type { FeedPost, FeedPostedEvent, UnreadChangedEvent } from './types';
 
 const FEED_SOCKET_PATH = '/post/feed/posted';
 const MAX_RECONNECT_DELAY_MS = 30_000;
 
-function parsePosted(data: unknown): FeedPostedEvent | null {
+type SocketEvent = FeedPostedEvent | UnreadChangedEvent;
+
+function parseEvent(data: unknown): SocketEvent | null {
   if (typeof data !== 'string') return null;
 
   try {
-    return JSON.parse(data) as FeedPostedEvent;
+    return JSON.parse(data) as SocketEvent;
   } catch {
     return null;
   }
 }
 
-export function useFeedSocket(onPosted: (post: FeedPost) => void): boolean {
+function isUnread(payload: SocketEvent): payload is UnreadChangedEvent {
+  return (payload as UnreadChangedEvent).kind === 'unread';
+}
+
+export function useFeedSocket(
+  onPosted: (post: FeedPost) => void,
+  onUnread?: (partnerId: number, count: number, total: number) => void,
+): boolean {
   const [connected, setConnected] = useState(false);
-  const handlerRef = useRef(onPosted);
-  handlerRef.current = onPosted;
+  const postedRef = useRef(onPosted);
+  const unreadRef = useRef(onUnread);
+  postedRef.current = onPosted;
+  unreadRef.current = onUnread;
 
   useEffect(() => {
     let socket: WebSocket | null = null;
@@ -35,10 +46,15 @@ export function useFeedSocket(onPosted: (post: FeedPost) => void): boolean {
       };
 
       socket.onmessage = (event) => {
-        const payload = parsePosted(event.data);
+        const payload = parseEvent(event.data);
         if (!payload) return;
 
-        handlerRef.current({
+        if (isUnread(payload)) {
+          unreadRef.current?.(Number(payload.partnerId), payload.count, payload.total);
+          return;
+        }
+
+        postedRef.current({
           id: Number(payload.postId),
           text: payload.postText,
           authorUserId: Number(payload.author_user_id),

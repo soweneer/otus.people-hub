@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { dialogApi, friendsApi } from '../api/client';
 import type { DialogMessage, DialogPartner, FriendInfoLite } from '../api/types';
+import { useUnread } from '../counters/UnreadContext';
 
 export function DialogsPage() {
+  const { countFor, clearFor } = useUnread();
   const [partners, setPartners] = useState<DialogPartner[]>([]);
   const [friends, setFriends] = useState<FriendInfoLite[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -39,17 +41,27 @@ export function DialogsPage() {
     };
   }, []);
 
-  const loadMessages = useCallback(async (partnerId: number) => {
-    setMessagesLoading(true);
-    try {
-      setMessages(await dialogApi.list(partnerId));
-    } catch (e) {
-      setMessages([]);
-      setError(e instanceof Error ? e.message : 'Не удалось загрузить сообщения');
-    } finally {
-      setMessagesLoading(false);
-    }
-  }, []);
+  const loadMessages = useCallback(
+    async (partnerId: number) => {
+      setMessagesLoading(true);
+      try {
+        const loaded = await dialogApi.list(partnerId);
+        setMessages(loaded);
+
+        const lastIncoming = [...loaded].reverse().find((message) => message.from === String(partnerId));
+        if (lastIncoming) {
+          await dialogApi.markRead(partnerId, lastIncoming.id);
+          clearFor(partnerId);
+        }
+      } catch (e) {
+        setMessages([]);
+        setError(e instanceof Error ? e.message : 'Не удалось загрузить сообщения');
+      } finally {
+        setMessagesLoading(false);
+      }
+    },
+    [clearFor],
+  );
 
   const selectPartner = useCallback(
     (partnerId: number) => {
@@ -146,13 +158,18 @@ export function DialogsPage() {
                   <li key={partner.id}>
                     <button
                       type="button"
-                      className={`list-group-item list-group-item-action w-100 text-start ${
+                      className={`list-group-item list-group-item-action w-100 text-start d-flex justify-content-between align-items-center ${
                         selectedId === partner.id ? 'active' : ''
                       }`}
                       onClick={() => selectPartner(partner.id)}
                     >
-                      <i className="fa fa-user me-2"></i>
-                      {partner.name}
+                      <span>
+                        <i className="fa fa-user me-2"></i>
+                        {partner.name}
+                      </span>
+                      {countFor(partner.id) > 0 && (
+                        <span className="badge rounded-pill bg-danger">{countFor(partner.id)}</span>
+                      )}
                     </button>
                   </li>
                 ))}
