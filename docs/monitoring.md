@@ -76,6 +76,39 @@ Prometheus уже скрёб `chats:8091` по job `chats` — конфиг
 лезть в базу монолита с её репликацией), `zabbix-server`, `zabbix-web` и
 `zabbix-agent` на образе agent2.
 
+```mermaid
+flowchart TB
+    subgraph monitored["Наблюдаемая машина: WSL2-виртуалка с Docker"]
+        procfs["/proc и / <br/>смонтированы в агент как /hostfs"]
+        socket["/var/run/docker.sock"]
+        chats["people-hub-chats<br/>и остальные контейнеры стенда"]
+        chats --- socket
+    end
+
+    agent["zabbix-agent<br/>agent2, порт 10050<br/>зонд: отвечает на ключи"]
+    server["zabbix-server<br/>порт 10051<br/>опрос, препроцессинг,<br/>триггеры, эскалации"]
+    db[("zabbix-db<br/>PostgreSQL<br/>конфигурация + история")]
+    web["zabbix-web<br/>nginx + PHP, порт 8095<br/>UI и /api_jsonrpc.php"]
+    client["браузер<br/>provision.ps1"]
+
+    procfs --> agent
+    socket --> agent
+
+    server -->|"опрос по ключам:<br/>system.cpu.util, vfs.fs.*, docker.*"| agent
+    agent -->|"значения"| server
+    server -->|"пишет историю, тренды, события"| db
+    db -->|"отдаёт конфигурацию:<br/>хосты, шаблоны, триггеры"| server
+    web <-->|"читает историю и конфигурацию,<br/>пишет правки"| db
+    web -->|"статус сервера, Execute now"| server
+    client --> web
+```
+
+Веб-морда не ходит к серверу за данными: историю она читает прямо из базы, а к
+`zabbix-server:10051` обращается только за живыми мелочами вроде статуса очереди.
+База — не деталь реализации, а точка встречи двух компонентов. С агентом же
+разговаривает только сервер: проверки пассивные, поэтому в интерфейсе хоста
+прописан DNS `zabbix-agent`, и канал проверяется через `zabbix_get`.
+
 Агент запущен с `pid: host` и смонтированными `/:/hostfs:ro` и docker-сокетом,
 поэтому отдаёт метрики хоста, а не своего контейнера: `/proc` в контейнере без
 lxcfs показывает хостовые значения. Провижининг вешает на хост `chats-host` два
